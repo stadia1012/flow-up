@@ -53,3 +53,11 @@
     color: var(--foreground);
   }
 }
+
+@layer utilities {
+
+}
+
+@layer components {
+
+}
