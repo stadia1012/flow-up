@@ -1,6 +1,6 @@
 'use client'
 
-export default function List({list}: {list: List}) {
+export default function Item({item}: {item: List}) {
   return (
     <div className={`group flex items-center p-[2px] pl-6 cursor-pointer hover:bg-gray-200/65 rounded-[5px] h-[30px]`}>
       {/* 폴더 아이콘 */}
@@ -15,7 +15,7 @@ export default function List({list}: {list: List}) {
         </svg>
       </div>
       {/* 폴더 이름 */}
-      <span className="relative top-[1px]">{list.name}</span>
+      <span className="relative top-[1px]">{item.name}</span>
       {/* 버튼 */}
       <div className="flex p-[3px] ml-auto items-center hidden group-hover:flex">
         <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all">

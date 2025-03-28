@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import List from "./list";
+import Item from "./item";
 
 export default function Folder({folder}: {folder: List}) {
   const [isFolded, setIsFolded] = useState(folder.isFolded);
@@ -8,7 +8,7 @@ export default function Folder({folder}: {folder: List}) {
 
   return (
     <>
-    <div className={`group folder ${state} flex items-center p-[2px] pl-4 cursor-default hover:bg-gray-200/65 rounded-[5px] h-[30px]`} onClick={() => {setIsFolded(!isFolded)}}>
+    <div className={`group folder ${state} flex items-center p-[2px] pl-4 cursor-default hover:bg-gray-200/65 rounded-[5px] h-[30px]`}>
       {/* 폴더 아이콘 */}
       <div className="w-[23px] h-[23px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[8px] rounded-[4px]">
         {/* 폴더 아이콘 [foled] */}
@@ -21,7 +21,7 @@ export default function Folder({folder}: {folder: List}) {
         </svg>
       </div>
       {/* 폴더 이름 */}
-      <span className="relative top-[1px] cursor-pointer">{folder.name}</span>
+      <span className="relative top-[1px] cursor-pointer" onClick={() => setIsFolded(!isFolded)}>{folder.name}</span>
       {/* 버튼 */}
       <div className="flex p-[3px] ml-auto items-center hidden group-hover:flex">
         <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); }}>
@@ -42,7 +42,7 @@ export default function Folder({folder}: {folder: List}) {
     {!isFolded &&
       <> {
           folder.lists?.map((list, index) => {
-            return <List list={list} key={index}></List>
+            return <Item item={list} key={index} />
           })
       } </>
     }

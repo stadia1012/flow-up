@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --popupShadow: 0 2px 5px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -55,7 +56,6 @@
 }
 
 @layer utilities {
-
 }
 
 @layer components {
