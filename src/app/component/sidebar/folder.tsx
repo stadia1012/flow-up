@@ -1,6 +1,7 @@
 'use client'
 import { useState } from "react";
 import Item from "./item";
+import SidebarSettingButton from "./sidebarSettingButton";
 
 export default function Folder({folder}: {folder: List}) {
   const [isFolded, setIsFolded] = useState(folder.isFolded);
@@ -8,7 +9,7 @@ export default function Folder({folder}: {folder: List}) {
 
   return (
     <>
-    <div className={`group folder ${state} flex items-center p-[2px] pl-4 cursor-default hover:bg-gray-200/65 rounded-[5px] h-[30px]`}>
+    <div className={`group folder ${state} flex items-center p-[2px] pl-4 cursor-default  rounded-[5px] h-[30px] hover:bg-gray-200/65 has-[.popup-menu]:bg-gray-200/65`}>
       {/* 폴더 아이콘 */}
       <div className="w-[23px] h-[23px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[8px] rounded-[4px]">
         {/* 폴더 아이콘 [foled] */}
@@ -22,21 +23,17 @@ export default function Folder({folder}: {folder: List}) {
       </div>
       {/* 폴더 이름 */}
       <span className="relative top-[1px] cursor-pointer" onClick={() => setIsFolded(!isFolded)}>{folder.name}</span>
-      {/* 버튼 */}
-      <div className="flex p-[3px] ml-auto items-center hidden group-hover:flex">
+      {/* button wrapper */}
+      <div className="p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
+        {/* button - add */}
         <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); }}>
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
             <path d="M12 5l0 14"></path>
             <path d="M5 12l14 0"></path>
           </svg>
         </div>
-        <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); }}>
-          <svg className="w-full h-full relative top-[1px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
-            <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-            <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-            <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-          </svg>
-        </div>
+        {/* button - add */}
+        <SidebarSettingButton type="folder" />
       </div>
     </div>
     {!isFolded &&
