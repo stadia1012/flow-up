@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from "react";
-import ProjectSettingPopup from "./sidebarSettingPopup";
+import SidebarSettingPopup from "./sidebarSettingPopup";
 
 export default function SidebarSettingButton({type, handleRename }: {type: string, handleRename?: () => void}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
@@ -40,7 +40,7 @@ export default function SidebarSettingButton({type, handleRename }: {type: strin
         <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
         <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
       </svg>
-      {isPopupOpen && <ProjectSettingPopup popupRef={popupRef} type={type} handleRename={handleRename} setIsPopupOpen={setIsPopupOpen} />}
+      {isPopupOpen && <SidebarSettingPopup popupRef={popupRef} type={type} handleRename={handleRename} setIsPopupOpen={setIsPopupOpen} />}
     </div>
   );
 }

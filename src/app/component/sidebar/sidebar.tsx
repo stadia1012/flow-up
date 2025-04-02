@@ -14,12 +14,15 @@ async function getProjects(): Promise<List[]> {
   });
 
   return projects.map((project) => ({
+    id: project.ID,
     name: project.NAME ?? '',
     isFolded: true,
     lists: project.folders.map((folder) => ({
+      id: folder.ID,
       name: folder.NAME ?? '',
       isFolded: true,
       lists: folder.items.map((item) => ({
+        id: item.ID,
         name: item.NAME ?? '',
       })),
     })),
