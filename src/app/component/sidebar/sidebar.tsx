@@ -1,4 +1,5 @@
-import Project from "./project";
+'use server'
+import ProjectList from "./projectList";
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -39,11 +40,7 @@ export default async function Sidebar() {
       </div>
       <div className="p-2 pr-3">
         <div className="font-[600] pl-2">Workspace</div>
-        {
-          projects.map((project, index) => {
-            return <Project project={project} key={index}></Project>
-          })
-        }
+        <ProjectList initialProjects={projects} />
       </div>
     </nav>
   );

@@ -2,7 +2,7 @@ import Header from "./component/header";
 import Sidebar from "./component/sidebar/sidebar";
 import Main from "./component/main"
 
-export default function Home() {
+export default async function Home() {
   return (
     <div className="flex flex-col h-full">
       <Header></Header>
