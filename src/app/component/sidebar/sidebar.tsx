@@ -1,34 +1,6 @@
-'use server'
-import ProjectList from "./projectList";
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
-async function getProjects(): Promise<List[]> {
-  const projects = await prisma.w_PROJECTS.findMany({
-    include: {
-      folders: {
-        include: {
-          items: true,
-        },
-      },
-    },
-  });
-
-  return projects.map((project) => ({
-    id: project.ID,
-    name: project.NAME ?? '',
-    isFolded: true,
-    lists: project.folders.map((folder) => ({
-      id: folder.ID,
-      name: folder.NAME ?? '',
-      isFolded: true,
-      lists: folder.items.map((item) => ({
-        id: item.ID,
-        name: item.NAME ?? '',
-      })),
-    })),
-  }));
-}
+'server client'
+import ProjectList from "./projectList_";
+import { getProjects } from "@/app/controllers/projectController";
 
 export default async function Sidebar() {
   const projects = await getProjects();

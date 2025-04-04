@@ -44,7 +44,9 @@ export default function Project({project}: {project: List}) {
 
   return (
     <>
-      <div className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-gray-200/65 has-[.popup-menu]:bg-gray-200/65`}>
+      <div
+        data-project-id={project.id} // 프로젝트 ID 전달
+        className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-gray-200/65 has-[.popup-menu]:bg-gray-200/65`}>
       {/* 폴더 아이콘 */}
         <div className="basis-[22px] h-[22px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[7px] rounded-[4px]">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
@@ -62,7 +64,7 @@ export default function Project({project}: {project: List}) {
                 defaultValue={projectName}
                 onBlur={handleBlur}
                 ref={renameRef}
-                onKeyDown={(e: React.KeyboardEvent) => handleKeyDown(e)} />
+                onKeyDown={handleKeyDown} />
             </div>
           ) : (
             <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
@@ -84,12 +86,9 @@ export default function Project({project}: {project: List}) {
       </div>
       {
         /* 하위 폴더 List */
-        !isFolded &&
-        <> {
-          project.lists?.map((folder, index) => {
-            return <Folder folder={folder} key={index} />
-          })
-        } </>
+        !isFolded && project.lists?.map((folder, index) => {
+          return <Folder folder={folder} key={index} />
+        })
       }
     </>
   );
