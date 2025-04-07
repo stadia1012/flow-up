@@ -22,7 +22,10 @@ export default function Folder({folder}: {folder: List}) {
         </svg>
       </div>
       {/* 폴더 이름 */}
-      <span className="relative top-[1px] cursor-pointer" onClick={() => setIsFolded(!isFolded)}>{folder.name}</span>
+      <span className="relative top-[1px] cursor-pointer" onClick={(e) => {
+        e.stopPropagation();
+        setIsFolded(!isFolded);
+      }}>{folder.name}</span>
       {/* button wrapper */}
       <div className="p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
         {/* button - add */}

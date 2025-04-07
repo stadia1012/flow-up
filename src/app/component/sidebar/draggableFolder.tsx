@@ -3,19 +3,19 @@ import { useState, useEffect, useRef } from "react";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import Project from "./project";
+import Folder from "./folder";
 import { DropIndicator } from "./drop-indicator";
 
 type DragState =
   | { type: "idle" }
   | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> };
 
-export default function DraggableProject({ project }: { project: List }) {
+export default function DraggableFolder({ folder }: { folder: List }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
 
   useEffect(() => {
-    console.log('draggableProject dnd');
+    console.log('draggableFolder dnd');
     const element = ref.current;
     if (!element) return;
 
@@ -25,7 +25,7 @@ export default function DraggableProject({ project }: { project: List }) {
       draggable({
         element: element,
         getInitialData() {
-          return { projectId: project.id };
+          return { true: true, folderId: folder.id };
         },
       }),
       // 개별 항목에 dropTarget 등록 (시각적 피드백)
@@ -34,11 +34,11 @@ export default function DraggableProject({ project }: { project: List }) {
         canDrop({ source }) {
           // 자신에게 드롭되지 않도록 처리
           if (source.element === element) return false;
-          return source.data && "projectId" in source.data;
+          return source.data && "folderId" in source.data;
         },
         getData({ input }) {
           // attachClosestEdge를 이용해 현재 요소의 가장 가까운 엣지 정보를 포함한 데이터를 반환
-          return attachClosestEdge({ projectId: project.id }, { element, input, allowedEdges: ["top", "bottom"] });
+          return attachClosestEdge({ folderId: folder.id }, { element, input, allowedEdges: ["top", "bottom"] });
         },
         getIsSticky() {
           return true;
@@ -59,16 +59,16 @@ export default function DraggableProject({ project }: { project: List }) {
         },
       })
     );
-  }, [project]);
+  }, [folder]);
 
   return (
-    <div ref={ref} data-project-id={project.id}
+    <div ref={ref} data-folder-id={folder.id}
     className="cursor-grab relative">
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge && (
         <DropIndicator edge={dragState.closestEdge} gap="0px" />
       )}
-      <Project project={project} />
+      <Folder folder={folder} />
     </div>
   );
 }

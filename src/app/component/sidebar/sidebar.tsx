@@ -1,5 +1,5 @@
-'server client'
-import ProjectList from "./projectList_";
+'user client'
+import SidebarTree from "./sidebarTree";
 import { getProjects } from "@/app/controllers/projectController";
 
 export default async function Sidebar() {
@@ -12,7 +12,7 @@ export default async function Sidebar() {
       </div>
       <div className="p-2 pr-3">
         <div className="font-[600] pl-2">Workspace</div>
-        <ProjectList initialProjects={projects} />
+        <SidebarTree initialProjects={projects} />
       </div>
     </nav>
   );
