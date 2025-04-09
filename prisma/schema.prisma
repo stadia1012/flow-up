@@ -600,25 +600,25 @@ model W_PROJECTS {
 
 model W_FOLDERS {
   ID         Int       @id @default(autoincrement())
-  PROJECT_ID Int?
+  PARENT_ID Int?
   NAME       String?   @db.VarChar(30)
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime? @db.DateTime(0)
   UPDT_ID    String?   @db.VarChar(15)
   UPDT_DT    DateTime? @db.DateTime(0)
 
-  project   W_PROJECTS? @relation(fields: [PROJECT_ID], references: [ID])
+  project   W_PROJECTS? @relation(fields: [PARENT_ID], references: [ID])
   items     W_ITEMS[]
 }
 
 model W_ITEMS {
   ID        Int       @id @default(autoincrement())
-  FOLDER_ID Int?
+  PARENT_ID Int?
   NAME      String?   @db.VarChar(30)
   REG_ID    String?   @db.VarChar(15)
   REG_DT    DateTime? @db.DateTime(0)
   UPDT_ID   String?   @db.VarChar(15)
   UPDT_DT   DateTime? @db.DateTime(0)
 
-  folder   W_FOLDERS? @relation(fields: [FOLDER_ID], references: [ID])
+  folder   W_FOLDERS? @relation(fields: [PARENT_ID], references: [ID])
 }

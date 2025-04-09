@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
+import { getProjects } from "@/app/controllers/projectController";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
@@ -11,9 +12,12 @@ export default function SidebarTree({ initialProjects }: { initialProjects: List
   const [projects, setProjects] = useState(initialProjects);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
+
   // 드래그 앤 드롭
   useEffect(() => {
-    console.log('sidebarTree dnd');
     const container = containerRef.current;
     if (!container) return;
 

@@ -8,18 +8,17 @@ import { DropIndicator } from "./drop-indicator";
 
 type DragState =
   | { type: "idle" }
-  | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> };
+  | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> }
+  | { type: "dragging-folder-over"; };
 
 export default function DraggableProject({ project }: { project: List }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
 
   useEffect(() => {
-    console.log('draggableProject dnd');
     const element = ref.current;
     if (!element) return;
 
-    // combine를 사용해 draggable과 dropTargetForElements를 한 번에 등록
     return combine(
       // 드래그 가능하도록 등록
       draggable({
@@ -34,7 +33,7 @@ export default function DraggableProject({ project }: { project: List }) {
         canDrop({ source }) {
           // 자신에게 드롭되지 않도록 처리
           if (source.element === element) return false;
-          return source.data && "projectId" in source.data;
+          return source.data && ("projectId" in source.data || "folderId" in source.data);
         },
         getData({ input }) {
           // attachClosestEdge를 이용해 현재 요소의 가장 가까운 엣지 정보를 포함한 데이터를 반환
@@ -43,13 +42,21 @@ export default function DraggableProject({ project }: { project: List }) {
         getIsSticky() {
           return true;
         },
-        onDragEnter({ self }) {
-          const closestEdge = extractClosestEdge(self.data);
-          setDragState({ type: "dragging-over", closestEdge });
+        onDragEnter({ self, source }) {
+          if ("projectId" in source.data) {
+            const closestEdge = extractClosestEdge(self.data);
+            setDragState({ type: "dragging-over", closestEdge });
+          } else if ("folderId" in source.data) {
+            setDragState({ type: "dragging-folder-over" });
+          }
         },
-        onDrag({ self }) {
-          const closestEdge = extractClosestEdge(self.data);
-          setDragState({ type: "dragging-over", closestEdge });
+        onDrag({ self, source }) {
+          if ("projectId" in source.data) {
+            const closestEdge = extractClosestEdge(self.data);
+            setDragState({ type: "dragging-over", closestEdge });
+          } else if ("folderId" in source.data) {
+            setDragState({ type: "dragging-folder-over" });
+          }
         },
         onDragLeave() {
           setDragState({ type: "idle" });
@@ -62,13 +69,14 @@ export default function DraggableProject({ project }: { project: List }) {
   }, [project]);
 
   return (
-    <div ref={ref} data-project-id={project.id}
-    className="cursor-grab relative">
+    <div ref={ref}
+      data-project-id={project.id}
+      className={`cursor-grab relative`}>
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge && (
         <DropIndicator edge={dragState.closestEdge} gap="0px" />
       )}
-      <Project project={project} />
+      <Project projectId={project.id} dragStateType={dragState.type} />
     </div>
   );
 }

@@ -1,0 +1,76 @@
+'use client'
+import { useState, useEffect, useRef } from "react";
+import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import Item from "./item";
+import { DropIndicator } from "./drop-indicator";
+
+type DragState =
+  | { type: "idle" }
+  | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> };
+
+export default function DraggableItem({ item }: { item: List }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [dragState, setDragState] = useState<DragState>({ type: "idle" });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    return combine(
+      // 드래그 가능하도록 등록
+      draggable({
+        element: element,
+        getInitialData() {
+          return { itemId: item.id, parentId: item.parentId, item: item }; // 드래그 시 전달 데이터
+        },
+      }),
+      // 개별 항목에 dropTarget 등록 (시각적 피드백)
+      dropTargetForElements({
+        element,
+        canDrop({ source }) {
+          if (source.element === element) return false; // 자신에게 드롭 방지
+          return source.data && "itemId" in source.data;
+        },
+        getData({ input }) {
+          // 현재 요소의 가까운 엣지 정보를 포함한 데이터를 반환
+          return attachClosestEdge(
+              { itemId: item.id, parentId: item.parentId, item: item },
+              { element, input, allowedEdges: ["top", "bottom"] }
+            )
+        },
+        getIsSticky() {
+          return true;
+        },
+        onDragEnter({ self }) {
+          const closestEdge = extractClosestEdge(self.data);
+          setDragState({ type: "dragging-over", closestEdge });
+        },
+        onDrag({ self }) {
+          const closestEdge = extractClosestEdge(self.data);
+          setDragState({ type: "dragging-over", closestEdge });
+        },
+        onDragLeave() {
+          setDragState({ type: "idle" });
+        },
+        onDrop() {
+          setDragState({ type: "idle" });
+        },
+      })
+    );
+  }, [item]);
+
+  return (
+    <div ref={ref}
+      data-item-id={item.id}
+      data-parent-id={item.parentId}
+      className="cursor-grab relative">
+      {/* 드래그 인디케이터 */}
+      {dragState.type === "dragging-over" && dragState.closestEdge && (
+        <DropIndicator edge={dragState.closestEdge} gap="0px" />
+      )}
+      <Item item={item} />
+    </div>
+  );
+}

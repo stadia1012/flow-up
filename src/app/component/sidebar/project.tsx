@@ -1,7 +1,10 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import SidebarSettingButton from "./sidebarSettingButton";
-import { updateProjectName } from '@/app/controllers/projectController';
+import { updateListName } from '@/app/controllers/projectController';
+import { useSelector, useDispatch } from "react-redux";
+import { moveFolder }  from "@/app/store/projectsSlice";
+import type { RootState, AppDispatch } from "@/app/store/store";
 // drag and drop 관련 import
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
@@ -10,14 +13,27 @@ import { flushSync } from "react-dom";
 import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
 import DraggableFolder from "./draggableFolder";
 
-export default function Project({project}: {project: List}) {
-  const [isFolded, setIsFolded] = useState(project.isFolded); // 폴더 펼치기/접기
+export default function Project({projectId, dragStateType}: {projectId : number, dragStateType: string}) {
+  const dispatch: AppDispatch = useDispatch();
+  const project = useSelector((state: RootState) =>
+    state.projects.projects.find((p) => p.id === projectId)
+  ) as List;
+
+  const [isFolded, setIsFolded] = useState(true); // 폴더 펼치기/접기
   const [isRename, setIsRename] = useState(false); // 이름변경 모드 여부
-  const [projectName, setProjectName] = useState(project.name); // 이름 state
+  const [projectName, setProjectName] = useState(project ? project.name : ""); // 이름 state
   const renameRef = useRef<HTMLInputElement>(null); // 이름변경 input ref
 
-  const [folders, setFolders] = useState(project.lists); // 하위 폴더들
+  const [folders, setFolders] = useState(project ? project.lists : []); // 하위 폴더들
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // project 업데이트 시 
+  useEffect(() => {
+    if (project) {
+      setProjectName(project.name);
+      setFolders(project.lists);
+    }
+  }, [project]);
   
   useEffect(() => {
     if (isRename && renameRef.current) {
@@ -39,7 +55,7 @@ export default function Project({project}: {project: List}) {
     if (renameRef.current) {
       const newName = renameRef.current.value;
       try {
-        await updateProjectName(project.id, newName);
+        await updateListName(project.id, newName, 'project');
         console.log('프로젝트 이름 업데이트 성공:', newName);
         setProjectName(newName);
       } catch (error) {
@@ -52,57 +68,110 @@ export default function Project({project}: {project: List}) {
 
   // 드래그 앤 드롭
   useEffect(() => {
-    console.log('project dnd');
     const container = containerRef.current;
-    if (!container) return;
-    if (!folders) return;
+    if (!container || !folders) return;
 
-    // 컨테이너 수준의 dropTarget 등록
-    return dropTargetForElements({
-      element: container,
-      canDrop({ source }) {
-        return source.data && "folderId" in source.data;
-      },
-      onDrop({ source, location }) {
-        const sourceData = source.data;
-        if (!sourceData || !("folderId" in sourceData)) return;
+    const registerDropTarget = async () => {
+      return dropTargetForElements({
+        element: container,
+        canDrop({ source }) {
+          return source.data && "folderId" in source.data;
+        },
+        onDrop: async ({ source, location }) => {
+          const sourceData = source.data;
+          if (!sourceData || !("folderId" in sourceData)) return;
 
-        // 컨테이너 하위에 등록된 각 항목의 dropTarget 중 하나가 타겟으로 선택
-        const target = location.current.dropTargets[0];
-        if (!target) return;
+          console.log('loaction.current:', location.current)
+  
+          //const target = location.current.dropTargets[0];
+          const target = location.current.dropTargets.find(t => 'projectId' in t.data || 'folderId' in t.data);
 
-        const targetData = target.data;
-        if (!targetData || !("folderId" in targetData)) return;
+          if (!target) return;
+          console.log(`target:`, target);
+          console.log(`source:`, source);
+          const targetData = target.data;
+          if (!targetData || !("folderId" in targetData || "projectId" in targetData)) return;
+          
+          if ("folderId" in targetData) {
+            // folder to folder 드래그
+            const sourceIndex = folders.findIndex((p) => p.id === sourceData.folderId);
+            const targetIndex = folders.findIndex((p) => p.id === targetData.folderId);
+    
+            if (targetIndex < 0) return;
+            const closestEdge = extractClosestEdge(targetData);
+    
+            console.log(`s: ${sourceData.parentId}, t: ${targetData.parentId}`);
+            if (sourceData.parentId !== targetData.parentId) {
+              // 외부 폴더에서의 드롭은 redux로 처리
 
-        const sourceIndex = folders?.findIndex((p) => p.id === sourceData.folderId);
-        const targetIndex = folders?.findIndex((p) => p.id === targetData.folderId);
-        if (sourceIndex < 0 || targetIndex < 0) return;
+              // updateParentId(Number(sourceData.folderId), Number(targetData.parentId));
+              // const newFolders = await getFolders(project.id);
+              // setFolders(newFolders);
+              //setFolders((prev) => { return })
 
-        const closestEdge = extractClosestEdge(targetData);
-        flushSync(() => {
-          setFolders(
-            reorderWithEdge({
-              list: folders,
-              startIndex: sourceIndex,
-              indexOfTarget: targetIndex,
-              closestEdgeOfTarget: closestEdge,
-              axis: "vertical",
-            })
-          );
-        });
+              // const newIndex = closestEdge === "top" ? targetIndex : targetIndex + 1;
+              // const newFolders = [...folders];
+              // const sourceFolder :List = sourceData.folder as List;
+              // sourceFolder.parentId = targetData.parentId as number | undefined;
+              
+              // newFolders.splice(newIndex, 0, sourceFolder);
+              
+              // setFolders(newFolders); // 렌더링
+              const newIndex = closestEdge === "top" ? targetIndex : targetIndex + 1;
 
-        // 드롭 후 해당 요소에 플래시 효과 적용
-        const element = document.querySelector(`[data-folder-id="${sourceData.folderId}"]`);
-        if (element instanceof HTMLElement) {
-          triggerPostMoveFlash(element);
-        }
-      },
-    });
+              dispatch(moveFolder({
+                sourceProjectId: Number(sourceData.parentId),
+                targetProjectId: project.id,
+                folderId: Number(sourceData.folderId),
+                targetIndex: Number(newIndex)
+              }));
+
+              setTimeout(() => {
+                const element = document.querySelector(`[data-folder-id="${sourceData.folderId}"]`);
+                if (element instanceof HTMLElement) {
+                  triggerPostMoveFlash(element);
+                }
+              }, 10)
+              
+            } else {
+              flushSync(() => {
+                setFolders(
+                  reorderWithEdge({
+                    list: folders,
+                    startIndex: sourceIndex,
+                    indexOfTarget: targetIndex,
+                    closestEdgeOfTarget: closestEdge,
+                    axis: "vertical",
+                  })
+                );
+              });
+    
+              const element = document.querySelector(`[data-folder-id="${sourceData.folderId}"]`);
+              if (element instanceof HTMLElement) {
+                triggerPostMoveFlash(element);
+              }
+            }
+          }
+          if ("projectId" in targetData) {
+            // folder to project 드래그
+            dispatch(moveFolder({
+              sourceProjectId: Number(sourceData.parentId),
+              targetProjectId: project.id,
+              folderId: Number(sourceData.folderId),
+              targetIndex: 0
+            }));
+          }
+        },
+      });
+    };
+    registerDropTarget();
   }, [folders, isFolded]); // 펼쳤을때 containerRef가 렌더링 되므로 isFolded 필요
 
   return (
-    <>
-      <div className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-gray-200/65 has-[.popup-menu]:bg-gray-200/65`}>
+    <div ref={containerRef} >
+      <div
+        className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-gray-200/65 has-[.popup-menu]:bg-gray-200/65 transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}
+        data-project-id={projectId}>
         {/* 폴더 아이콘 */}
         <div className="basis-[22px] h-[22px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[7px] rounded-[4px]">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
@@ -111,7 +180,7 @@ export default function Project({project}: {project: List}) {
             <path d="M10 3v18"></path>
           </svg>
         </div>
-        {/* 폴더 이름 */}
+        {/* 프로젝트 이름 */}
         { isRename ? ( /* 이름변경 시 */
             <div className="flex-1 rename peer">
               <input
@@ -141,13 +210,13 @@ export default function Project({project}: {project: List}) {
         </div>
       </div>
       {
-        /* 하위 폴더 List */
-        !isFolded && <div ref={containerRef} className="relative">
+        /* 하위 folder List */
+        !isFolded && <div className="relative">
           {folders?.map((folder) => (
             <DraggableFolder key={folder.id} folder={folder} />
           ))}
-        </div> 
+        </div>
       }
-    </>
+    </div>
   );
 }
