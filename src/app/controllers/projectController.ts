@@ -3,42 +3,59 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 type PrismaModel = {
-  update: (args: { where: { ID: number }; data: { NAME: string } }) => Promise<any>;
+  update: (args: { 
+    where: { ID: number };
+    data: { NAME?: string, PARENT_ID?: number }
+  }) => Promise<any>;
 };
 
-// List 요소 이름 변경
-export async function updateListName(id: number, newName: string, type: string) {
-  let model :PrismaModel
-  switch (type) {
-    case 'folder':
-      model = prisma.w_FOLDERS; // 실제 모델명 확인 필수
-      break;
-    case 'project':
-      model = prisma.w_PROJECTS; // 실제 모델명 확인 필수
-      break;
-    default:
-      throw new Error('잘못된 타입입니다.');
-  }
+const prismaTable = {
+  'folder': prisma.w_FOLDERS,
+  'project': prisma.w_PROJECTS,
+  'item': prisma.w_ITEMS
+};
+
+// 이름 변경
+export async function updateListName({
+  type,
+  id,
+  newName,
+}: {
+  type: keyof typeof prismaTable;
+  id: number;
+  newName: string;
+}) {
   try {
-    const updatedProject = await model.update({
+    const model = prismaTable[type] as unknown as PrismaModel;
+    const result = await model.update({
       where: { ID: id },
       data: { NAME: newName },
     });
-    return updatedProject;
+    return result;
   } catch (error) {
     console.error('프로젝트 이름 업데이트 실패:', error);
     throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
   }
 }
 
-// folder 이동
-export async function updateParentId(folderId: number, parentId: number) {
+// parentId 변경 (이동)
+export async function updateParentId({
+  type,
+  id,
+  parentId
+} : {
+  type: keyof typeof prismaTable;
+  id: number,
+  parentId: number
+}) {
   try {
-    const updatedFolder = await prisma.w_FOLDERS.update({
-      where: { ID: folderId },
+    if (type === "project") return;
+    const model = prismaTable[type] as unknown as PrismaModel;
+    const result = await model.update({
+      where: { ID: id },
       data: { PARENT_ID: parentId },
     });
-    return updatedFolder;
+    return result;
   } catch (error) {
     console.error('프로젝트 이름 업데이트 실패:', error);
     throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
@@ -58,43 +75,22 @@ export async function getProjects(): Promise<List[]> {
   });
 
   return projects.map((project) => ({
+    type: 'project',
     id: project.ID,
     name: project.NAME ?? '',
     isFolded: true,
     lists: project.folders.map((folder) => ({
+      type: 'folder',
       id: folder.ID,
       parentId: folder.PARENT_ID ?? undefined,
       name: folder.NAME ?? '',
       isFolded: true,
       lists: folder.items.map((item) => ({
+        type: 'item',
         id: item.ID,
         parentId: item.PARENT_ID ?? undefined,
         name: item.NAME ?? '',
       })),
-    })),
-  }));
-}
-
-// folder 가져오기
-export async function getFolders(projectId: number): Promise<List[]> {
-  const folders = await prisma.w_FOLDERS.findMany({
-    include: {
-      items: true,
-    },
-    where: {
-      PARENT_ID: projectId,
-    }
-  });
-
-  return folders.map((folder) => ({
-    id: folder.ID,
-    name: folder.NAME ?? '',
-    isFolded: true,
-    lists: folder.items.map((folder) => ({
-      id: folder.ID,
-      parentId: folder.PARENT_ID ?? undefined,
-      name: folder.NAME ?? '',
-      isFolded: false,
     })),
   }));
 }

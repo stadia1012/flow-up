@@ -34,7 +34,6 @@ export default function DraggableItem({ item }: { item: List }) {
           return source.data && "itemId" in source.data;
         },
         getData({ input }) {
-          // 현재 요소의 가까운 엣지 정보를 포함한 데이터를 반환
           return attachClosestEdge(
               { itemId: item.id, parentId: item.parentId, item: item },
               { element, input, allowedEdges: ["top", "bottom"] }
@@ -63,9 +62,8 @@ export default function DraggableItem({ item }: { item: List }) {
 
   return (
     <div ref={ref}
-      data-item-id={item.id}
-      data-parent-id={item.parentId}
-      className="cursor-grab relative">
+      className="cursor-grab relative"
+      data-item-wrapper={item.id}>
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge && (
         <DropIndicator edge={dragState.closestEdge} gap="0px" />

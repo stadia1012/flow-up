@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction, createAsyncThunk  } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { getProjects } from '@/app/controllers/projectController';
 
 export const fetchProjects = createAsyncThunk(
@@ -39,50 +39,95 @@ const projectsSlice = createSlice({
         project.lists = project.lists?.filter((f) => f.id !== folderId);
       }
     },
-    // 프로젝트 간 폴더 이동 액션 (하나의 액션에서 두 작업을 수행)
+    // 폴더 isFolded 상태 업데이트
+    setIsFoldedState: (
+      state,
+      action: PayloadAction<{ type: string, folderId: number, isFolded : boolean }>
+    ) => {
+      const { type, folderId, isFolded } = action.payload;
+
+      const list : List =  state.projects
+        .flatMap((p) => p.lists || [])
+        .find((f) => f.type == type && f.id === folderId) as List;
+
+      list.isFolded = isFolded;
+    },
+    // List 이름 업데이트
+    setNameState: (
+      state,
+      action: PayloadAction<{ type: string, id: number, newName : string }>
+    ) => {
+      const { type, id, newName } = action.payload;
+
+      const list : List =  state.projects
+        .flatMap((p) => p.lists || [])
+        .find((f) => f.type == type && f.id === id) as List;
+
+      list.name = newName;
+    },
+    // 프로젝트 간 폴더 이동
     moveFolder: (
       state,
       action: PayloadAction<{
-        sourceProjectId: number;
-        targetProjectId: number;
-        folderId: number;
+        sourceParentId: number;
+        targetParentId: number;
+        sourceId: number;
         targetIndex: number;
       }>
     ) => {
-      const { sourceProjectId, targetProjectId, folderId, targetIndex } =
+      const { sourceParentId, targetParentId, sourceId, targetIndex } =
         action.payload;
-      const sourceProject : List = state.projects.find((p) => p.id === sourceProjectId) as List;
-      const targetProject : List  = state.projects.find((p) => p.id === targetProjectId) as List;
+      const sourceProject : List = state.projects.find((p) => p.id === sourceParentId) as List;
+      const targetProject : List = state.projects.find((p) => p.id === targetParentId) as List;
       if (sourceProject && targetProject) {
         // source 프로젝트에서 폴더 찾기
-        const folder = sourceProject.lists?.find((f) => f.id === folderId);
+        const folder = sourceProject.lists?.find((f) => f.id === sourceId);
         if (folder) {
           // source 프로젝트에서 제거
-          sourceProject.lists = sourceProject.lists?.filter((f) => f.id !== folderId);
-          // 필요하다면 parentId 업데이트
-          folder.parentId = targetProjectId;
-          // target 프로젝트에 추가 (targetIndex가 지정되면 해당 위치에, 없으면 마지막에)
+          sourceProject.lists = sourceProject.lists?.filter((f) => f.id !== sourceId);
+          // parentId 업데이트
+          folder.parentId = targetParentId;
+          // target 프로젝트에 추가
           if (typeof targetIndex === 'number') {
             targetProject.lists?.splice(targetIndex, 0, folder);
           }
         }
       }
     },
-    // 같은 프로젝트 내 폴더 재정렬 (예: 동일 프로젝트 내 이동)
-    // reorderFolderWithinProject: (
-    //   state,
-    //   action: PayloadAction<{ projectId: number; folderId: string; targetIndex: number }>
-    // ) => {
-    //   const { projectId, folderId, targetIndex } = action.payload;
-    //   const project = state.projects.find((p) => p.id === projectId);
-    //   if (project) {
-    //     const folderIndex = project.lists.findIndex((f) => f.id === folderId);
-    //     if (folderIndex >= 0) {
-    //       const [folder] = project.lists.splice(folderIndex, 1);
-    //       project.lists.splice(targetIndex, 0, folder);
-    //     }
-    //   }
-    // },
+    // 폴더 간 아이템 이동
+    moveItem: (
+      state,
+      action: PayloadAction<{
+        sourceParentId: number;
+        targetParentId: number;
+        sourceId: number;
+        targetIndex: number;
+      }>
+    ) => {
+      const { sourceParentId, targetParentId, sourceId, targetIndex } =
+        action.payload;
+      const sourceFolder : List = state.projects
+        .flatMap((p) => p.lists || []) // 모든 lists를 하나의 배열로 평탄화
+        .find((f) => f.id === sourceParentId) as List;
+      
+      const targetFolder : List = state.projects
+        .flatMap((p) => p.lists || [])
+        .find((f) => f.id === targetParentId) as List;
+      if (sourceFolder && targetFolder) {
+        // source 폴더에서 아이템 찾기
+        const item = sourceFolder.lists?.find((f) => f.id === sourceId);
+        if (item) {
+          // source 폴더에서 제거
+          sourceFolder.lists = sourceFolder.lists?.filter((f) => f.id !== sourceId);
+          // parentId 업데이트
+          item.parentId = targetParentId;
+          // target 폴더에서 추가
+          if (typeof targetIndex === 'number') {
+            targetFolder.lists?.splice(targetIndex, 0, item);
+          }
+        }
+      }
+    },
   },
    extraReducers: (builder) => {
     builder
@@ -103,7 +148,10 @@ const projectsSlice = createSlice({
 export const {
   addFolder,
   removeFolder,
+  setNameState,
+  setIsFoldedState,
   moveFolder,
+  moveItem,
   // reorderFolderWithinProject,
 } = projectsSlice.actions;
 

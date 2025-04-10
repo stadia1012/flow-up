@@ -1,23 +1,17 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import SidebarSettingButton from "./sidebarSettingButton";
-import { updateListName, updateParentId } from '@/app/controllers/projectController';
+import { updateListName } from '@/app/controllers/projectController';
 import { useDispatch } from "react-redux";
-import { moveItem, setIsFoldedState, setNameState }  from "@/app/store/projectsSlice";
-import type { RootState, AppDispatch } from "@/app/store/store";
-// drag and drop 관련 import
-import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
-import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { flushSync } from "react-dom";
-import { flash } from "@/app/animation";
+import { setIsFoldedState, setNameState }  from "@/app/store/projectsSlice";
+import type { AppDispatch } from "@/app/store/store";
 import DraggableItem from "./draggableItem";
 
 export default function Folder({folder, dragStateType}: {folder: List, dragStateType: string}) {
   const dispatch: AppDispatch = useDispatch();
   const [isFolded, setIsFolded] = useState(folder.isFolded);
   const [isRename, setIsRename] = useState(false); // 이름변경 모드 여부
-  const [folderName, setFolderName] = useState(folder.name); // 이름 state
+  const [folderName, setFolderName] = useState(folder ? folder.name : ""); // 이름 state
   let state = isFolded ? "folded" : "unfolded";
   const renameRef = useRef<HTMLInputElement>(null); // 이름변경 input ref
   const [items, setItems] = useState(folder ? folder.lists : []); // 하위 폴더들
@@ -76,11 +70,11 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
         // 화면 변경
         setFolderName(newName);
         // redux 변경
-        dispatch(setNameState({
+        setNameState({
           id: folder.id,
           newName: newName,
           type: 'folder'
-        }));
+        })
       } catch (error) {
         console.error('프로젝트 이름 업데이트 실패:', error);
       } finally {
@@ -88,96 +82,6 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
       }
     }
   };
-
-  // 드래그 앤 드롭
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !items) return;
-
-    const registerDropTarget = async () => {
-      return dropTargetForElements({
-        element: container,
-        canDrop({ source }) {
-          return source.data && "itemId" in source.data;
-        },
-        onDrop: async ({ source, location }) => {
-          const sourceData = source.data;
-          if (!sourceData || !("itemId" in sourceData)) return;
-  
-          //const target = location.current.dropTargets[0];
-          const target = location.current.dropTargets.find(t => 'folderId' in t.data || 'itemId' in t.data);
-
-          if (!target) return;
-          const targetData = target.data;
-          // 같은 폴더로의 이동 처리 X (target: project, source: folder인 경우) 
-          if ("folderId" in sourceData && "itemId" in sourceData && targetData.id === sourceData.parentId) return;
-
-          console.log(`target:`, target);
-          console.log(`source:`, source);
-          
-          if (!targetData || !("folderId" in targetData || "itemId" in targetData)) return;
-          
-          if ("itemId" in targetData) {
-            // folder to folder 드래그
-            const sourceIndex = items.findIndex((p) => p.id === sourceData.itemId);
-            const targetIndex = items.findIndex((p) => p.id === targetData.itemId);
-    
-            if (targetIndex < 0) return;
-            const closestEdge = extractClosestEdge(targetData);
-    
-            console.log(`s: ${sourceData.parentId}, t: ${targetData.parentId}`);
-            if (sourceData.parentId !== targetData.parentId) {
-              // 외부 폴더에서의 드롭은 redux로 처리
-
-              // db 변경
-              updateParentId({
-                type: "item",
-                id: Number(sourceData.itemId),
-                parentId: Number(targetData.parentId)
-              });
-              
-              // redux state 변경
-              const newIndex = closestEdge === "top" ? targetIndex : targetIndex + 1;
-              dispatch(moveItem({
-                sourceParentId: Number(sourceData.parentId),
-                targetParentId: folder.id,
-                sourceId: Number(sourceData.itemId),
-                targetIndex: Number(newIndex)
-              }));
-            } else {
-              flushSync(() => {
-                setItems(
-                  reorderWithEdge({
-                    list: items,
-                    startIndex: sourceIndex,
-                    indexOfTarget: targetIndex,
-                    closestEdgeOfTarget: closestEdge,
-                    axis: "vertical",
-                  })
-                );
-              });
-            }
-          }
-          if ("folderId" in targetData) {
-            // folder to project 드래그
-            dispatch(moveItem({
-              sourceParentId: Number(sourceData.parentId),
-              targetParentId: folder.id,
-              sourceId: Number(sourceData.itemId),
-              targetIndex: 0 // bottom에 드롭
-            }));
-          }
-          const element :Element | null = document.querySelector(`[data-item-wrapper="${sourceData.itemId}"]`);
-          if (element instanceof Element) {
-            setTimeout(() => {
-              flash(element);
-            }, 10)
-          }
-        },
-      });
-    };
-    registerDropTarget();
-  }, [items]);
 
   return (
     <div ref={containerRef}>

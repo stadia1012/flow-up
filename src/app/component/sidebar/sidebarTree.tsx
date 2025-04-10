@@ -1,11 +1,10 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
-import { getProjects } from "@/app/controllers/projectController";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flushSync } from "react-dom";
-import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
+import { flash } from "@/app/animation";
 import DraggableProject from "./draggableProject";
 
 export default function SidebarTree({ initialProjects }: { initialProjects: List[] }) {
@@ -56,9 +55,11 @@ export default function SidebarTree({ initialProjects }: { initialProjects: List
         });
 
         // 드롭 후 해당 요소에 플래시 효과 적용
-        const element = document.querySelector(`[data-project-id="${sourceData.projectId}"]`);
-        if (element instanceof HTMLElement) {
-          triggerPostMoveFlash(element);
+        const element = document.querySelector(`[data-project-wrapper="${sourceData.projectId}"]`);
+        if (element instanceof Element) {
+          setTimeout(() => {
+            flash(element);
+          }, 10)
         }
       },
     });

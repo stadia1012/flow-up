@@ -10,20 +10,18 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flushSync } from "react-dom";
-import { triggerPostMoveFlash } from "@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash";
+import { flash } from "@/app/animation";
 import DraggableFolder from "./draggableFolder";
 
-export default function Project({projectId, dragStateType}: {projectId : number, dragStateType: string}) {
+export default function Project({project, dragStateType}: {project : List, dragStateType: string}) {
   const dispatch: AppDispatch = useDispatch();
-  const project = useSelector((state: RootState) =>
-    state.projects.projects.find((p) => p.id === projectId)
-  ) as List;
-
+  //const project = useSelector((state: RootState) =>
+  //   state.projects.projects.find((p) => p.id === projectId)
+  // ) as List;
   const [isFolded, setIsFolded] = useState(true); // 폴더 펼치기/접기
   const [isRename, setIsRename] = useState(false); // 이름변경 모드 여부
   const [projectName, setProjectName] = useState(project ? project.name : ""); // 이름 state
   const renameRef = useRef<HTMLInputElement>(null); // 이름변경 input ref
-
   const [folders, setFolders] = useState(project ? project.lists : []); // 하위 폴더들
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -49,14 +47,22 @@ export default function Project({projectId, dragStateType}: {projectId : number,
     if (e.key === "Enter") {
       handleBlur();
     }
+    if (e.key === "Escape") {
+      if (!renameRef.current) return;
+      handleRename();
+      renameRef.current.value = projectName;
+    }
   }
 
   const handleBlur = async () => {
     if (renameRef.current) {
       const newName = renameRef.current.value;
       try {
-        await updateListName(project.id, newName, 'project');
-        console.log('프로젝트 이름 업데이트 성공:', newName);
+        await updateListName({
+          id: project.id,
+          newName: newName,
+          type: 'project'
+        });
         setProjectName(newName);
       } catch (error) {
         console.error('프로젝트 이름 업데이트 실패:', error);
@@ -80,17 +86,19 @@ export default function Project({projectId, dragStateType}: {projectId : number,
         onDrop: async ({ source, location }) => {
           const sourceData = source.data;
           if (!sourceData || !("folderId" in sourceData)) return;
-
-          console.log('loaction.current:', location.current)
   
           //const target = location.current.dropTargets[0];
           const target = location.current.dropTargets.find(t => 'projectId' in t.data || 'folderId' in t.data);
 
           if (!target) return;
+          const targetData = target.data;
+          // 같은 폴더로의 이동 처리 X (target: project, source: folder인 경우) 
+          if ("projectId" in sourceData && "folderId" in sourceData && targetData.id === sourceData.parentId) return;
+
           console.log(`target:`, target);
           console.log(`source:`, source);
-          const targetData = target.data;
-          if (!targetData || !("folderId" in targetData || "projectId" in targetData)) return;
+          
+          if (!targetData || !("projectId" in targetData || "folderId" in targetData)) return;
           
           if ("folderId" in targetData) {
             // folder to folder 드래그
@@ -103,36 +111,14 @@ export default function Project({projectId, dragStateType}: {projectId : number,
             console.log(`s: ${sourceData.parentId}, t: ${targetData.parentId}`);
             if (sourceData.parentId !== targetData.parentId) {
               // 외부 폴더에서의 드롭은 redux로 처리
-
-              // updateParentId(Number(sourceData.folderId), Number(targetData.parentId));
-              // const newFolders = await getFolders(project.id);
-              // setFolders(newFolders);
-              //setFolders((prev) => { return })
-
-              // const newIndex = closestEdge === "top" ? targetIndex : targetIndex + 1;
-              // const newFolders = [...folders];
-              // const sourceFolder :List = sourceData.folder as List;
-              // sourceFolder.parentId = targetData.parentId as number | undefined;
-              
-              // newFolders.splice(newIndex, 0, sourceFolder);
-              
-              // setFolders(newFolders); // 렌더링
               const newIndex = closestEdge === "top" ? targetIndex : targetIndex + 1;
 
               dispatch(moveFolder({
-                sourceProjectId: Number(sourceData.parentId),
-                targetProjectId: project.id,
-                folderId: Number(sourceData.folderId),
+                sourceParentId: Number(sourceData.parentId),
+                targetParentId: project.id,
+                sourceId: Number(sourceData.folderId),
                 targetIndex: Number(newIndex)
               }));
-
-              setTimeout(() => {
-                const element = document.querySelector(`[data-folder-id="${sourceData.folderId}"]`);
-                if (element instanceof HTMLElement) {
-                  triggerPostMoveFlash(element);
-                }
-              }, 10)
-              
             } else {
               flushSync(() => {
                 setFolders(
@@ -145,33 +131,33 @@ export default function Project({projectId, dragStateType}: {projectId : number,
                   })
                 );
               });
-    
-              const element = document.querySelector(`[data-folder-id="${sourceData.folderId}"]`);
-              if (element instanceof HTMLElement) {
-                triggerPostMoveFlash(element);
-              }
             }
           }
           if ("projectId" in targetData) {
             // folder to project 드래그
             dispatch(moveFolder({
-              sourceProjectId: Number(sourceData.parentId),
-              targetProjectId: project.id,
-              folderId: Number(sourceData.folderId),
-              targetIndex: 0
+              sourceParentId: Number(sourceData.parentId),
+              targetParentId: project.id,
+              sourceId: Number(sourceData.folderId),
+              targetIndex: 0 // top에 드롭
             }));
+          }
+          const element :Element | null = document.querySelector(`[data-folder-wrapper="${sourceData.folderId}"]`);
+          if (element instanceof Element) {
+            setTimeout(() => {
+              flash(element);
+            }, 10)
           }
         },
       });
     };
     registerDropTarget();
-  }, [folders, isFolded]); // 펼쳤을때 containerRef가 렌더링 되므로 isFolded 필요
+  }, [folders]);
 
   return (
     <div ref={containerRef} >
       <div
-        className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-gray-200/65 has-[.popup-menu]:bg-gray-200/65 transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}
-        data-project-id={projectId}>
+        className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
         <div className="basis-[22px] h-[22px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[7px] rounded-[4px]">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
@@ -189,13 +175,15 @@ export default function Project({projectId, dragStateType}: {projectId : number,
                 defaultValue={projectName}
                 onBlur={handleBlur}
                 ref={renameRef}
-                onKeyDown={handleKeyDown} />
+                onKeyDown={handleKeyDown}
+                autoComplete="off"
+                spellCheck="false"
+                />
             </div>
           ) : (
             <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
           )
         }
-
         {/* button wrapper */}
         <div className="relative p-[3px] basis-[50px] items-center hidden group-hover:flex has-[.popup-menu]:flex peer-[.rename]:flex peer-[.rename]:opacity-0 peer-[.rename]:pointer-events-none">
           {/* button - add */}
