@@ -20,14 +20,14 @@ export default function DraggableFolder({ folder }: { folder: List }) {
     if (!element) return;
 
     return combine(
-      // 드래그 가능하도록 등록
       draggable({
+        // 드래그 시 sourceData
         element: element,
         getInitialData() {
-          return { folderId: folder.id, parentId: folder.parentId, folder: folder }; // 드래그 시 전달 데이터
+          return { folderId: folder.id, parentId: folder.parentId, order: folder.order }; // 드래그 시 전달 데이터
         },
       }),
-      // 개별 항목에 dropTarget 등록 (시각적 피드백)
+      // 개별 항목에 dropTarget 등록
       dropTargetForElements({
         element,
         canDrop({ source }) {
@@ -35,8 +35,9 @@ export default function DraggableFolder({ folder }: { folder: List }) {
           return source.data && ("folderId" in source.data || "itemId" in source.data);
         },
         getData({ input }) {
+          // drop 시 targetData
           return attachClosestEdge(
-              { folderId: folder.id, parentId: folder.parentId, folder: folder },
+              { folderId: folder.id, parentId: folder.parentId, order: folder.order },
               { element, input, allowedEdges: ["top", "bottom"] }
             )
         },

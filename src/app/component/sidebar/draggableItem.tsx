@@ -19,23 +19,25 @@ export default function DraggableItem({ item }: { item: List }) {
     if (!element) return;
 
     return combine(
-      // 드래그 가능하도록 등록
+      // 드래그 시 sourceData
       draggable({
         element: element,
         getInitialData() {
-          return { itemId: item.id, parentId: item.parentId, item: item }; // 드래그 시 전달 데이터
+          return { itemId: item.id, parentId: item.parentId, order: item.order }; // 드래그 시 전달 데이터
         },
       }),
-      // 개별 항목에 dropTarget 등록 (시각적 피드백)
+      // 개별 항목에 dropTarget 등록
       dropTargetForElements({
         element,
         canDrop({ source }) {
-          if (source.element === element) return false; // 자신에게 드롭 방지
+          // 자신에게 드롭 방지
+          if (source.element === element) return false; 
           return source.data && "itemId" in source.data;
         },
+        // drop 시 targetData
         getData({ input }) {
           return attachClosestEdge(
-              { itemId: item.id, parentId: item.parentId, item: item },
+              { itemId: item.id, parentId: item.parentId, order: item.order },
               { element, input, allowedEdges: ["top", "bottom"] }
             )
         },

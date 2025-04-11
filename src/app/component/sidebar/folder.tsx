@@ -73,9 +73,7 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
           newName: newName,
           type: 'folder'
         });
-        // 화면 변경
-        setFolderName(newName);
-        // redux 변경
+        // redux 변경 (화면 자동반영)
         dispatch(setNameState({
           id: folder.id,
           newName: newName,
@@ -109,65 +107,41 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
 
           if (!target) return;
           const targetData = target.data;
-          // 같은 폴더로의 이동 처리 X (target: project, source: folder인 경우) 
-          if ("folderId" in sourceData && "itemId" in sourceData && targetData.id === sourceData.parentId) return;
 
           console.log(`target:`, target);
           console.log(`source:`, source);
-          
-          if (!targetData || !("folderId" in targetData || "itemId" in targetData)) return;
-          
-          if ("itemId" in targetData) {
-            // folder to folder 드래그
-            const sourceIndex = items.findIndex((p) => p.id === sourceData.itemId);
-            const targetIndex = items.findIndex((p) => p.id === targetData.itemId);
-    
-            if (targetIndex < 0) return;
-            const closestEdge = extractClosestEdge(targetData);
-    
-            console.log(`s: ${sourceData.parentId}, t: ${targetData.parentId}`);
-            if (sourceData.parentId !== targetData.parentId) {
-              // 외부 폴더에서의 드롭은 redux로 처리
+          console.log(`s: ${sourceData.parentId}, t: ${targetData.parentId}`);
 
-              // db 변경
-              updateParentId({
-                type: "item",
-                id: Number(sourceData.itemId),
-                parentId: Number(targetData.parentId)
-              });
-              
-              // redux state 변경
-              const newIndex = closestEdge === "top" ? targetIndex : targetIndex + 1;
-              dispatch(moveItem({
-                sourceParentId: Number(sourceData.parentId),
-                targetParentId: folder.id,
-                sourceId: Number(sourceData.itemId),
-                targetIndex: Number(newIndex)
-              }));
-            } else {
-              flushSync(() => {
-                setItems(
-                  reorderWithEdge({
-                    list: items,
-                    startIndex: sourceIndex,
-                    indexOfTarget: targetIndex,
-                    closestEdgeOfTarget: closestEdge,
-                    axis: "vertical",
-                  })
-                );
-              });
-            }
-          }
+          // 같은 폴더로의 이동 처리 X (target: project, source: folder인 경우) 
+          if ("folderId" in targetData && "itemId" in sourceData && targetData.id === sourceData.parentId) return;
+
+          // 유효하지 않은 target
+          if (!targetData || !("folderId" in targetData || "itemId" in targetData)) return;
+
+          let updateOrder = 0;
+
+          // case 1 : item to item 드래그
+          if ("itemId" in targetData) {
+            const targetOrder = Number(targetData.order);
+            const closestEdge = extractClosestEdge(targetData);
+            updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
+          } 
+          // case 2 : item to folder 드래그
           if ("folderId" in targetData) {
-            // folder to project 드래그
+            const maxOrder = Math.max(...items.map(item => item.order), 0) ;
+            updateOrder = maxOrder + 1;
+          }
+
+          // redux 반영 (화면 변경)
             dispatch(moveItem({
               sourceParentId: Number(sourceData.parentId),
               targetParentId: folder.id,
               sourceId: Number(sourceData.itemId),
-              targetIndex: 0 // bottom에 드롭
+              updateOrder: Number(updateOrder)
             }));
-          }
-          const element :Element | null = document.querySelector(`[data-item-wrapper="${sourceData.itemId}"]`);
+
+          // 이동 후 flash
+          const element :Element | null = document.querySelector(`[data-folder-wrapper="${sourceData.itemId}"]`);
           if (element instanceof Element) {
             setTimeout(() => {
               flash(element);
@@ -228,9 +202,11 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
     {
       /* 하위 Item List */
       !isFolded && <div className="relative">
-        {items?.map((item) => (
-          <DraggableItem key={item.id} item={item} />
-        ))}
+        {
+          [...(items ?? [])].sort((a, b) => (a.order) - (b.order)).map((item) => (
+            <DraggableItem key={item.id} item={item} />
+          ))
+        }
       </div>
     }
     </div>

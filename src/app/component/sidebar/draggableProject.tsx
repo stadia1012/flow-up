@@ -20,24 +20,24 @@ export default function DraggableProject({ project }: { project: List }) {
     if (!element) return;
 
     return combine(
-      // 드래그 가능하도록 등록
+      // 드래그 시 sourceData
       draggable({
         element: element,
         getInitialData() {
-          return { projectId: project.id };
+          return { projectId: project.id, order: project.order };
         },
       }),
-      // 개별 항목에 dropTarget 등록 (시각적 피드백)
+      // 개별 항목에 dropTarget 등록
       dropTargetForElements({
         element,
         canDrop({ source }) {
-          // 자신에게 드롭되지 않도록 처리
+          // 자신에게 드롭 방지
           if (source.element === element) return false;
           return source.data && ("projectId" in source.data || "folderId" in source.data);
         },
         getData({ input }) {
-          // attachClosestEdge를 이용해 현재 요소의 가장 가까운 엣지 정보를 포함한 데이터를 반환
-          return attachClosestEdge({ projectId: project.id }, { element, input, allowedEdges: ["top", "bottom"] });
+          // drop 시 targetData
+          return attachClosestEdge({ projectId: project.id, order: project.order }, { element, input, allowedEdges: ["top", "bottom"] });
         },
         getIsSticky() {
           return true;

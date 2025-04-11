@@ -39,6 +39,14 @@ const projectsSlice = createSlice({
         project.lists = project.lists?.filter((f) => f.id !== folderId);
       }
     },
+    // projects 반영
+    setProjectsState: (
+      state,
+      action: PayloadAction<{ initialProjects : List[] }>
+    ) => {
+      const { initialProjects } = action.payload;
+      state.projects = initialProjects;
+    },
     // 폴더 isFolded 상태 업데이트
     setIsFoldedState: (
       state,
@@ -65,66 +73,81 @@ const projectsSlice = createSlice({
 
       list.name = newName;
     },
-    // 프로젝트 간 폴더 이동
+    // project 간 folder 이동
     moveFolder: (
       state,
       action: PayloadAction<{
         sourceParentId: number;
         targetParentId: number;
         sourceId: number;
-        targetIndex: number;
+        updateOrder: number;
       }>
     ) => {
-      const { sourceParentId, targetParentId, sourceId, targetIndex } =
+      const { sourceParentId, targetParentId, sourceId, updateOrder } =
         action.payload;
-      const sourceProject : List = state.projects.find((p) => p.id === sourceParentId) as List;
-      const targetProject : List = state.projects.find((p) => p.id === targetParentId) as List;
+      const sourceProject = state.projects.find((p) => p.id === sourceParentId);
+      const targetProject = state.projects.find((p) => p.id === targetParentId);
       if (sourceProject && targetProject) {
         // source 프로젝트에서 폴더 찾기
         const folder = sourceProject.lists?.find((f) => f.id === sourceId);
         if (folder) {
           // source 프로젝트에서 제거
-          sourceProject.lists = sourceProject.lists?.filter((f) => f.id !== sourceId);
+          sourceProject.lists = sourceProject.lists
+            ?.filter((f) => f.id !== sourceId)
+            .map((p) => {
+              if (p.order > folder.order) p.order -= 1
+              return p;
+          });
           // parentId 업데이트
           folder.parentId = targetParentId;
           // target 프로젝트에 추가
-          if (typeof targetIndex === 'number') {
-            targetProject.lists?.splice(targetIndex, 0, folder);
-          }
+          folder.order = updateOrder;
+          targetProject.lists = [...(targetProject.lists || []), folder]
+            .map((p) => {
+              if (p.order >= updateOrder && p.id != sourceId) p.order += 1
+              return p;
+          });
         }
       }
     },
-    // 폴더 간 아이템 이동
+    // folder 간 item 이동
     moveItem: (
       state,
       action: PayloadAction<{
         sourceParentId: number;
         targetParentId: number;
         sourceId: number;
-        targetIndex: number;
+        updateOrder: number;
       }>
     ) => {
-      const { sourceParentId, targetParentId, sourceId, targetIndex } =
+      const { sourceParentId, targetParentId, sourceId, updateOrder } =
         action.payload;
-      const sourceFolder : List = state.projects
-        .flatMap((p) => p.lists || []) // 모든 lists를 하나의 배열로 평탄화
-        .find((f) => f.id === sourceParentId) as List;
-      
-      const targetFolder : List = state.projects
+      const sourceFolder = state.projects
         .flatMap((p) => p.lists || [])
-        .find((f) => f.id === targetParentId) as List;
+        .find((f) => f.id === sourceParentId && f.type == "folder");
+      const targetFolder = state.projects
+        .flatMap((p) => p.lists || [])
+        .find((f) => f.id === targetParentId && f.type == "folder");
       if (sourceFolder && targetFolder) {
         // source 폴더에서 아이템 찾기
         const item = sourceFolder.lists?.find((f) => f.id === sourceId);
         if (item) {
-          // source 폴더에서 제거
-          sourceFolder.lists = sourceFolder.lists?.filter((f) => f.id !== sourceId);
+          // source 프로젝트에서 제거
+          sourceFolder.lists = sourceFolder.lists
+            ?.filter((f) => f.id !== sourceId)
+            .map((p) => {
+              if (p.order > item.order) p.order -= 1
+              return p;
+          });
           // parentId 업데이트
           item.parentId = targetParentId;
-          // target 폴더에서 추가
-          if (typeof targetIndex === 'number') {
-            targetFolder.lists?.splice(targetIndex, 0, item);
-          }
+          // target 프로젝트에 추가
+          item.order = updateOrder;
+          targetFolder.lists = [...(targetFolder.lists || []), item]
+            .map((p) => {
+              if (p.order >= updateOrder && p.id != sourceId) p.order += 1
+              return p;
+          });
         }
       }
     },
@@ -146,6 +169,7 @@ const projectsSlice = createSlice({
 });
 
 export const {
+  setProjectsState,
   addFolder,
   removeFolder,
   setNameState,

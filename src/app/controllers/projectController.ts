@@ -15,6 +15,42 @@ const prismaTable = {
   'item': prisma.w_ITEMS
 };
 
+// projects 가져오기 
+export async function getProjects(): Promise<List[]> {
+  const projects = await prisma.w_PROJECTS.findMany({
+    include: {
+      folders: {
+        include: {
+          items: true,
+        },
+      },
+    },
+  });
+
+  return projects.map((project) => ({
+    type: 'project',
+    id: project.ID,
+    name: project.NAME ?? '',
+    order: project.ORDER ?? 0,
+    isFolded: true,
+    lists: project.folders.map((folder) => ({
+      type: 'folder',
+      id: folder.ID,
+      parentId: folder.PARENT_ID ?? undefined,
+      name: folder.NAME ?? '',
+      order: folder.ORDER ?? 0,
+      isFolded: true,
+      lists: folder.items.map((item) => ({
+        type: 'item',
+        id: item.ID,
+        parentId: item.PARENT_ID ?? undefined,
+        name: item.NAME ?? '',
+        order: item.ORDER ?? 0,
+      })),
+    })),
+  }));
+}
+
 // 이름 변경
 export async function updateListName({
   type,
@@ -60,37 +96,4 @@ export async function updateParentId({
     console.error('프로젝트 이름 업데이트 실패:', error);
     throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
   }
-}
-
-// project 가져오기
-export async function getProjects(): Promise<List[]> {
-  const projects = await prisma.w_PROJECTS.findMany({
-    include: {
-      folders: {
-        include: {
-          items: true,
-        },
-      },
-    },
-  });
-
-  return projects.map((project) => ({
-    type: 'project',
-    id: project.ID,
-    name: project.NAME ?? '',
-    isFolded: true,
-    lists: project.folders.map((folder) => ({
-      type: 'folder',
-      id: folder.ID,
-      parentId: folder.PARENT_ID ?? undefined,
-      name: folder.NAME ?? '',
-      isFolded: true,
-      lists: folder.items.map((item) => ({
-        type: 'item',
-        id: item.ID,
-        parentId: item.PARENT_ID ?? undefined,
-        name: item.NAME ?? '',
-      })),
-    })),
-  }));
 }
