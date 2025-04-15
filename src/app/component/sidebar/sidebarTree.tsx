@@ -1,13 +1,15 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
+import { moveList } from '@/app/controllers/projectController';
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { flushSync } from "react-dom";
+import { useDispatch } from "react-redux";
+import { moveProject }  from "@/app/store/projectsSlice";
 import { flash } from "@/app/animation";
 import DraggableProject from "./draggableProject";
 
 export default function SidebarTree({ initialProjects }: { initialProjects: List[] }) {
+  const dispatch = useDispatch();
   const [projects, setProjects] = useState(initialProjects);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -20,7 +22,6 @@ export default function SidebarTree({ initialProjects }: { initialProjects: List
     const container = containerRef.current;
     if (!container) return;
 
-    // 컨테이너 수준의 dropTarget 등록
     return dropTargetForElements({
       element: container,
       canDrop({ source }) {
@@ -31,30 +32,43 @@ export default function SidebarTree({ initialProjects }: { initialProjects: List
         if (!sourceData || !("projectId" in sourceData)) return;
 
         const target = location.current.dropTargets[0];
-        if (!target) return;
 
+        if (!target) return;
         const targetData = target.data;
+
+        console.log(`target:`, target);
+        console.log(`source:`, source);
+        console.log(`s_parent: ${sourceData.parentId}, t_parent: ${targetData.parentId}`);
+
+        // 유효하지 않은 target
         if (!targetData || !("projectId" in targetData)) return;
 
-        const sourceIndex = projects.findIndex((p) => p.id === sourceData.projectId);
-        const targetIndex = projects.findIndex((p) => p.id === targetData.projectId);
-        if (sourceIndex < 0 || targetIndex < 0) return;
-
+        const targetOrder = Number(targetData.order);
         const closestEdge = extractClosestEdge(targetData);
-        flushSync(() => {
-          setProjects(
-            reorderWithEdge({
-              list: projects,
-              startIndex: sourceIndex,
-              indexOfTarget: targetIndex,
-              closestEdgeOfTarget: closestEdge,
-              axis: "vertical",
-            })
-          );
+        let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
+
+        // 동일 폴더에서의 이동 && 후순위로의 이동은 updateOrder -1
+        if (updateOrder > Number(sourceData.order)) updateOrder -= 1;
+
+        // redux state 변경 (화면 변경)
+        dispatch(moveProject({
+          sourceId: Number(sourceData.projectId),
+          updateOrder: Number(updateOrder)
+        }));
+
+        // // DB 변경
+        console.log(sourceData.projectId, Number(sourceData.order),updateOrder)
+        moveList({
+          type: 'project',
+          id: Number(sourceData.projectId),
+          originalParentId: 0,
+          updateParentId: 0,
+          originalOrder: Number(sourceData.order),
+          updateOrder: updateOrder
         });
 
-        // 드롭 후 flash
-        const element = document.querySelector(`[data-project-wrapper="${sourceData.projectId}"]`);
+        // 이동 후 flash
+        const element :Element | null = document.querySelector(`[data-project-wrapper="${sourceData.projectId}"]`);
         if (element instanceof Element) {
           setTimeout(() => {
             flash(element);

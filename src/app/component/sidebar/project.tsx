@@ -1,9 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import SidebarSettingButton from "./sidebarSettingButton";
-import { updateListName } from '@/app/controllers/projectController';
+import { updateListName, moveList } from '@/app/controllers/projectController';
 import { useDispatch } from "react-redux";
-import { moveFolder }  from "@/app/store/projectsSlice";
+import { moveFolder, setNameState }  from "@/app/store/projectsSlice";
 // drag and drop 관련 import
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
@@ -52,12 +52,18 @@ export default function Project({project, dragStateType}: {project : List, dragS
     if (renameRef.current) {
       const newName = renameRef.current.value;
       try {
+        // DB 변경
         await updateListName({
           id: project.id,
           newName: newName,
           type: 'project'
         });
-        setProjectName(newName);
+        // redux 변경 (화면 자동반영)
+        dispatch(setNameState({
+          id: project.id,
+          newName: newName,
+          type: 'project'
+        }));
       } catch (error) {
         console.error('프로젝트 이름 업데이트 실패:', error);
       } finally {
@@ -92,7 +98,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
           console.log(`s_parent: ${sourceData.parentId}, t_parent: ${targetData.parentId}`);
 
           // 같은 폴더로의 이동 처리 X (target: project, source: folder인 경우) 
-          if ("projectId" in targetData && "folderId" in sourceData && targetData.id === sourceData.parentId) return;
+          if ("projectId" in targetData && "folderId" in sourceData && targetData.projectId === sourceData.parentId) return;
 
           // 유효하지 않은 target
           if (!targetData || !("projectId" in targetData || "folderId" in targetData)) return;
@@ -107,17 +113,35 @@ export default function Project({project, dragStateType}: {project : List, dragS
           } 
           // case 2 : folder to project 드래그
           if ("projectId" in targetData) {
-            const maxOrder = Math.max(...folders.map(folder => folder.order), 0) ;
+            const maxOrder = Math.max(...folders.map(folder => folder.order), -1) ;
             updateOrder = maxOrder + 1;
           }
 
-          // redux 반영 (화면 변경)
+          // 동일 폴더에서의 이동 && 후순위로의 이동은 updateOrder -1
+          if (
+            (("folderId" in targetData && targetData.parentId == sourceData.parentId)
+              || ("projectId" in targetData && targetData.projectId == sourceData.parentId)
+            ) && updateOrder > Number(sourceData.order)) {
+            updateOrder -= 1;
+          }
+
+          // redux state 변경
           dispatch(moveFolder({
             sourceParentId: Number(sourceData.parentId),
             targetParentId: project.id,
             sourceId: Number(sourceData.folderId),
             updateOrder: Number(updateOrder)
           }));
+
+          // // DB 변경
+          moveList({
+            type: 'folder',
+            id: Number(sourceData.folderId),
+            originalParentId: Number(sourceData.parentId),
+            updateParentId: project.id,
+            originalOrder: Number(sourceData.order),
+            updateOrder: updateOrder
+          });
 
           // 이동 후 flash
           const element :Element | null = document.querySelector(`[data-folder-wrapper="${sourceData.folderId}"]`);

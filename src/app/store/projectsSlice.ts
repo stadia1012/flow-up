@@ -60,20 +60,56 @@ const projectsSlice = createSlice({
 
       list.isFolded = isFolded;
     },
-    // List 이름 업데이트
+    // [List 이름 업데이트]
     setNameState: (
       state,
       action: PayloadAction<{ type: string, id: number, newName : string }>
     ) => {
       const { type, id, newName } = action.payload;
 
-      const list : List =  state.projects
-        .flatMap((p) => p.lists || [])
-        .find((f) => f.type == type && f.id === id) as List;
+      const allList = state.projects.flatMap(project => [
+        project, // 프로젝트 추가
+        ...(project.lists ?? []).flatMap(folder => [
+          folder, // 폴더 추가
+          ...(folder.lists ?? []) // 아이템 추가
+        ])
+      ]);
 
-      list.name = newName;
+      const targetItem = allList.find(item => item.type === type && item.id === id);
+
+      if (targetItem) {
+        targetItem.name = newName;
+      }
     },
-    // project 간 folder 이동
+    // [project 이동]
+    moveProject: (
+      state,
+      action: PayloadAction<{
+        sourceId: number;
+        updateOrder: number;
+      }>
+    ) => {
+      const { sourceId, updateOrder } = action.payload;
+      // source 프로젝트 찾기
+      const project = state.projects.find((f) => f.id === sourceId);
+      if (project) {
+        // 프로젝트 제거
+        state.projects = state.projects
+          ?.filter((f) => f.id !== sourceId)
+          .map((p) => {
+            if (p.order > project.order) p.order -= 1
+            return p;
+        });
+        // 프로젝트 추가
+        project.order = updateOrder;
+        state.projects = [...(state.projects || []), project]
+          .map((p) => {
+            if (p.order >= updateOrder && p.id != sourceId) p.order += 1
+            return p;
+        });
+      }
+    },
+    // [folder 이동]
     moveFolder: (
       state,
       action: PayloadAction<{
@@ -110,7 +146,7 @@ const projectsSlice = createSlice({
         }
       }
     },
-    // folder 간 item 이동
+    // [item 이동]
     moveItem: (
       state,
       action: PayloadAction<{
@@ -174,6 +210,7 @@ export const {
   removeFolder,
   setNameState,
   setIsFoldedState,
+  moveProject,
   moveFolder,
   moveItem,
   // reorderFolderWithinProject,

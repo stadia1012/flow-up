@@ -1,15 +1,13 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import SidebarSettingButton from "./sidebarSettingButton";
-import { updateListName, updateParentId } from '@/app/controllers/projectController';
+import { updateListName, moveList } from '@/app/controllers/projectController';
 import { useDispatch } from "react-redux";
 import { moveItem, setIsFoldedState, setNameState }  from "@/app/store/projectsSlice";
-import type { RootState, AppDispatch } from "@/app/store/store";
+import type { AppDispatch } from "@/app/store/store";
 // drag and drop 관련 import
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import { flushSync } from "react-dom";
 import { flash } from "@/app/animation";
 import DraggableItem from "./draggableItem";
 
@@ -113,7 +111,7 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
           console.log(`s: ${sourceData.parentId}, t: ${targetData.parentId}`);
 
           // 같은 폴더로의 이동 처리 X (target: project, source: folder인 경우) 
-          if ("folderId" in targetData && "itemId" in sourceData && targetData.id === sourceData.parentId) return;
+          if ("folderId" in targetData && "itemId" in sourceData && targetData.folderId === sourceData.parentId) return;
 
           // 유효하지 않은 target
           if (!targetData || !("folderId" in targetData || "itemId" in targetData)) return;
@@ -128,17 +126,35 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
           } 
           // case 2 : item to folder 드래그
           if ("folderId" in targetData) {
-            const maxOrder = Math.max(...items.map(item => item.order), 0) ;
+            const maxOrder = Math.max(...items.map(item => item.order), -1) ;
             updateOrder = maxOrder + 1;
           }
 
-          // redux 반영 (화면 변경)
-            dispatch(moveItem({
-              sourceParentId: Number(sourceData.parentId),
-              targetParentId: folder.id,
-              sourceId: Number(sourceData.itemId),
-              updateOrder: Number(updateOrder)
-            }));
+          // 동일 폴더에서의 이동 && 후순위로의 이동은 updateOrder -1
+          if (
+            (("itemId" in targetData && targetData.parentId == sourceData.parentId)
+              || ("folderId" in targetData && targetData.folderId == sourceData.parentId)
+            ) && updateOrder > Number(sourceData.order)) {
+            updateOrder -= 1;
+          }
+
+          // redux 반영
+          dispatch(moveItem({
+            sourceParentId: Number(sourceData.parentId),
+            targetParentId: folder.id,
+            sourceId: Number(sourceData.itemId),
+            updateOrder: Number(updateOrder)
+          }));
+
+          // // DB 변경
+          moveList({
+            type: 'item',
+            id: Number(sourceData.itemId),
+            originalParentId: Number(sourceData.parentId),
+            updateParentId: folder.id,
+            originalOrder: Number(sourceData.order),
+            updateOrder: updateOrder
+          });
 
           // 이동 후 flash
           const element :Element | null = document.querySelector(`[data-folder-wrapper="${sourceData.itemId}"]`);
@@ -180,7 +196,7 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
               onKeyDown={handleKeyDown}
               autoComplete="off"
               spellCheck="false"
-              />
+            />
           </div>
         ) : (
           <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1" onClick={handleIsFolded}>{folderName}</span>

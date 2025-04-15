@@ -4,9 +4,13 @@ const prisma = new PrismaClient();
 
 type PrismaModel = {
   update: (args: { 
-    where: { ID: number };
-    data: { NAME?: string, PARENT_ID?: number }
-  }) => Promise<any>;
+    where: any;
+    data: any
+  }) => Promise<any>,
+  updateMany: (args: { 
+    where: any;
+    data: any
+  }) => Promise<any>
 };
 
 const prismaTable = {
@@ -51,7 +55,7 @@ export async function getProjects(): Promise<List[]> {
   }));
 }
 
-// 이름 변경
+// List 이름 변경
 export async function updateListName({
   type,
   id,
@@ -74,24 +78,52 @@ export async function updateListName({
   }
 }
 
-// parentId 변경 (이동)
-export async function updateParentId({
+// List 이동 (order, parentId 변경)
+export async function moveList({
   type,
   id,
-  parentId
+  originalParentId,
+  updateParentId,
+  originalOrder,
+  updateOrder
 } : {
   type: keyof typeof prismaTable;
   id: number,
-  parentId: number
+  originalParentId: number,
+  updateParentId: number,
+  originalOrder: number,
+  updateOrder: number
 }) {
   try {
-    if (type === "project") return;
     const model = prismaTable[type] as unknown as PrismaModel;
-    const result = await model.update({
-      where: { ID: id },
-      data: { PARENT_ID: parentId },
+
+    // source parent order 변경
+    await model.updateMany({
+      where: {
+        ORDER: { gt: originalOrder },
+        ...(type !== "project" && { PARENT_ID: originalParentId })
+      },
+      data: { ORDER: { decrement: 1 } },
     });
-    return result;
+
+    // target parent order 변경
+    await model.updateMany({
+      where: {
+        ORDER: { gte: updateOrder },
+        ...(type !== "project" && { PARENT_ID: updateParentId })
+      },
+      data: { ORDER: { increment: 1 } },
+    });
+
+    // 대상의 parentId, order 변경
+    const data: Record<string, any> = {
+      ORDER: updateOrder,
+      ...(type !== "project" && { PARENT_ID: updateParentId }) // 조건부
+    };
+    await model.update({
+      where: { ID: id },
+      data,
+    });
   } catch (error) {
     console.error('프로젝트 이름 업데이트 실패:', error);
     throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
