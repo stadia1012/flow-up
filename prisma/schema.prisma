@@ -133,13 +133,14 @@ model MENU_PERMISSIONS {
 }
 
 model W_PROJECTS {
-  ID      Int       @id @default(autoincrement())
-  NAME    String?   @db.VarChar(30)
+  ID      Int        @id @default(autoincrement())
+  NAME    String?    @db.VarChar(30)
+  ICON_COLOR String? @db.VarChar(6) 
   ORDER   Int?            
-  REG_ID  String?   @db.VarChar(15)
-  REG_DT  DateTime? @db.DateTime(0)
-  UPDT_ID String?   @db.VarChar(15)
-  UPDT_DT DateTime? @db.DateTime(0)
+  REG_ID  String?    @db.VarChar(15)
+  REG_DT  DateTime?  @db.DateTime(0)
+  UPDT_ID String?    @db.VarChar(15)
+  UPDT_DT DateTime?  @db.DateTime(0)
   
   folders  W_FOLDERS[]
 }
@@ -148,6 +149,7 @@ model W_FOLDERS {
   ID         Int       @id @default(autoincrement())
   PARENT_ID  Int?
   NAME       String?   @db.VarChar(30)
+  ICON_COLOR String? @db.VarChar(6) 
   ORDER      Int?
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime? @db.DateTime(0)
@@ -162,6 +164,7 @@ model W_ITEMS {
   ID        Int       @id @default(autoincrement())
   PARENT_ID Int?
   NAME      String?   @db.VarChar(30)
+  ICON_COLOR String? @db.VarChar(6) 
   ORDER     Int?
   REG_ID    String?   @db.VarChar(15)
   REG_DT    DateTime? @db.DateTime(0)

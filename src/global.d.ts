@@ -4,10 +4,13 @@ declare global {
     id: number;
     parentId?: number;
     name: string;
+    iconColor: string;
     order: number;
     isFolded?: boolean;
     lists?: List[];
   }
+
+  type ListType = "project" | "folder" | "item";
 
   interface Modal {
     type: "confirm" | "delete" | "alert";

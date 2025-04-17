@@ -35,6 +35,7 @@ export async function getProjects(): Promise<List[]> {
     type: 'project',
     id: project.ID,
     name: project.NAME ?? '',
+    iconColor: project.ICON_COLOR ?? '000000', 
     order: project.ORDER ?? 0,
     isFolded: true,
     lists: project.folders.map((folder) => ({
@@ -42,6 +43,7 @@ export async function getProjects(): Promise<List[]> {
       id: folder.ID,
       parentId: folder.PARENT_ID ?? undefined,
       name: folder.NAME ?? '',
+      iconColor: folder.ICON_COLOR ?? '000000', 
       order: folder.ORDER ?? 0,
       isFolded: true,
       lists: folder.items.map((item) => ({
@@ -49,6 +51,7 @@ export async function getProjects(): Promise<List[]> {
         id: item.ID,
         parentId: item.PARENT_ID ?? undefined,
         name: item.NAME ?? '',
+        iconColor: item.ICON_COLOR ?? '000000', 
         order: item.ORDER ?? 0,
       })),
     })),

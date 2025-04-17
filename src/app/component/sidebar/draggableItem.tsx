@@ -22,6 +22,13 @@ export default function DraggableItem({ item }: { item: List }) {
       // 드래그 시 sourceData
       draggable({
         element: element,
+        canDrag({ element }) {
+          // 드래그 비활성화
+          if (element.querySelector('input, .popup-menu')) {
+            return false;
+          }
+          return true;
+        },
         getInitialData() {
           return { itemId: item.id, parentId: item.parentId, order: item.order }; // 드래그 시 전달 데이터
         },

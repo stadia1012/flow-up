@@ -4,17 +4,15 @@ import SidebarSettingPopup from "./sidebarSettingPopup";
 
 export default function SidebarSettingButton({type, handleRename }: {type: string, handleRename?: () => void}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
-  const buttonRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
   // 외부 클릭 감지 로직
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (!buttonRef.current || !popupRef.current) return;
+      if (!popupRef.current) return;
 
       const isOutside = 
-        !buttonRef.current.contains(target) && 
         !popupRef.current.contains(target);
 
       if (isOutside) setIsPopupOpen(false);
@@ -34,7 +32,7 @@ export default function SidebarSettingButton({type, handleRename }: {type: strin
   };
 
   return (
-    <div className="w-[22px] h-[22px] p-[3px] rounded-[7px] transition-all cursor-pointer hover:bg-gray-300 has-[.popup-menu]:bg-gray-300" ref={buttonRef} onClick={(e) => { toggleMenu(e); }}>
+    <div className="w-[22px] h-[22px] p-[3px] rounded-[7px] transition-all cursor-pointer hover:bg-gray-300 has-[.popup-menu]:bg-gray-300" onClick={(e) => { toggleMenu(e); }}>
       <svg className="w-full h-full relative top-[1px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
         <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
         <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>

@@ -23,6 +23,13 @@ export default function DraggableProject({ project }: { project: List }) {
       // 드래그 시 sourceData
       draggable({
         element: element,
+        canDrag({ element }) {
+          // 드래그 비활성화
+          if (element.querySelector('input, .popup-menu')) {
+            return false;
+          }
+          return true;
+        },
         getInitialData() {
           return { projectId: project.id, order: project.order };
         },

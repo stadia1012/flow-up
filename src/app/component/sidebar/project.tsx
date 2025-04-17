@@ -9,6 +9,7 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flash } from "@/app/animation";
 import DraggableFolder from "./draggableFolder";
+import SidebarAddButton from "./sidebarAddButton";
 
 export default function Project({project, dragStateType}: {project : List, dragStateType: string}) {
   const dispatch = useDispatch();
@@ -162,7 +163,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
         className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
         <div className="basis-[22px] h-[22px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[7px] rounded-[4px]">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+          <svg style={{color: `3${project.iconColor}`}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
             <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"></path>
             <path d="M3 10h18"></path>
             <path d="M10 3v18"></path>
@@ -189,12 +190,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
         {/* button wrapper */}
         <div className="relative p-[3px] basis-[50px] items-center hidden group-hover:flex has-[.popup-menu]:flex peer-[.rename]:flex peer-[.rename]:opacity-0 peer-[.rename]:pointer-events-none">
           {/* button - add */}
-          <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); }}>
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
-              <path d="M12 5l0 14"></path>
-              <path d="M5 12l14 0"></path>
-            </svg>
-          </div>
+          <SidebarAddButton addType="folder" />
           {/* button -setting */}
           <SidebarSettingButton type="project" handleRename={handleRename} />
         </div>

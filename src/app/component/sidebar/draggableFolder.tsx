@@ -23,6 +23,13 @@ export default function DraggableFolder({ folder }: { folder: List }) {
       draggable({
         // 드래그 시 sourceData
         element: element,
+        canDrag({ element }) {
+          // 드래그 비활성화
+          if (element.querySelector('input, .popup-menu')) {
+            return false;
+          }
+          return true;
+        },
         getInitialData() {
           return { folderId: folder.id, parentId: folder.parentId, order: folder.order }; // 드래그 시 전달 데이터
         },
