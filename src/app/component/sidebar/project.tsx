@@ -190,7 +190,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
         {/* button wrapper */}
         <div className="relative p-[3px] basis-[50px] items-center hidden group-hover:flex has-[.popup-menu]:flex peer-[.rename]:flex peer-[.rename]:opacity-0 peer-[.rename]:pointer-events-none">
           {/* button - add */}
-          <SidebarAddButton addType="folder" />
+          <SidebarAddButton addType="folder" parentId={project.id} />
           {/* button -setting */}
           <SidebarSettingButton type="project" handleRename={handleRename} />
         </div>

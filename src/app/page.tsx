@@ -1,15 +1,20 @@
 import Header from "./component/header";
 import Sidebar from "./component/sidebar/sidebar";
 import Main from "./component/main"
+import Modal from "./component/modal";
 
 export default async function Home() {
   return (
-    <div className="flex flex-col h-full">
-      <Header></Header>
-      <div className="h-full">
-        <Sidebar></Sidebar>
-        <Main></Main>
+    <>
+      <div className="flex flex-col h-full">
+        <Header></Header>
+        <div className="h-full">
+          <Sidebar></Sidebar>
+          <Main></Main>
+        </div>
       </div>
-    </div>
+      <Modal />
+    </>
+    
   );
 }

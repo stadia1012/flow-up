@@ -3,14 +3,10 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 type PrismaModel = {
-  update: (args: { 
-    where: any;
-    data: any
-  }) => Promise<any>,
-  updateMany: (args: { 
-    where: any;
-    data: any
-  }) => Promise<any>
+  update: (args: any) => Promise<any>,
+  updateMany: (args: any) => Promise<any>,
+  create: (args: any) => Promise<any>,
+  aggregate: (args: any) => Promise<any>,
 };
 
 const prismaTable = {
@@ -127,6 +123,47 @@ export async function moveList({
       where: { ID: id },
       data,
     });
+  } catch (error) {
+    console.error('프로젝트 이름 업데이트 실패:', error);
+    throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
+  }
+}
+
+// List 추가
+export async function addListItem({
+  type,
+  parentId,
+  name,
+  iconColor,
+}: {
+  type: ListType;
+  parentId?: number;
+  name: string;
+  iconColor: string;
+}) {
+  const date = new Date();
+  try {
+    const model = prismaTable[type] as unknown as PrismaModel;
+    const maxOrder = await model.aggregate({
+      where: {
+        ...(type !== "project" && { PARENT_ID: parentId }),
+      },
+      _max: {
+        ORDER: true
+      }
+    })
+
+    const result = await model.create({
+      data: {
+        NAME: name,
+        ICON_COLOR: iconColor,
+        // REG_ID: 'userId', // 추후에 추가예정
+        ORDER: maxOrder._max.ORDER + 1 || 0,
+        REG_DT: date,
+        ...(type !== "project" && { PARENT_ID: parentId }), // 조건부
+      },
+    });
+    return result;
   } catch (error) {
     console.error('프로젝트 이름 업데이트 실패:', error);
     throw new Error('프로젝트 이름 업데이트에 실패했습니다.');

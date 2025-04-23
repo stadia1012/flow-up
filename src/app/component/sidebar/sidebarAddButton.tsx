@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import SidebarAddPopup from "./sidebarAddPopup";
 
-export default function SidebarAddButton({addType}: {addType: ListType}) {
+export default function SidebarAddButton({addType, parentId}: {addType: ListType, parentId: number}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
   const buttonRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -34,14 +34,14 @@ export default function SidebarAddButton({addType}: {addType: ListType}) {
   };
 
   return (
-    <>
-    <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all cursor-pointer has-[.popup-menu]:bg-gray-300" ref={buttonRef} onClick={(e) => { toggleMenu(e); }}>
-      <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
-        <path d="M12 5l0 14"></path>
-        <path d="M5 12l14 0"></path>
-      </svg>
-      {isPopupOpen && <SidebarAddPopup popupRef={popupRef} addType={addType} setIsPopupOpen={setIsPopupOpen} />}
+    <div className="relative">
+      <div className="w-[22px] h-[22px] p-[3px] hover:bg-[#ecedf1] rounded-[7px] transition-all cursor-pointer has-[.popup-menu]:bg-[#ecedf1] mix-blend-multiply" ref={buttonRef} onClick={(e) => { toggleMenu(e); }}>
+        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
+          <path d="M12 5l0 14"></path>
+          <path d="M5 12l14 0"></path>
+        </svg>
+      </div>
+      {isPopupOpen && <SidebarAddPopup popupRef={popupRef} addType={addType} setIsPopupOpen={setIsPopupOpen} parentId={parentId} />}
     </div>
-    </>
   );
 }

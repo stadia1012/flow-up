@@ -21,7 +21,7 @@ export default function SidebarTreeWrapper({ initialProjects }: { initialProject
     }));
   }, [initialProjects]);
 
-  let projects = useSelector((state: RootState) =>
+  const projects = useSelector((state: RootState) =>
     state.projects.projects
   ) as List[];
 

@@ -1,13 +1,4 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { getProjects } from '@/app/controllers/projectController';
-
-export const fetchProjects = createAsyncThunk(
-  'projects/fetchProjects',
-  async () => {
-    const projects: List[] = await getProjects();
-    return projects;
-  }
-);
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 const projectsSlice = createSlice({
   name: 'projects',
@@ -74,7 +65,6 @@ const projectsSlice = createSlice({
           ...(folder.lists ?? []) // 아이템 추가
         ])
       ]);
-
       const targetItem = allList.find(item => item.type === type && item.id === id);
 
       if (targetItem) {
@@ -187,20 +177,68 @@ const projectsSlice = createSlice({
         }
       }
     },
-  },
-   extraReducers: (builder) => {
-    builder
-      .addCase(fetchProjects.pending, (state) => {
-        state.loading = true;
+    // [add item]
+    addItem: (
+      state,
+      action: PayloadAction<{
+        id: number;
+        addType: "project" | "folder" | "item";
+        parentId?: number;
+        name: string;
+        order: number;
+        iconColor: string;
+      }>
+    ) => {
+      const { id, addType, parentId = 1, name, order, iconColor } = action.payload;
+
+      // project의 경우
+      if (addType === "project") {
+        // top‑level: just push onto the projects array
+        state.projects.push({
+          id,
+          type: "project",
+          name,
+          iconColor,
+          order,
+          isFolded: false,
+          lists: [],
+        });
+        return;
+      }
+     
+      // all list
+      const allList = state.projects.flatMap(project => [
+        project, // 프로젝트
+        ...(project.lists ?? []).flatMap(folder => [
+          folder, // 폴더
+          ...(folder.lists ?? []) // 아이템
+        ])
+      ]);
+
+      let parentType = "root";
+      if (addType === "folder") {
+        parentType = "project";
+      } else if (addType === "item") {
+        parentType = "folder";
+      }
+      console.log(`parent 찾기 전`);
+      // parent 찾기
+      const parentItem = allList.find(item => item.type === parentType && item.id === parentId);
+      if (!parentItem) return;
+      console.log(`addItem:`, parentItem);
+
+      parentItem.lists?.push({
+        id,
+        type: addType,
+        parentId,
+        name,
+        iconColor,
+        order,
+        isFolded: true,
+        lists: [],
       })
-      .addCase(fetchProjects.fulfilled, (state, action) => {
-        state.loading = false;
-        state.projects = action.payload;
-      })
-      .addCase(fetchProjects.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || 'Failed to load projects';
-      });
+      return;
+    },
   },
 });
 
@@ -213,6 +251,7 @@ export const {
   moveProject,
   moveFolder,
   moveItem,
+  addItem,
   // reorderFolderWithinProject,
 } = projectsSlice.actions;
 

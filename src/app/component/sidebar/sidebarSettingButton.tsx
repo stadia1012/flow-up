@@ -12,9 +12,7 @@ export default function SidebarSettingButton({type, handleRename }: {type: strin
       const target = e.target as Node;
       if (!popupRef.current) return;
 
-      const isOutside = 
-        !popupRef.current.contains(target);
-
+      const isOutside = !popupRef.current.contains(target);
       if (isOutside) setIsPopupOpen(false);
     };
 

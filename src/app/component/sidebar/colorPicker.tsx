@@ -1,17 +1,16 @@
 'use client'
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 interface ColorPanelProps {
   hex: string,
   selected?: boolean,
   onSelect?: (hex: string) => void
-}
-
+} 
 const ColorPanel = ({ hex, selected, onSelect } : ColorPanelProps ) => {
   return (
     <div
       className="inline-block"
-      onClick={() => onSelect && onSelect(hex) }
+      onClick={() => {onSelect && onSelect(hex); console.log('panel')} }
     >
       <button className={`rounded-full w-[22px] h-[22px] border-transparent border-[1px] hover:border-gray-400/80 p-[3px] cursor-pointer`} style={{borderColor: selected ? '#3c7fff' : ''}}>
         <span className='block rounded-full w-full h-full' style={{backgroundColor: `#${hex}`}}></span>
@@ -20,21 +19,33 @@ const ColorPanel = ({ hex, selected, onSelect } : ColorPanelProps ) => {
   )
 }
 
-export default function ColorPicker({hex} : {hex : string}) {
+interface ColorPickerProps {
+  hex: string;
+  colorPopupRef: React.RefObject<HTMLDivElement | null>;
+  setIsColorPopupOpen: (isColorPopupOpen: boolean) => void;
+  applyColor: (hex: string) => void;
+}
+export default function ColorPicker({hex, colorPopupRef, setIsColorPopupOpen, applyColor} : ColorPickerProps) {
   const [selectedHex, setSelectedHex] = useState(hex);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   const defaultColors = [
-    '000000','ff0000','ffa500','fff000','008000','0050ff','000080','800080','808080','ffc0cb','ff69b4','ffd700','a52A2a','00ff00','40e0d0','87ceeb',
-  ]
+    '000000','ff0000','ffa500','fff000','008000','0050ff','000080','800080','808080','ffc0cb','ff69b4','a52A2a','00ff00','40e0d0','87ceeb',
+  ];
   return (
     <div
       className="absolute bg-white p-[10px] pl-[18px] pr-[18px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3 popup-menu w-[230px] pb-[10px] w-[250px] top-[30px]"
       onClick={(e) => e.stopPropagation()}
+      ref={colorPopupRef}
     >
       <div className="pb-[5px] relative">
         <h2 className="text-[13px] font-[600]">Color 선택</h2>
-        <button className='absolute top-[-2px] right-[-10px]'>
+        <button
+          className='absolute top-[-2px] right-[-10px] hover:bg-gray-200/65 rounded-[3px]'
+          onClick={(e) => {
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+            setIsColorPopupOpen(false);
+          }}
+        >
           <svg
           xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" strokeWidth="2">
             <path d="M18 6l-12 12"></path>
@@ -49,7 +60,6 @@ export default function ColorPicker({hex} : {hex : string}) {
         <span className="flex ml-[5px] text-[13px] justify-center items-center text-[#333333] leading-[100%]">
           <span className="font-[600]">#</span>
           <input
-            ref={inputRef}
             type="text"
             className="inline-block ml-[2px] outline-none text-center text-[13px] text-[#333333] border-[1px] border-[#808080] p-[2px] w-[58px] rounded-[3px] leading-[100%] bg-gray-100/50"
             value={selectedHex}
@@ -60,6 +70,14 @@ export default function ColorPicker({hex} : {hex : string}) {
             maxLength={6}
           />
         </span>
+        <button type="button" className="ml-[6px] rounded-full hover:bg-gray-200/80 p-[2px]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" strokeWidth="1.5">
+            <path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25"></path>
+            <path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+            <path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+            <path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+          </svg>
+        </button>
       </div>
       <div className="pt-[5px]">
         <ul className="flex gap-[2px] flex-wrap">
@@ -74,13 +92,17 @@ export default function ColorPicker({hex} : {hex : string}) {
               </li>
             ))
           }
-          <li>
-            <button type="button" className="relative text-[12px] top-[1px] ml-[2px] rounded-[3px] hover:bg-[#ecedf1] cursor-pointer">Custom</button>
-          </li>
         </ul>
       </div>
       <div className='flex mt-[5px]'>
-        <button className='dft-apply-btn ml-auto pt-[4px] pb-[4px] pl-[10px] pr-[10px]'>적용</button>
+        <button
+          className='dft-apply-btn ml-auto pt-[4px] pb-[4px] pl-[10px] pr-[10px]'
+          onClick={(e) => {
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+            applyColor(selectedHex);
+          }}
+        >적용</button>
       </div>
     </div>
   );

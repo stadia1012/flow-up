@@ -10,6 +10,7 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flash } from "@/app/animation";
 import DraggableItem from "./draggableItem";
+import SidebarAddButton from "./sidebarAddButton";
 
 export default function Folder({folder, dragStateType}: {folder: List, dragStateType: string}) {
   const dispatch: AppDispatch = useDispatch();
@@ -205,12 +206,7 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
       {/* button wrapper */}
       <div className="p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
         {/* button - add */}
-        <div className="w-[22px] h-[22px] p-[3px] hover:bg-gray-300 rounded-[7px] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); }}>
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
-            <path d="M12 5l0 14"></path>
-            <path d="M5 12l14 0"></path>
-          </svg>
-        </div>
+        <SidebarAddButton addType="item" parentId={folder.id} />
         {/* button - setting */}
         <SidebarSettingButton type="folder" handleRename={handleRename} />
       </div>
