@@ -1,20 +1,5 @@
 'use client'
-import { useState, useEffect, ReactNode } from "react";
-import { useSelector, useDispatch } from "react-redux";
-
-interface ModalProps {
-  type: "confirm" | "delete" | "alert";
-  title?: ReactNode; 
-  description?: ReactNode;
-  buttonText?: { 
-    confirm?: string;
-    cancel?: string;
-  };
-  onConfirm?: () => void;
-  onCancel?: () => void;
-}
-
-export default function Modal(props : ModalProps) {
+export default function DefaultModal(props : ModalProps) {
   // 적용 버튼
   let confirmBtnClass = "dft-apply-btn";
   switch (props.type) {
@@ -52,21 +37,23 @@ export default function Modal(props : ModalProps) {
             <h2 className="text-center font-[500]">{props.title}</h2>
           </div>
           <div>
-            <p></p>
+            <p className="text-center">{props.description}</p>
           </div>
           <div className="flex justify-end items-center">
             {
+              // 확인 버튼
               ["confirm", "delete"].includes(props.type) &&
               <button
                 type="button"
                 className={`${confirmBtnClass} mr-[5px] w-[53px]`}
-                onClick={props.onConfirm}
+                onClick={() => { props.onConfirm?.(); }}
               >{props.buttonText?.confirm}</button>
             }
+            { /* cancel 버튼 */ }
             <button
               type="button"
               className={cancelBtnClass}
-              onClick={props.onCancel}
+              onClick={() => { props.onCancel?.(); }}
             >{props.buttonText?.cancel}</button>
           </div>
         </div>

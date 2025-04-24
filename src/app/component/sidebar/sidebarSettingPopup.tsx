@@ -1,5 +1,7 @@
-import { useDispatch } from "react-redux";
-import { openModal } from "@/app/store/modalSlice";
+import { useModal } from '@/app/hooks/useModal';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/app/store/store';
+import { closeModal } from '@/app/store/modalSlice';
 interface SidebarSettingPopupProps {
   popupRef: React.RefObject<HTMLDivElement | null>;
   type: string;
@@ -8,22 +10,38 @@ interface SidebarSettingPopupProps {
 }
 
 export default function SidebarSettingPopup({popupRef, type, handleRename, setIsPopupOpen} : SidebarSettingPopupProps) {
-  const dispatch = useDispatch();
-  const deleteItem = () => {
-    dispatch(openModal({
-      type: 'delete',
-      title: '삭제하시겠습니까?',
-      description: '삭제된 항목은 복구할 수 없습니다.',
-      onConfirm: handleConfirm,
-      onCancel: handleCancel,
-    }))
+  const dispatch = useDispatch<AppDispatch>();
+  const modal = useModal();
+
+  const deleteItem = async () => {
+    try {
+      await modal({
+        props: {
+          type: 'delete',
+          title: '삭제하시겠습니까?',
+          description: '',
+          buttonText: {
+            confirm: '삭제',
+            cancel: '취소',
+          },
+        }
+      });
+      // 확인 클릭 시 실행할 로직
+      console.log('확인누름');
+    } catch {
+      // 취소 클릭 시 실행할 로직
+      console.log('취소누름');
+    }
   }
+  
   const handleConfirm= () => {
     console.log('확인');
+    dispatch(closeModal());
     setIsPopupOpen(false);
   }
   const handleCancel = () => {
     console.log('취소');
+    dispatch(closeModal());
     setIsPopupOpen(false);
   }
   return (
