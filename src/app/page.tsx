@@ -1,7 +1,6 @@
 import Header from "./component/header";
 import Sidebar from "./component/sidebar/sidebar";
 import Main from "./component/main"
-import Modal from "./component/modal";
 
 export default async function Home() {
   return (
@@ -13,8 +12,6 @@ export default async function Home() {
           <Main></Main>
         </div>
       </div>
-      <Modal />
     </>
-    
   );
 }

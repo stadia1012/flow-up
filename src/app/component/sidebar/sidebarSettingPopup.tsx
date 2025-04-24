@@ -1,3 +1,5 @@
+import { useDispatch } from "react-redux";
+import { openModal } from "@/app/store/modalSlice";
 interface SidebarSettingPopupProps {
   popupRef: React.RefObject<HTMLDivElement | null>;
   type: string;
@@ -6,6 +8,24 @@ interface SidebarSettingPopupProps {
 }
 
 export default function SidebarSettingPopup({popupRef, type, handleRename, setIsPopupOpen} : SidebarSettingPopupProps) {
+  const dispatch = useDispatch();
+  const deleteItem = () => {
+    dispatch(openModal({
+      type: 'delete',
+      title: '삭제하시겠습니까?',
+      description: '삭제된 항목은 복구할 수 없습니다.',
+      onConfirm: handleConfirm,
+      onCancel: handleCancel,
+    }))
+  }
+  const handleConfirm= () => {
+    console.log('확인');
+    setIsPopupOpen(false);
+  }
+  const handleCancel = () => {
+    console.log('취소');
+    setIsPopupOpen(false);
+  }
   return (
     <div className="absolute bg-white p-[10px] pl-[7px] pr-[7px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3 popup-menu" ref={popupRef} onClick={(e) => e.stopPropagation()}>
       <div
@@ -52,7 +72,13 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
           </svg>
         </div>
         {/* 설정 이름 */}
-        <div className="w-[100px]">삭제</div>
+        <div
+          className="w-[100px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteItem();
+          }}
+        >삭제</div>
       </div>
     </div>
   );

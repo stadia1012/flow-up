@@ -130,7 +130,7 @@ export async function moveList({
 }
 
 // List 추가
-export async function addListItem({
+export async function addItemToDB({
   type,
   parentId,
   name,

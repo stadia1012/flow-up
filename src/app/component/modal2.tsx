@@ -1,18 +1,23 @@
 'use client'
-import { useState, useEffect } from "react";
-import type { RootState } from "@/app/store/store";
+import { useState, useEffect, ReactNode } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-export default function Modal() {
-  const dispatch = useDispatch();
+interface ModalProps {
+  type: "confirm" | "delete" | "alert";
+  title?: ReactNode; 
+  description?: ReactNode;
+  buttonText?: { 
+    confirm?: string;
+    cancel?: string;
+  };
+  onConfirm?: () => void;
+  onCancel?: () => void;
+}
 
-  const modalState = useSelector((state: RootState) =>
-    state.modal
-  ) as Modal;
-
+export default function Modal(props : ModalProps) {
   // 적용 버튼
   let confirmBtnClass = "dft-apply-btn";
-  switch (modalState.type) {
+  switch (props.type) {
     case "confirm":
       confirmBtnClass = "dft-apply-btn";
       break;
@@ -24,7 +29,7 @@ export default function Modal() {
   }
   // 취소 버튼
   let cancelBtnClass = "dft-btn";
-  switch (modalState.type) {
+  switch (props.type) {
     case "confirm":
       cancelBtnClass = "dft-btn";
       break;
@@ -38,37 +43,34 @@ export default function Modal() {
       cancelBtnClass = "dft-btn";
   }
 
-  console.log(`modalState:`, modalState);
+  console.log(`modalState:`, props);
   return (
     <>
-    {
-    modalState.isOpen &&
       <div className="h-screen w-screen fixed top-0 left-0 bg-gray-500/30 z-100 flex justify-center items-center">
         <div className="relative flex flex-col justify-between z-101 bg-white shadow-[var(--modalShadow)] w-[320px] min-h-[100px] rounded-[6px] p-[15px] pt-[20px] top-[-80px]">
           <div>
-            <h2 className="text-center font-[500]">{modalState.title}</h2>
+            <h2 className="text-center font-[500]">{props.title}</h2>
           </div>
           <div>
             <p></p>
           </div>
           <div className="flex justify-end items-center">
             {
-              ["confirm", "delete"].includes(modalState.type) &&
+              ["confirm", "delete"].includes(props.type) &&
               <button
                 type="button"
                 className={`${confirmBtnClass} mr-[5px] w-[53px]`}
-                onClick={modalState.onConfirm}
-              >{modalState.buttonText?.confirm}</button>
+                onClick={props.onConfirm}
+              >{props.buttonText?.confirm}</button>
             }
             <button
               type="button"
               className={cancelBtnClass}
-              onClick={modalState.onCancel}
-            >{modalState.buttonText?.cancel}</button>
+              onClick={props.onCancel}
+            >{props.buttonText?.cancel}</button>
           </div>
         </div>
       </div>
-    }
     </>
   );
 }

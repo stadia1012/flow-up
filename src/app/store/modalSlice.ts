@@ -1,42 +1,58 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ReactNode } from 'react';
 
+// 초기값
+const initialState: Modal = {
+  type: 'alert',
+  title: '확인하시겠습니까?',
+  description: undefined,
+  buttonText: {
+    confirm: '확인',
+    cancel: '취소',
+  },
+  isOpen: false,
+  onConfirm: undefined,
+  onCancel: undefined,
+};
+
 const modalSlice = createSlice({
   name: 'modal',
-  initialState: {
-    type: "confirm",
-    title: "확인하시겠습니까?",
-    isOpen: false,
-    buttonText : {
-      apply: "확인",
-      close: "취소"
-    }
-  },
+  initialState,
   reducers: {
     // modal 열기
     openModal: (
-      state,
+      _state,
       action: PayloadAction<{
+        type: "confirm" | "delete" | "alert";
         title: ReactNode;
-        description: ReactNode;
-        index?: number
+        description?: ReactNode;
+        buttonText?: {
+          confirm: string;
+          cancel: string;
+        },
+        onConfirm?: () => void;
+        onCancel?: () => void;
       }>
     ) => {
-      const {  }  = action.payload;
+      const { type, title, description, buttonText, onConfirm, onCancel }  = action.payload;
+      return {
+        ...initialState, // 초기화
+        type,
+        title,
+        description,
+        buttonText: buttonText ?? initialState.buttonText,
+        onConfirm,
+        onCancel,
+        isOpen: true,
+      };
     },
-    // modal 닫기
-    closeModal: (
-      state,
-      action: PayloadAction<{ projectId: number; folder: List; index?: number }>
-    ) => {
-      const { projectId, folder, index }  = action.payload;
-    },
+    
   },
 });
 
 export const {
   openModal,
-  closeModal,
+  // closeModal,
 } = modalSlice.actions;
 
 export default modalSlice.reducer;

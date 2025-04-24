@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { useDispatch } from "react-redux";
-import { addListItem } from "@/app/controllers/projectController";
+import { addItemToDB } from "@/app/controllers/projectController";
 import ColorPicker from './colorPicker'
-import { addItem } from "@/app/store/projectsSlice";
+import { addItemToStore } from "@/app/store/projectsSlice";
 
 interface SidebarAddPopupProps {
   popupRef: React.RefObject<HTMLDivElement | null>;
@@ -62,7 +62,7 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
   }, [isColorPopupOpen]);
 
   // 등록 전 유휴성 검사
-  const validateInput = () => {
+  const addItem = () => {
     if (!nameInputRef.current?.value.trim()) {
       alert("이름을 입력하세요.");
       return false;
@@ -73,7 +73,7 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
     }
 
     // DB에 추가
-    addListItem({
+    addItemToDB({
       type: addType,
       name: nameInputRef.current?.value,
       iconColor: iconColor,
@@ -82,7 +82,7 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
         : {})
     }).then((newListItem) => {
       // redux store에 추가
-      dispatch(addItem({
+      dispatch(addItemToStore({
         id: Number(newListItem.ID),
         addType: addType,
         name: newListItem.NAME,
@@ -200,7 +200,7 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
       <div className='flex mt-[5px]'>
         <button
           className='dft-apply-btn ml-auto pt-[4px] pb-[4px] pl-[10px] pr-[10px]'
-          onClick={validateInput}
+          onClick={addItem}
         >추가</button>
       </div>
     </div>

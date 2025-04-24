@@ -8,28 +8,6 @@ const projectsSlice = createSlice({
     error: null as string | null,
   },
   reducers: {
-    // target project에 폴더 추가
-    addFolder: (
-      state,
-      action: PayloadAction<{ projectId: number; folder: List; index?: number }>
-    ) => {
-      const { projectId, folder, index }  = action.payload;
-      const project: List = state.projects.find((p) => p.id === projectId) as List;
-      if (project && index) {
-        project.lists?.splice(index, 0, folder);
-      }
-    },
-    // source project에서 폴더 제거
-    removeFolder: (
-      state,
-      action: PayloadAction<{ projectId: number; folderId: number }>
-    ) => {
-      const { projectId, folderId } = action.payload;
-      const project = state.projects.find((p) => p.id === projectId);
-      if (project) {
-        project.lists = project.lists?.filter((f) => f.id !== folderId);
-      }
-    },
     // projects 반영
     setProjectsState: (
       state,
@@ -178,7 +156,7 @@ const projectsSlice = createSlice({
       }
     },
     // [add item]
-    addItem: (
+    addItemToStore: (
       state,
       action: PayloadAction<{
         id: number;
@@ -244,14 +222,12 @@ const projectsSlice = createSlice({
 
 export const {
   setProjectsState,
-  addFolder,
-  removeFolder,
   setNameState,
   setIsFoldedState,
   moveProject,
   moveFolder,
   moveItem,
-  addItem,
+  addItemToStore,
   // reorderFolderWithinProject,
 } = projectsSlice.actions;
 

@@ -28,7 +28,7 @@ interface ColorPickerProps {
 export default function ColorPicker({hex, colorPopupRef, setIsColorPopupOpen, applyColor} : ColorPickerProps) {
   const [selectedHex, setSelectedHex] = useState(hex);
   const defaultColors = [
-    '000000','ff0000','ffa500','fff000','008000','0050ff','000080','800080','808080','ffc0cb','ff69b4','a52A2a','00ff00','40e0d0','87ceeb',
+    '000000','ff0000','ffa500','f9d900','008000','0050ff','000080','800080','808080','ffc0cb','ff69b4','a52A2a','00ff00','40e0d0','87ceeb',
   ];
   return (
     <div

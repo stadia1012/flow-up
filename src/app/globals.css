@@ -93,13 +93,13 @@ button.dft-delete-btn {
   transition: background-color ease 0.12s;
   line-height: 100%;
 }
-button.dft-apply-btn:hover {
-  background: #5a93fb;
-  border: 1px solid #5a93fb;
+button.dft-delete-btn:hover {
+  background: #ff7e7e;
+  border: 1px solid #ff7e7e;
 }
-button.dft-apply-btn:focus, button.dft-apply-btn:focus-visible {
+button.dft-delete-btn:focus, button.dft-delete-btn:focus-visible {
   outline-offset: 1px;
-  outline: 1px solid #538eff;
+  outline: 1px solid #ff6868;
 }
 
 /* 일반 버튼 기본값*/
