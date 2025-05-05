@@ -6,6 +6,7 @@ type PrismaModel = {
   update: (args: any) => Promise<any>,
   updateMany: (args: any) => Promise<any>,
   create: (args: any) => Promise<any>,
+  delete: (args: any) => Promise<any>,
   aggregate: (args: any) => Promise<any>,
 };
 
@@ -21,9 +22,19 @@ export async function getProjects(): Promise<List[]> {
     include: {
       folders: {
         include: {
-          items: true,
+          items: {
+            where: {
+              IS_DELETED: 'N',
+            },
+          },
+        },
+        where: {
+          IS_DELETED: 'N',
         },
       },
+    },
+    where: {
+      IS_DELETED: 'N',
     },
   });
 
@@ -54,7 +65,7 @@ export async function getProjects(): Promise<List[]> {
   }));
 }
 
-// List 이름 변경
+// name 변경
 export async function updateListName({
   type,
   id,
@@ -72,12 +83,35 @@ export async function updateListName({
     });
     return result;
   } catch (error) {
-    console.error('프로젝트 이름 업데이트 실패:', error);
-    throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
+    console.error('item name 업데이트 실패:', error);
+    throw new Error('item name 업데이트 실패');
   }
 }
 
-// List 이동 (order, parentId 변경)
+// IconColor 변경
+export async function updateItemIconColor({
+  type,
+  id,
+  newHex,
+}: {
+  type: keyof typeof prismaTable;
+  id: number;
+  newHex: string;
+}) {
+  try {
+    const model = prismaTable[type] as unknown as PrismaModel;
+    const result = await model.update({
+      where: { ID: id },
+      data: { ICON_COLOR: newHex },
+    });
+    return result;
+  } catch (error) {
+    console.error('item IconColor 업데이트 실패:', error);
+    throw new Error('item IconColor 업데이트 실패');
+  }
+}
+
+// item 이동 (order, parentId 변경)
 export async function moveList({
   type,
   id,
@@ -124,12 +158,12 @@ export async function moveList({
       data,
     });
   } catch (error) {
-    console.error('프로젝트 이름 업데이트 실패:', error);
-    throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
+    console.error('item 이동 실패:', error);
+    throw new Error('item 이동 실패');
   }
 }
 
-// List 추가
+// item 추가
 export async function addItemToDB({
   type,
   parentId,
@@ -165,7 +199,49 @@ export async function addItemToDB({
     });
     return result;
   } catch (error) {
-    console.error('프로젝트 이름 업데이트 실패:', error);
-    throw new Error('프로젝트 이름 업데이트에 실패했습니다.');
+    console.error('item 추가 실패:', error);
+    throw new Error('item 추가 실패:');
   }
 }
+
+export async function deleteItemFromDB({
+  itemType,
+  itemId,
+}: {
+  itemType: ListType;
+  itemId: number;
+}) {
+  try {
+    const model = prismaTable[itemType] as unknown as PrismaModel;
+
+    const result = await model.update({
+      where: { ID: itemId },
+      data: { IS_DELETED: 'Y' },
+    });
+    return result;
+  } catch (error) {
+    console.error('item 삭제 실패:', error);
+    throw new Error('item 삭제 실패');
+  }
+}
+
+// item value
+export async function getItemValues({
+  itemId
+}: {
+  itemId: number;
+}) {
+  const itemValues = await prisma.w_VALUES.findMany({
+    where: {
+      row: {
+        ITEM_ID: itemId,
+      },
+    },
+    include: {
+      row: true,
+      field: true,
+    },
+  });
+
+  return itemValues
+};

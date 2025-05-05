@@ -64,19 +64,29 @@ export default function ColorPicker({hex, colorPopupRef, setIsColorPopupOpen, ap
             className="inline-block ml-[2px] outline-none text-center text-[13px] text-[#333333] border-[1px] border-[#808080] p-[2px] w-[58px] rounded-[3px] leading-[100%] bg-gray-100/50"
             value={selectedHex}
             onChange={(e) => {
-              const newHex = e.target.value.replace(/[^0-9a-f]/gi, ''); // 16진수만 허용
+              // 16진수만 허용
+              const newHex = e.target.value.replace(/[^0-9a-f]/gi, '');
               setSelectedHex(newHex);
             }}
             maxLength={6}
           />
         </span>
-        <button type="button" className="ml-[6px] rounded-full hover:bg-gray-200/80 p-[2px]">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" strokeWidth="1.5">
-            <path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25"></path>
-            <path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-            <path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-            <path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-          </svg>
+        {/* 컬러 직접 선택 */}
+        <button type="button" className="flex ml-[6px] rounded-full hover:bg-gray-200/80 p-[2px]">
+          <label htmlFor="colorInput">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" strokeWidth="1.5">
+              <path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25"></path>
+              <path d="M8.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+              <path d="M12.5 7.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+              <path d="M16.5 10.5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+            </svg>
+          </label>
+          <input
+            id="colorInput"
+            type="color"
+            className="w-0 h-0"
+            onChange={(e) => setSelectedHex(e.target.value.replace(/#/, ''))}
+          />
         </button>
       </div>
       <div className="pt-[5px]">

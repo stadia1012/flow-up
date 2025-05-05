@@ -18,7 +18,7 @@ export default async function Sidebar() {
           <div className="ml-auto">
             <SidebarAddButton
               addType="project"
-              parentId={0}
+              item={null}
             />
           </div>
         </div>

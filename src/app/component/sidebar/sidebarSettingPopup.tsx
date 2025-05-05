@@ -1,49 +1,45 @@
-import { useModal } from '@/app/hooks/useModal';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '@/app/store/store';
-import { closeModal } from '@/app/store/modalSlice';
+import { showModal } from '@/app/component/modalUtils';
+import { deleteItemFromDB } from '@/app/controllers/projectController';
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/app/store/store";
+import { deleteItemFromStore }  from "@/app/store/projectsSlice";
 interface SidebarSettingPopupProps {
   popupRef: React.RefObject<HTMLDivElement | null>;
   type: string;
   handleRename?: () => void;
   setIsPopupOpen: (isOpen: boolean) => void;
+  item: List;
 }
 
-export default function SidebarSettingPopup({popupRef, type, handleRename, setIsPopupOpen} : SidebarSettingPopupProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const modal = useModal();
-
-  const deleteItem = async () => {
-    try {
-      await modal({
-        props: {
-          type: 'delete',
-          title: '삭제하시겠습니까?',
-          description: '',
-          buttonText: {
-            confirm: '삭제',
-            cancel: '취소',
-          },
-        }
-      });
-      // 확인 클릭 시 실행할 로직
-      console.log('확인누름');
-    } catch {
-      // 취소 클릭 시 실행할 로직
-      console.log('취소누름');
+export default function SidebarSettingPopup({popupRef, type, handleRename, setIsPopupOpen, item} : SidebarSettingPopupProps) {
+  const dispatch: AppDispatch = useDispatch();
+  const handleDelete = async () => {
+    let title = `'${item.name}'을(를) 삭제하시겠습니까?`;
+    if (['project', 'folder'].includes(type)) {
+      title += `\n하위 항목도 모두 삭제됩니다.`;
     }
-  }
-  
-  const handleConfirm= () => {
-    console.log('확인');
-    dispatch(closeModal());
-    setIsPopupOpen(false);
-  }
-  const handleCancel = () => {
-    console.log('취소');
-    dispatch(closeModal());
-    setIsPopupOpen(false);
-  }
+    try {
+      await showModal({
+        type: 'delete',
+        title: title
+      });
+
+      // 삭제 처리 (DB)
+      await deleteItemFromDB({
+        itemType: item.type,
+        itemId: item.id,
+      })
+
+      // 삭제 처리 (store)
+      dispatch(deleteItemFromStore({
+        itemType: item.type,
+        itemId: item.id,
+      }))
+    } catch {
+      console.log('사용자 취소');
+    }
+  };
+
   return (
     <div className="absolute bg-white p-[10px] pl-[7px] pr-[7px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3 popup-menu" ref={popupRef} onClick={(e) => e.stopPropagation()}>
       <div
@@ -78,7 +74,13 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
         {/* 설정 이름 */}
         <div className="w-[100px]">이동</div>
       </div> }
-      <div className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer">
+      <div
+        className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete();
+        }}
+      >
         {/* 설정 아이콘 */}
         <div className="relative top-[-1px] w-[19px] h-[19px] mr-[8px]">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
@@ -92,10 +94,6 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
         {/* 설정 이름 */}
         <div
           className="w-[100px]"
-          onClick={(e) => {
-            e.stopPropagation();
-            deleteItem();
-          }}
         >삭제</div>
       </div>
     </div>

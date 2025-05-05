@@ -1,15 +1,16 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import SidebarSettingButton from "./sidebarSettingButton";
-import { updateListName, moveList } from '@/app/controllers/projectController';
+import { updateListName, moveList, updateItemIconColor } from '@/app/controllers/projectController';
 import { useDispatch } from "react-redux";
-import { moveFolder, setNameState }  from "@/app/store/projectsSlice";
+import { moveFolder, setNameState, setIconColorState }  from "@/app/store/projectsSlice";
 // drag and drop 관련 import
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flash } from "@/app/animation";
 import DraggableFolder from "./draggableFolder";
 import SidebarAddButton from "./sidebarAddButton";
+import ColorPicker from '../colorPicker';
 
 export default function Project({project, dragStateType}: {project : List, dragStateType: string}) {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
   const renameRef = useRef<HTMLInputElement>(null); // 이름변경 input ref
   const [folders, setFolders] = useState(project ? project.lists : []); // 하위 폴더들
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isColorPopupOpen, setIsColorPopupOpen] = useState(false);
 
   // project 업데이트 시 
   useEffect(() => {
@@ -27,7 +29,51 @@ export default function Project({project, dragStateType}: {project : List, dragS
       setFolders(project.lists);
     }
   }, [project]);
+
+  // color
+  const toggleColorPopup = () => {
+    setIsColorPopupOpen(prev => !prev);
+  }
+  const applyColor = (hex: string) => {
+    setIsColorPopupOpen(false);
+    // redux update
+    dispatch(setIconColorState({
+      type: 'project',
+      id: project.id,
+      newHex : hex
+    }));
+    // db update
+    updateItemIconColor({
+      type: 'project',
+      id: project.id,
+      newHex: hex
+    });
+  };
+  const colorPopupRef = useRef<HTMLDivElement>(null);
+
+  // colorPopup 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!colorPopupRef.current) return;
+
+      const isOutside = !colorPopupRef.current.contains(target);
+      if (isOutside) {
+        // stop: 현재 팝업만 닫기
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        setIsColorPopupOpen(false)
+      };
+    };
+
+    // 팝업이 열려 있을 때만 이벤트 등록
+    if (isColorPopupOpen) {
+      document.addEventListener('click', handleClickOutside, true);
+    }
+    return () => document.removeEventListener('click', handleClickOutside, true);
+  }, [isColorPopupOpen]);
   
+  // rename
   useEffect(() => {
     if (isRename && renameRef.current) {
       renameRef.current.focus();
@@ -162,13 +208,20 @@ export default function Project({project, dragStateType}: {project : List, dragS
       <div
         className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
-        <div className="basis-[22px] h-[22px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[7px] rounded-[4px]">
-          <svg style={{color: `${project.iconColor}`}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+        <button type="button" className="basis-[22px] h-[22px] p-[1.8px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[7px] rounded-[4px]" onClick={toggleColorPopup}>
+          <svg style={{color: `${project.iconColor}`}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={project.iconColor === "000000" ? "none" : "currentColor"} fillOpacity="0.15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
             <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"></path>
             <path d="M3 10h18"></path>
             <path d="M10 3v18"></path>
           </svg>
-        </div>
+        </button>
+        {isColorPopupOpen &&
+        <ColorPicker
+          hex={project.iconColor}
+          colorPopupRef={colorPopupRef}
+          setIsColorPopupOpen={setIsColorPopupOpen}
+          applyColor={applyColor}
+        />}
         {/* 프로젝트 이름 */}
         { isRename ? ( /* 이름변경 시 */
             <div className="flex-1 rename peer">
@@ -190,9 +243,9 @@ export default function Project({project, dragStateType}: {project : List, dragS
         {/* button wrapper */}
         <div className="relative p-[3px] basis-[50px] items-center hidden group-hover:flex has-[.popup-menu]:flex peer-[.rename]:flex peer-[.rename]:opacity-0 peer-[.rename]:pointer-events-none">
           {/* button - add */}
-          <SidebarAddButton addType="folder" parentId={project.id} />
+          <SidebarAddButton addType="folder" item={project} />
           {/* button -setting */}
-          <SidebarSettingButton type="project" handleRename={handleRename} />
+          <SidebarSettingButton type="project" handleRename={handleRename} item={project} />
         </div>
       </div>
       {

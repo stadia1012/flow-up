@@ -1,16 +1,17 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { useDispatch } from "react-redux";
 import { addItemToDB } from "@/app/controllers/projectController";
-import ColorPicker from './colorPicker'
+import ColorPicker from '../colorPicker'
 import { addItemToStore } from "@/app/store/projectsSlice";
+import { showModal } from '@/app/component/modalUtils';
 
 interface SidebarAddPopupProps {
   popupRef: React.RefObject<HTMLDivElement | null>;
   addType: ListType;
   setIsPopupOpen: (isPopupOpen: boolean) => void;
-  parentId: number;
+  item: List | null;
 }
 
 const typeName = {
@@ -19,10 +20,19 @@ const typeName = {
   item: "항목"
 }
 
-export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, parentId} : SidebarAddPopupProps) {
+export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, item} : SidebarAddPopupProps) {
   const dispatch = useDispatch();
   const [iconColor, setIconColor] = useState("000000");
   const [isColorPopupOpen, setIsColorPopupOpen] = useState(false);
+  // addType === item 일때 folder options 표시 목적
+  const [selectedProjectId, setSelectedProjectId] = useState(item?.parentId)
+
+ const selectParentProject = (e:ChangeEvent<HTMLSelectElement>) => {
+  if (addType !== "item") return;
+  setSelectedProjectId(Number(e.target.value))
+ }
+
+  // colorPicker ref
   const colorPopupRef = useRef<HTMLDivElement>(null);
   const toggleColorPopup = () => {
     setIsColorPopupOpen(prev => !prev);
@@ -37,7 +47,8 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
 
   // input List
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const locationSelectRef = useRef<HTMLSelectElement>(null);
+  const projectSelectRef = useRef<HTMLSelectElement>(null);
+  const folderSelectRef = useRef<HTMLSelectElement>(null);
   
   // colorPopup 외부 클릭 감지
   useEffect(() => {
@@ -62,13 +73,16 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
   }, [isColorPopupOpen]);
 
   // 등록 전 유휴성 검사
-  const addItem = () => {
+  const addItem = async () => {
     if (!nameInputRef.current?.value.trim()) {
-      alert("이름을 입력하세요.");
-      return false;
-    }
-    if (locationSelectRef.current && !locationSelectRef.current?.value) {
-      alert("위치를 선택하세요.");
+      try {
+        await showModal({
+          type: 'alert',
+          title: `이름을 입력하세요.`,
+        });
+      } catch {
+        console.log('error');
+      }
       return false;
     }
 
@@ -77,19 +91,23 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
       type: addType,
       name: nameInputRef.current?.value,
       iconColor: iconColor,
-      ...(addType !== "project"
-        ? {parentId: Number(locationSelectRef.current?.value) || 0}
-        : {})
-    }).then((newListItem) => {
+      ...(addType === "folder"
+        ? {parentId: Number(projectSelectRef.current?.value)}
+        : (
+          addType === "item"
+          ? {parentId: Number(folderSelectRef.current?.value)}
+          : {}
+        ))
+    }).then((newItem) => {
       // redux store에 추가
       dispatch(addItemToStore({
-        id: Number(newListItem.ID),
+        id: Number(newItem.ID),
         addType: addType,
-        name: newListItem.NAME,
-        order: Number(newListItem.ORDER),
-        iconColor: newListItem.ICON_COLOR,
+        name: newItem.NAME,
+        order: Number(newItem.ORDER),
+        iconColor: newItem.ICON_COLOR,
         ...(addType !== "project"
-          ? {parentId: Number(newListItem.PARENT_ID) || 0}
+          ? {parentId: Number(newItem.PARENT_ID) || 0}
           : {})
       }))
 
@@ -99,6 +117,18 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
     });
 
     setIsPopupOpen(false);
+  }
+
+  // select 기본 값 구하기
+  let parentProjectId = 0;
+  let parentFolderId = 0;
+  
+  if (addType === "folder") {
+    parentProjectId = Number(item?.id);
+  }
+  if (addType === "item") {
+    parentFolderId = Number(item?.id);
+    parentProjectId = Number(item?.parentId);
   }
   return (
     <div
@@ -133,34 +163,42 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
         />
       </div>
       {/* location */}
-      { addType !== "project" &&
+      { ["folder", "item"].includes(addType) &&
       <div className='mt-[8px]'>
         <div className='text-[13px] font-semibold mb-[1px]'>Location</div>
+        {/* project list */}
         <select
-          className='border-[1px] rounded-[3px] border-gray-400 min-w-full h-[23px] focus:border-blue-400 focus-visible:outline-none'
-          defaultValue={parentId}
-          key={parentId}
-          ref={locationSelectRef}
+          className='border-[1px] rounded-[3px] border-gray-400 min-w-full h-[23px] focus:border-blue-400 focus-visible:outline-none text-[13px]'
+          defaultValue={parentProjectId}
+          key={`p${parentProjectId}`}
+          ref={projectSelectRef}
+          onChange={selectParentProject}
         >
           {
-            addType === "folder" &&
             projectList.map((p) => (
               <option key={p.id} value={p.id} className='text-[13px]'>
                 {p.name}
               </option>
             ))
           }
+        </select>
+        {/* folder list */
+        addType === "item" &&
+        <select
+          className='border-[1px] rounded-[3px] border-gray-400 min-w-full h-[23px] focus:border-blue-400 focus-visible:outline-none text-[13px] mt-[5px]'
+          defaultValue={parentFolderId}
+          key={`f${parentFolderId}`}
+          ref={folderSelectRef}
+        >
           {
-            addType === "item" &&
-            projectList.flatMap((p) => (
-              p.lists?.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))
+            projectList.find((p) => p.id === selectedProjectId)?.lists?.map(f => (
+              <option key={f.id} value={f.id} className='text-[13px]'>
+                {f.name}
+              </option>
             ))
           }
         </select>
+        }
       </div>
       }
       {/* color */}
@@ -200,7 +238,11 @@ export default function SidebarAddPopup({popupRef, addType, setIsPopupOpen, pare
       <div className='flex mt-[5px]'>
         <button
           className='dft-apply-btn ml-auto pt-[4px] pb-[4px] pl-[10px] pr-[10px]'
-          onClick={addItem}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+            addItem();
+          }}
         >추가</button>
       </div>
     </div>

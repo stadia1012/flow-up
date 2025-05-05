@@ -16,7 +16,7 @@ const projectsSlice = createSlice({
       const { initialProjects } = action.payload;
       state.projects = initialProjects;
     },
-    // 폴더 isFolded 상태 업데이트
+    // folder isFolded 상태 업데이트
     setIsFoldedState: (
       state,
       action: PayloadAction<{ type: string, folderId: number, isFolded : boolean }>
@@ -29,7 +29,7 @@ const projectsSlice = createSlice({
 
       list.isFolded = isFolded;
     },
-    // [List 이름 업데이트]
+    // [Item 이름 업데이트]
     setNameState: (
       state,
       action: PayloadAction<{ type: string, id: number, newName : string }>
@@ -49,7 +49,25 @@ const projectsSlice = createSlice({
         targetItem.name = newName;
       }
     },
-    // [project 이동]
+    // [Item iconColor 업데이트]
+    setIconColorState: (
+      state,
+      action: PayloadAction<{ type: string, id: number, newHex : string }>
+    ) => {
+      const { type, id, newHex } = action.payload;
+      const allList = state.projects.flatMap(project => [
+        project, // 프로젝트 추가
+        ...(project.lists ?? []).flatMap(folder => [
+          folder, // 폴더 추가
+          ...(folder.lists ?? []) // 아이템 추가
+        ])
+      ]);
+      const targetItem = allList.find(item => item.type === type && item.id === id);
+      if (targetItem) {
+        targetItem.iconColor = newHex;
+      }
+    },
+    // [Item.project 이동]
     moveProject: (
       state,
       action: PayloadAction<{
@@ -77,7 +95,7 @@ const projectsSlice = createSlice({
         });
       }
     },
-    // [folder 이동]
+    // [Item.folder 이동]
     moveFolder: (
       state,
       action: PayloadAction<{
@@ -114,7 +132,7 @@ const projectsSlice = createSlice({
         }
       }
     },
-    // [item 이동]
+    // [Item.item 이동]
     moveItem: (
       state,
       action: PayloadAction<{
@@ -155,12 +173,12 @@ const projectsSlice = createSlice({
         }
       }
     },
-    // [add item]
+    // [add Item]
     addItemToStore: (
       state,
       action: PayloadAction<{
         id: number;
-        addType: "project" | "folder" | "item";
+        addType: ListType;
         parentId?: number;
         name: string;
         order: number;
@@ -171,7 +189,6 @@ const projectsSlice = createSlice({
 
       // project의 경우
       if (addType === "project") {
-        // top‑level: just push onto the projects array
         state.projects.push({
           id,
           type: "project",
@@ -199,11 +216,10 @@ const projectsSlice = createSlice({
       } else if (addType === "item") {
         parentType = "folder";
       }
-      console.log(`parent 찾기 전`);
+
       // parent 찾기
       const parentItem = allList.find(item => item.type === parentType && item.id === parentId);
       if (!parentItem) return;
-      console.log(`addItem:`, parentItem);
 
       parentItem.lists?.push({
         id,
@@ -217,17 +233,58 @@ const projectsSlice = createSlice({
       })
       return;
     },
+    // [Item 삭제]
+    deleteItemFromStore: (
+      state,
+      action: PayloadAction<{
+        itemType: ListType;
+        itemId: number;
+      }>
+    ) => {
+      const { itemType, itemId } = action.payload;
+
+      // project의 경우
+      if (itemType === "project") {
+        state.projects = state.projects.filter((f) => f.id !== itemId);
+        return;
+      }
+
+      const allList = state.projects.flatMap(project => [
+        project, // 프로젝트
+        ...(project.lists ?? []).flatMap(folder => [
+          folder, // 폴더
+          ...(folder.lists ?? []) // 아이템
+        ])
+      ]);
+
+      const item = allList.find(item => item.type === itemType && item.id === itemId);
+      if (!item) return;
+
+      let parentType = "root";
+      if (itemType === "folder") {
+        parentType = "project";
+      } else if (itemType === "item") {
+        parentType = "folder";
+      }
+      
+      const parentItem = allList.find(f => f.type === parentType && f.id === item.parentId);
+      if (!parentItem) return;
+
+      parentItem.lists = parentItem.lists?.filter((i) => i.id !== itemId);
+    },
   },
 });
 
 export const {
   setProjectsState,
   setNameState,
+  setIconColorState,
   setIsFoldedState,
   moveProject,
   moveFolder,
   moveItem,
   addItemToStore,
+  deleteItemFromStore
   // reorderFolderWithinProject,
 } = projectsSlice.actions;
 

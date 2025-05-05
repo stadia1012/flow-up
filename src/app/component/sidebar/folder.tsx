@@ -1,9 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import SidebarSettingButton from "./sidebarSettingButton";
-import { updateListName, moveList } from '@/app/controllers/projectController';
+import { updateListName, moveList, updateItemIconColor } from '@/app/controllers/projectController';
 import { useDispatch } from "react-redux";
-import { moveItem, setIsFoldedState, setNameState }  from "@/app/store/projectsSlice";
+import { moveItem, setIsFoldedState, setNameState, setIconColorState }  from "@/app/store/projectsSlice";
 import type { AppDispatch } from "@/app/store/store";
 // drag and drop 관련 import
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
@@ -11,6 +11,7 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { flash } from "@/app/animation";
 import DraggableItem from "./draggableItem";
 import SidebarAddButton from "./sidebarAddButton";
+import ColorPicker from '../colorPicker';
 
 export default function Folder({folder, dragStateType}: {folder: List, dragStateType: string}) {
   const dispatch: AppDispatch = useDispatch();
@@ -21,6 +22,7 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
   const renameRef = useRef<HTMLInputElement>(null); // 이름변경 input ref
   const [items, setItems] = useState(folder ? folder.lists : []); // 하위 폴더들
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isColorPopupOpen, setIsColorPopupOpen] = useState(false);
 
   // folder 업데이트 시 
   useEffect(() => {
@@ -30,6 +32,50 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
     }
   }, [folder]);
 
+  // iconColor 변경
+  const toggleColorPopup = () => {
+    setIsColorPopupOpen(prev => !prev);
+  }
+  const applyColor = (hex: string) => {
+    setIsColorPopupOpen(false);
+    // redux update
+    dispatch(setIconColorState({
+      type: 'folder',
+      id: folder.id,
+      newHex : hex
+    }));
+    // db update
+    updateItemIconColor({
+      type: 'folder',
+      id: folder.id,
+      newHex: hex
+    });
+  };
+  const colorPopupRef = useRef<HTMLDivElement>(null);
+
+  // colorPopup 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!colorPopupRef.current) return;
+
+      const isOutside = !colorPopupRef.current.contains(target);
+      if (isOutside) {
+        // stop: 현재 팝업만 닫기
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        setIsColorPopupOpen(false)
+      };
+    };
+
+    // 팝업이 열려 있을 때만 이벤트 등록
+    if (isColorPopupOpen) {
+      document.addEventListener('click', handleClickOutside, true);
+    }
+    return () => document.removeEventListener('click', handleClickOutside, true);
+  }, [isColorPopupOpen]);
+
+ // rename
   useEffect(() => {
     if (isRename && renameRef.current) {
       renameRef.current.focus();
@@ -175,16 +221,23 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
       <div
         className={`group folder ${state} flex items-center p-[2px] pl-4 cursor-default rounded-[5px] h-[30px] hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
-        <div className="w-[23px] h-[23px] p-[1.8px] hover:bg-gray-300 transition-all cursor-pointer mr-[8px] rounded-[4px]">
+        <button type="button" className="w-[23px] h-[23px] p-[1.8px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[8px] rounded-[4px]" onClick={toggleColorPopup}>
           {/* 폴더 아이콘 [foled] */}
-          <svg style={{color: `${folder.iconColor}`}} className="ic_folded group-[.folded]:block group-[.unfolded]:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+          <svg style={{color: `${folder.iconColor}`}} className="relative ic_folded group-[.folded]:block group-[.unfolded]:hidden left-[1px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={folder.iconColor === "000000" ? "none" : "currentColor"} fillOpacity="0.15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
             <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"></path>
           </svg>
           {/* 폴더 아이콘 [unfoled] */}
-          <svg style={{color: `${folder.iconColor}`}} className="ic_unfolded group-[.folded]:hidden group-[.unfolded]:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
+          <svg style={{color: `${folder.iconColor}`}} className="relative ic_unfolded group-[.folded]:hidden group-[.unfolded]:block left-[1px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={folder.iconColor === "000000" ? "none" : "currentColor"} fillOpacity="0.15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
             <path d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2"></path>
           </svg>
-        </div>
+        </button>
+        {isColorPopupOpen &&
+        <ColorPicker
+          hex={folder.iconColor}
+          colorPopupRef={colorPopupRef}
+          setIsColorPopupOpen={setIsColorPopupOpen}
+          applyColor={applyColor}
+        />}
         {/* 폴더 이름 */}
         { isRename ? ( /* 이름변경 시 */
           <div className="flex-1 rename peer">
@@ -206,9 +259,9 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
       {/* button wrapper */}
       <div className="p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
         {/* button - add */}
-        <SidebarAddButton addType="item" parentId={folder.id} />
+        <SidebarAddButton addType="item" item={folder} />
         {/* button - setting */}
-        <SidebarSettingButton type="folder" handleRename={handleRename} />
+        <SidebarSettingButton type="folder" handleRename={handleRename} item={folder} />
       </div>
     </div>
     {

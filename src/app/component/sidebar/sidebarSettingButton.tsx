@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import SidebarSettingPopup from "./sidebarSettingPopup";
 
-export default function SidebarSettingButton({type, handleRename }: {type: string, handleRename?: () => void}) {
+export default function SidebarSettingButton({type, handleRename, item}: {type: string, handleRename?: () => void, item: List}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +36,7 @@ export default function SidebarSettingButton({type, handleRename }: {type: strin
         <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
         <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
       </svg>
-      {isPopupOpen && <SidebarSettingPopup popupRef={popupRef} type={type} handleRename={handleRename} setIsPopupOpen={setIsPopupOpen} />}
+      {isPopupOpen && <SidebarSettingPopup popupRef={popupRef} type={type} handleRename={handleRename} setIsPopupOpen={setIsPopupOpen} item={item} />}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import SidebarAddPopup from "./sidebarAddPopup";
 
-export default function SidebarAddButton({addType, parentId}: {addType: ListType, parentId: number}) {
+export default function SidebarAddButton({addType, item}: {addType: ListType, item: List | null}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
   const buttonRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -41,7 +41,7 @@ export default function SidebarAddButton({addType, parentId}: {addType: ListType
           <path d="M5 12l14 0"></path>
         </svg>
       </div>
-      {isPopupOpen && <SidebarAddPopup popupRef={popupRef} addType={addType} setIsPopupOpen={setIsPopupOpen} parentId={parentId} />}
+      {isPopupOpen && <SidebarAddPopup popupRef={popupRef} addType={addType} setIsPopupOpen={setIsPopupOpen} item={item} />}
     </div>
   );
 }

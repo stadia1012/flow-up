@@ -11,18 +11,6 @@ declare global {
   }
 
   type ListType = "project" | "folder" | "item";
-
-  interface ModalProps {
-    type: "confirm" | "delete" | "alert";
-    title?: ReactNode; 
-    description?: ReactNode;
-    buttonText?: { 
-      confirm?: string;
-      cancel?: string;
-    };
-    onConfirm?: () => void;
-    onCancel?: () => void;
-  }
 }
 
 export const ReactNativeWebView = window.ReactNativeWebView;
