@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
 import { Providers } from "@/app/component/providers";
+import Header from "./component/header";
+import Sidebar from "./component/sidebar/sidebar";
+import Main from "./component/main"
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -23,7 +26,15 @@ export default function RootLayout({
   return (
     <html lang="kr">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="flex flex-col h-full">
+            <Header></Header>
+            <div className="flex flex-row h-full">
+              <Sidebar></Sidebar>
+              {children}
+            </div>
+          </div>
+        </Providers>
       </body>
     </html>
   );

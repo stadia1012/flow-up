@@ -253,7 +253,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
         !isFolded && <div className="relative">
           {
             [...(folders ?? [])].sort((a, b) => (a.order) - (b.order)).map((folder) => (
-              <DraggableFolder key={folder.id} folder={folder} />
+              <DraggableFolder key={folder.id} folder={folder} project={project} />
             ))
           }
         </div>

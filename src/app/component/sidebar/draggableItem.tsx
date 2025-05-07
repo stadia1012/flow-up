@@ -10,7 +10,7 @@ type DragState =
   | { type: "idle" }
   | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> };
 
-export default function DraggableItem({ item }: { item: List }) {
+export default function DraggableItem({ item, project, folder }: { item: List, project: List, folder: List }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
 
@@ -77,7 +77,7 @@ export default function DraggableItem({ item }: { item: List }) {
       {dragState.type === "dragging-over" && dragState.closestEdge && (
         <DropIndicator edge={dragState.closestEdge} gap="0px" />
       )}
-      <Item item={item} />
+      <Item item={item} project={project} folder={folder} />
     </div>
   );
 }

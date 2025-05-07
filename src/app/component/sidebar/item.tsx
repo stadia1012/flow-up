@@ -6,8 +6,9 @@ import { useDispatch } from "react-redux";
 import { setNameState, setIconColorState }  from "@/app/store/projectsSlice";
 import type { AppDispatch } from "@/app/store/store";
 import ColorPicker from '../colorPicker';
+import Link from "next/link";
 
-export default function Item({item}: {item: List}) {
+export default function Item({item, project, folder}: {item: List, project: List, folder: List}) {
   const dispatch: AppDispatch = useDispatch();
   const [isRename, setIsRename] = useState(false); // 이름변경 모드 여부
   const [itemName, setItemName] = useState(item.name); // 이름 state
@@ -133,7 +134,7 @@ export default function Item({item}: {item: List}) {
       />}
       {/* 아이템 이름 */}
       { isRename ? ( /* 이름변경 시 */
-          <div className="flex-1 rename peer">
+          <div className="flex-1 rename">
             <input
               type="text"
               className="w-full px-[6px] py-[0px] outline-solid outline-gray-400 outline-1 rounded-[3px] bg-white"
@@ -146,7 +147,13 @@ export default function Item({item}: {item: List}) {
             />
           </div>
         ) : (
-          <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1">{itemName}</span>
+          <Link href={{
+              pathname: `/${project.id}/${folder.id}/${item.id}`,
+            }}
+            draggable={false}
+          >
+            <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1">{itemName}</span>
+          </Link>
         )
       }
       {/* button wrapper */}

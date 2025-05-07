@@ -13,7 +13,7 @@ import DraggableItem from "./draggableItem";
 import SidebarAddButton from "./sidebarAddButton";
 import ColorPicker from '../colorPicker';
 
-export default function Folder({folder, dragStateType}: {folder: List, dragStateType: string}) {
+export default function Folder({folder, dragStateType, project}: {folder: List, dragStateType: string, project: List}) {
   const dispatch: AppDispatch = useDispatch();
   const [isFolded, setIsFolded] = useState(folder.isFolded);
   const [isRename, setIsRename] = useState(false); // 이름변경 모드 여부
@@ -269,7 +269,7 @@ export default function Folder({folder, dragStateType}: {folder: List, dragState
       !isFolded && <div className="relative">
         {
           [...(items ?? [])].sort((a, b) => (a.order) - (b.order)).map((item) => (
-            <DraggableItem key={item.id} item={item} />
+            <DraggableItem key={item.id} item={item} project={project} folder={folder} />
           ))
         }
       </div>

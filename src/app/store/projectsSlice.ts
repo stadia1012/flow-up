@@ -284,8 +284,8 @@ export const {
   moveFolder,
   moveItem,
   addItemToStore,
-  deleteItemFromStore
-  // reorderFolderWithinProject,
+  deleteItemFromStore,
+  // getParents
 } = projectsSlice.actions;
 
 export default projectsSlice.reducer;

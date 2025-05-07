@@ -10,14 +10,20 @@ export async function GET(
   const id = Number(itemId);
   
   try {
-    // value
-    const rawValues = await prisma.w_VALUES.findMany({
-      where: { row: { ITEM_ID: id } },
-      include: {
-        row: true,
-        field: true,
-      },
-    });
+    // query
+    const [rawValues, fields] = await Promise.all([
+      prisma.w_VALUES.findMany({
+        where: { row: { ITEM_ID: id } },
+        include: {
+          row: true,
+          field: true,
+        },
+      }),
+      prisma.w_FIELDS.findMany({
+        where: { ITEM_ID: id },
+        select: { ID: true, NAME: true, FIELD_TYPE: true }
+      })
+    ])
     
     const rowMap = new Map<number, Record<string, any>>();
     rawValues.forEach(({ row, field, VALUE }) => {
@@ -26,11 +32,6 @@ export async function GET(
       const entry = rowMap.get(key)!;
 
       entry[field?.ID as number] = VALUE;
-    });
-    
-    // fields
-    const fields = await prisma.w_FIELDS.findMany({
-      where: { ITEM_ID: id }
     });
 
     const object = {

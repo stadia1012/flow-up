@@ -8,6 +8,7 @@ type PrismaModel = {
   create: (args: any) => Promise<any>,
   delete: (args: any) => Promise<any>,
   aggregate: (args: any) => Promise<any>,
+  findUnique: (args: any) => Promise<any>,
 };
 
 const prismaTable = {
@@ -48,7 +49,7 @@ export async function getProjects(): Promise<List[]> {
     lists: project.folders.map((folder) => ({
       type: 'folder',
       id: folder.ID,
-      parentId: folder.PARENT_ID ?? undefined,
+      parentId: project.ID ?? undefined,
       name: folder.NAME ?? '',
       iconColor: folder.ICON_COLOR ?? '000000', 
       order: folder.ORDER ?? 0,
@@ -56,13 +57,35 @@ export async function getProjects(): Promise<List[]> {
       lists: folder.items.map((item) => ({
         type: 'item',
         id: item.ID,
-        parentId: item.PARENT_ID ?? undefined,
+        parentId: folder.ID ?? undefined,
         name: item.NAME ?? '',
         iconColor: item.ICON_COLOR ?? '000000', 
         order: item.ORDER ?? 0,
       })),
     })),
   }));
+}
+
+// getProject
+export async function getList({type, id} : {type: ListType; id: number}): Promise<List | undefined> {
+  try {
+    const model = prismaTable[type] as unknown as PrismaModel;
+    const data = await model.findUnique({
+      where: { ID: id}
+    });
+    if (!data) return;
+    return {
+      type: type,
+      id: data.ID,
+      parentId: data.PARENT_ID ?? 0,
+      name: data.NAME ?? '',
+      iconColor: data.ICON_COLOR ?? '000000', 
+      order: data.ORDER ?? 0,
+    }
+  } catch (error) {
+    console.error('project 조회 실패:', error);
+    throw new Error('project 조회 실패');
+  }
 }
 
 // name 변경
@@ -94,7 +117,7 @@ export async function updateItemIconColor({
   id,
   newHex,
 }: {
-  type: keyof typeof prismaTable;
+  type: ListType;
   id: number;
   newHex: string;
 }) {
@@ -224,24 +247,3 @@ export async function deleteItemFromDB({
     throw new Error('item 삭제 실패');
   }
 }
-
-// item value
-export async function getItemValues({
-  itemId
-}: {
-  itemId: number;
-}) {
-  const itemValues = await prisma.w_VALUES.findMany({
-    where: {
-      row: {
-        ITEM_ID: itemId,
-      },
-    },
-    include: {
-      row: true,
-      field: true,
-    },
-  });
-
-  return itemValues
-};

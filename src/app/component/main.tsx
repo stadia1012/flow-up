@@ -1,5 +1,12 @@
-import MainTable from './mainTable'
-export default function Main() {
+'use server'
+import ItemTable from './itemTable'
+export default async function Main() {
+  const res = await fetch(`http://localhost:3000/api/values/1`);
+  const data: {
+    fields: { id: number; name: string }[];
+    values: Record<string, any>[];
+  } = await res.json();
+
   return (
     <div className='flex flex-col p-[15px]'>
       <div className=''>
@@ -12,7 +19,7 @@ export default function Main() {
         </div>
         <h1 className='text-[15px] font-[600] '>Item 1</h1>
       </div>
-      <MainTable />
+      <ItemTable fields={data.fields} values={data.values} />
     </div>
   );
 }

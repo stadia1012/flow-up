@@ -122,6 +122,10 @@ button.dft-btn:focus, .dft-btn:focus-visible {
   outline-offset: 1px;
   outline: 1px solid rgb(100 147 246);
 }
+
+.itemTable th, .itemTable td {
+  font-size: 14px;
+}
 }
 
 @layer utilities {

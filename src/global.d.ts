@@ -1,6 +1,6 @@
 declare global {
   interface List {
-    type: "project" | "folder" | "item";
+    type: ListType;
     id: number;
     parentId?: number;
     name: string;
