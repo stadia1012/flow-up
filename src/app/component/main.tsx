@@ -1,5 +1,5 @@
 'use server'
-import ItemTable from './itemTable'
+import ItemTable from './table/itemTable'
 export default async function Main() {
   const res = await fetch(`http://localhost:3000/api/values/1`);
   const data: {

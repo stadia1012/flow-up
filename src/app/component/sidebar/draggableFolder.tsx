@@ -4,7 +4,7 @@ import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-d
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import Folder from "./folder";
-import { DropIndicator } from "./drop-indicator";
+import { DropIndicator } from "./dropIndicator";
 
 type DragState =
   | { type: "idle" }

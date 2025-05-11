@@ -30,7 +30,8 @@ export async function GET(
       const key = row?.ID as number;
       if (!rowMap.has(key)) rowMap.set(key, {});
       const entry = rowMap.get(key)!;
-
+      entry['rowId'] = row?.ID;
+      entry['order'] = row?.ORDER;
       entry[field?.ID as number] = VALUE;
     });
 

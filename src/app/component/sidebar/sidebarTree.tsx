@@ -17,7 +17,7 @@ export default function SidebarTree({ initialProjects }: { initialProjects: List
     setProjects(initialProjects);
   }, [initialProjects]);
 
-  // 드래그 앤 드롭
+  // 드래그 앤 드롭 - 드롭 영역
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -56,7 +56,7 @@ export default function SidebarTree({ initialProjects }: { initialProjects: List
           updateOrder: Number(updateOrder)
         }));
 
-        // // DB 변경
+        // DB 변경
         console.log(sourceData.projectId, Number(sourceData.order),updateOrder)
         moveList({
           type: 'project',

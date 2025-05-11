@@ -1,5 +1,5 @@
 'use server'
-import ItemTable from '@/app/component/itemTable'
+import ItemTable from '@/app/component/table/itemTable'
 export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   const res = await fetch(`http://localhost:3000/api/values/${itemId}`);
   const data: {
@@ -8,7 +8,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   } = await res.json();
   return (
     <>
-      <ItemTable fields={data.fields} values={data.values} />
+      <ItemTable fields={data.fields} initialData={data.values} />
     </>
   );
 }

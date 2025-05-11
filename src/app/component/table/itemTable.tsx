@@ -1,25 +1,30 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
-
 import {
   useReactTable,
   getCoreRowModel,
   ColumnResizeMode,
   flexRender,
 } from '@tanstack/react-table'
-import ItemTableColumn from './itemTableColumn';
+import { flash } from "@/app/animation";
+import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import ItemTableRow from './itemTableRow';
 
-const columnHelper = createColumnHelper<any>();
 
-export default function ItemTable({fields, values}: {fields: any, values: any}) {
-  const [data, setData] = useState([])
+export default function ItemTable({fields, initialData}: {fields: any, initialData: any}) {
+  const [data, setData] = useState(initialData as [])
   const [columns, setColumns] = useState<any[]>([])
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
-  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
+  const columnHelper = createColumnHelper<any>();
 
+  // drop 영역
+  const containerRef = useRef<HTMLTableSectionElement>(null);
+
+  // 초기 table field 받아오기
   useEffect(() => {
-    // data 받아오기
     const fetchData = async () => {
       try {
         // fields
@@ -34,15 +39,12 @@ export default function ItemTable({fields, values}: {fields: any, values: any}) 
             })
           }));
         }
-
-        // values
-        setData(values);
       } catch (error) {
         console.error('Error:', error);
       }
     };
     fetchData();
-  }, [fields, values]);
+  }, [fields]);
 
   const table = useReactTable({
     data,
@@ -61,10 +63,10 @@ export default function ItemTable({fields, values}: {fields: any, values: any}) 
     });
   };
 
-  // 전체 선택여부
-  const isAllChecked = values.length > 0 && checkedIds.size === values.length;
+  // 전체 check 여부
+  const isAllChecked = data.length > 0 && checkedIds.size === data.length;
 
-  // 
+  // 전체 check
   const handleCheckAll = () => {
     setCheckedIds(prev => {
       if (isAllChecked) {
@@ -75,8 +77,75 @@ export default function ItemTable({fields, values}: {fields: any, values: any}) 
     });
   };
 
+  // 드래그 앤 드롭 - 드롭 영역
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    return dropTargetForElements({
+      element: container,
+      canDrop({ source }) {
+        return true;
+      },
+      onDrop({ source, location }) {
+        const sourceData = source.data;
+        if (!sourceData || !("rowId" in sourceData) || !("order" in sourceData)) return;
+
+        const target = location.current.dropTargets[0];
+
+        const targetData = target.data;
+        if (!targetData || !("rowId" in targetData) || !("order" in targetData)) return;
+        
+        console.log(`target:`, target);
+        console.log(`source:`, source);
+
+        const targetOrder = Number(targetData.order);
+        const closestEdge = extractClosestEdge(targetData);
+        let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
+
+        const newData = data.map((el: any) => ({ ...el }));
+        if (updateOrder > Number(sourceData.order)) {
+          // 후순서로 이동\console.log('후순서 이동');
+          // 소스 ~ 타켓 order -1
+          newData.forEach((el: any) => {
+            if (el.order >= sourceData.order! && el.order <= updateOrder) {
+              el.order -= 1
+            }
+          });
+        } else {
+          // 선순서로 이동
+          console.log('선순서 이동');
+          // 타겟 ~ 소스 order +1
+          newData.forEach((el: any) => {
+            if (el.order >= updateOrder && el.order <= sourceData.order!) {
+              el.order += 1
+            }
+          });
+        }
+        // 대상 업데이트
+        newData.find((el: any) => el.rowId === sourceData.rowId).order = updateOrder;
+        console.log(newData.find((el: any) => el.rowId === sourceData.rowId))
+          
+        console.log('updateOrder: ', updateOrder);
+        console.log('sourceData.order: ', Number(sourceData.order));
+        setData([...newData] as []);
+
+        // DB 변경
+        //
+
+        // 이동 후 flash
+        const element: Element | null = document.querySelector(`[data-row-id="${sourceData.rowId}"]`);
+        if (element instanceof Element) {
+          setTimeout(() => {
+            flash(element);
+          }, 10)
+        }
+      },
+    });
+  }, [data, data]);
+
   return (
-    <div className="pl-[5px] pt-[10px]" style={{ overflowX: 'auto' }}>
+    <div className="relative pl-[5px] pt-[10px]" style={{ overflowX: 'auto' }}>
     <table className="itemTable border-collapse w-full">
       <thead>
         {table.getHeaderGroups().map(headerGroup => (
@@ -171,82 +240,11 @@ export default function ItemTable({fields, values}: {fields: any, values: any}) 
           </tr>
         ))}
       </thead>
-      <tbody>
-        {table.getRowModel().rows.map(row => (
-          <tr key={row.id} className='group hover:bg-gray-100/30 transition'>
-            <td>
-              <button
-                className='
-                  relative invisible group-hover:visible
-                  top-[2px] pl-[2px] pr-[3px]
-                  cursor-move hover:bg-gray-100
-                  transition
-                '
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
-                  <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                  <path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                  <path d="M9 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                  <path d="M15 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                  <path d="M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                  <path d="M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-                </svg>
-              </button>
-            </td>
-            <td>
-              <span
-                role="checkbox"
-                aria-checked={checkedIds.has(row.id)}
-                tabIndex={0}
-                data-id={row.id}
-                onClick={handleCheckbox}
-                onKeyDown={e => {
-                  if (e.key === ' ' || e.key === 'Enter') {
-                    e.preventDefault();
-                    handleCheckbox(e as any);
-                  }
-                }}
-                className={`
-                  inline-block
-                  relative
-                  invisible
-                  group-hover:visible
-                  w-[14px] h-[14px]
-                  border rounded-[2px]
-                  text-center
-                  select-none
-                  cursor-pointer
-                  top-[-3px]
-                  mr-[5px]
-                  ${checkedIds.has(row.id)
-                    ? 'bg-blue-500 text-white border-blue-500 visible'
-                    : 'bg-transparent text-transparent border-gray-400'}
-                `}
-              >
-                <span className='block relative top-[2px] text-[9px] font-[400] leading-[100%]'>✔</span>
-              </span>
-            </td>
-            {row.getVisibleCells().map(cell => (
-              <td
-                onClick={() => console.log(cell.id)}
-                key={cell.id}
-                className={`border-bottom border-gray-300`}
-                style={{
-                  width: cell.column.getSize(),
-                }}
-              >
-                <ItemTableColumn cell={cell}>
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
-                </ItemTableColumn>
-              </td>
-            ))}
-            <td></td>
-          </tr>
+      <tbody ref={containerRef}>
+        {[...table.getRowModel().rows].sort((a, b) => (a.original["order"]) - (b.original["order"])).map((row)  => (
+          <ItemTableRow key={row.id} row={row} checkedIds={checkedIds} handleCheckbox={handleCheckbox} />
         ))}
-        <tr>
+        <tr className='relative'>
           <td>{/* default field */}</td>
           <td>{/* default field */}</td>
           <td>

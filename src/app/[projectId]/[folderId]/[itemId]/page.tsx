@@ -1,4 +1,4 @@
-import ItemTableWrapper from '@/app/component/itemTableWrapper'
+import ItemTableWrapper from '@/app/component/table/itemTableWrapper'
 import { getList } from '@/app/controllers/projectController'
 
 /* params가 비동기(Promise) 객체로 전달되기 때문에 params를 먼저 await한 후에 속성 사용 */
