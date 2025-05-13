@@ -11,6 +11,12 @@ declare global {
   }
 
   type ListType = "project" | "folder" | "item";
+
+  type Field = {
+    id: number;
+    name: string;
+    type: string;
+  };
 }
 
 export const ReactNativeWebView = window.ReactNativeWebView;

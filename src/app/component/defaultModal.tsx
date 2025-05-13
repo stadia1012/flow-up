@@ -65,6 +65,7 @@ export default function DefaultModal({
               <button
                 type="button"
                 className={`${confirmBtnClass} mr-[5px] w-[53px]`}
+                onMouseDown={e => e.preventDefault()}
                 onClick={() => { onConfirm?.(); }}
               >{buttonText?.confirm ?? ((type === 'delete') ? '삭제' : '취소')}</button>
             }
@@ -72,6 +73,7 @@ export default function DefaultModal({
             <button
               type="button"
               className={`${cancelBtnClass}`}
+              onMouseDown={e => e.preventDefault()}
               onClick={() => { onCancel?.(); }}
             >{buttonText?.cancel ?? ((type === 'alert') ? '확인' : '취소')}</button>
           </div>

@@ -198,9 +198,9 @@ export async function addItemToDB({
   name: string;
   iconColor: string;
 }) {
-  const date = new Date();
+  const now = new Date();
   try {
-    const model = prismaTable[type] as unknown as PrismaModel;
+    const model = prismaTable[type] as PrismaModel;
     const maxOrder = await model.aggregate({
       where: {
         ...(type !== "project" && { PARENT_ID: parentId }),
@@ -215,11 +215,25 @@ export async function addItemToDB({
         NAME: name,
         ICON_COLOR: iconColor,
         // REG_ID: 'userId', // 추후에 추가예정
-        ORDER: maxOrder._max.ORDER + 1 || 0,
-        REG_DT: date,
+        ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+        REG_DT: now,
         ...(type !== "project" && { PARENT_ID: parentId }), // 조건부
       },
-    });
+    })
+
+    // default field 'Name'
+    if (type === "item") {
+      await prisma.w_FIELDS.create({
+        data: {
+          ITEM_ID: result.ID,
+          ORDER: 0,
+          NAME: "Name",
+          FIELD_TYPE: 'name',
+          REG_ID: 'system',
+          REG_DT: now,
+        },
+      });
+    }
     return result;
   } catch (error) {
     console.error('item 추가 실패:', error);

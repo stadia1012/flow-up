@@ -11,14 +11,60 @@ import { flash } from "@/app/animation";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import ItemTableRow from './itemTableRow';
+import AddRowButton from './addRowButton';
+import { moveTaskRow, addTaskToDB } from '@/app/controllers/taskController';
 
-
-export default function ItemTable({fields, initialData}: {fields: any, initialData: any}) {
-  const [data, setData] = useState(initialData as [])
-  const [columns, setColumns] = useState<any[]>([])
+export default function ItemTable({fields, initialData, itemId}: {fields: Field[], initialData: any, itemId: number}) {
+  const [data, setData] = useState<any[]>(initialData);
+  const [columns, setColumns] = useState<any[]>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
-  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const columnHelper = createColumnHelper<any>();
+
+  const addNewTask = (name: string) => {
+    const newData = data.map(el => ({ ...el }));
+
+    // 1. 최대 order 계산
+    const maxOrder = newData.reduce(
+      (max, el) => (typeof el.order === 'number' && el.order > max ? el.order : max),
+      0
+    );
+
+    // 2. 임시 rowId 생성
+    const tempRowId = Date.now();
+
+    // 3. 새 행 객체 생성
+    const newRow: Record<string, any> = {
+      rowId: tempRowId,
+      order: maxOrder + 1,
+    };
+    // 'name' 타입에 name 할당
+    const nameField = fields.find(f => f.type === 'name');
+    fields.forEach(f => {
+      newRow[f.id] = f.id === nameField?.id ? name : '';
+    });
+
+    // 4. 상태 업데이트
+    newData.push(newRow);
+    setData(newData);
+
+    // 5. 새로 추가된 행에 플래시 애니메이션 적용
+    setTimeout(() => {
+      const el = document.querySelector(`[data-row-id="${tempRowId}"]`);
+      if (el) {
+        flash(el);
+      }
+    }, 10);
+
+    // DB에 추가
+    addTaskToDB({
+      itemId: itemId,
+      name
+    }).then((newTask) => {
+      newRow.rowId = newTask.ID;
+      setData([...newData]);
+    });
+  }
 
   // drop 영역
   const containerRef = useRef<HTMLTableSectionElement>(null);
@@ -29,9 +75,9 @@ export default function ItemTable({fields, initialData}: {fields: any, initialDa
       try {
         // fields
         if (fields) {
-          setColumns(fields.map((f: any) => {
-            return columnHelper.accessor(f.ID.toString(), {
-              header: f.NAME,
+          setColumns(fields.map((f) => {
+            return columnHelper.accessor(f.id?.toString(), {
+              header: f.name,
               size: 200,
               minSize: 100,
               maxSize: 400,
@@ -103,10 +149,13 @@ export default function ItemTable({fields, initialData}: {fields: any, initialDa
         const closestEdge = extractClosestEdge(targetData);
         let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
 
-        const newData = data.map((el: any) => ({ ...el }));
+        // const newData = data.map((el: any) => ({ ...el }));
+        const newData = [...data];
         if (updateOrder > Number(sourceData.order)) {
-          // 후순서로 이동\console.log('후순서 이동');
+          // 후순서로 이동
+          console.log('후순서 이동');
           // 소스 ~ 타켓 order -1
+          updateOrder--; // 조정
           newData.forEach((el: any) => {
             if (el.order >= sourceData.order! && el.order <= updateOrder) {
               el.order -= 1
@@ -131,7 +180,11 @@ export default function ItemTable({fields, initialData}: {fields: any, initialDa
         setData([...newData] as []);
 
         // DB 변경
-        //
+        moveTaskRow({
+          rowId: Number(sourceData.rowId),
+          sourceOrder: Number(sourceData.order),
+          updateOrder
+        })
 
         // 이동 후 flash
         const element: Element | null = document.querySelector(`[data-row-id="${sourceData.rowId}"]`);
@@ -146,7 +199,7 @@ export default function ItemTable({fields, initialData}: {fields: any, initialDa
 
   return (
     <div className="relative pl-[5px] pt-[10px]" style={{ overflowX: 'auto' }}>
-    <table className="itemTable border-collapse w-full">
+    <table className="itemTable border-collapse">
       <thead>
         {table.getHeaderGroups().map(headerGroup => (
           <tr key={headerGroup.id} className='group'>
@@ -198,7 +251,7 @@ export default function ItemTable({fields, initialData}: {fields: any, initialDa
                 `}
                 data-type={fields.find((f: any) => {
                     f.ID === header.id
-                  })?.FIELD_TYPE || ''
+                  })?.type || ''
                 }
                 style={{
                   width: header.getSize(),
@@ -244,30 +297,7 @@ export default function ItemTable({fields, initialData}: {fields: any, initialDa
         {[...table.getRowModel().rows].sort((a, b) => (a.original["order"]) - (b.original["order"])).map((row)  => (
           <ItemTableRow key={row.id} row={row} checkedIds={checkedIds} handleCheckbox={handleCheckbox} />
         ))}
-        <tr className='relative'>
-          <td>{/* default field */}</td>
-          <td>{/* default field */}</td>
-          <td>
-            <button className='
-              flex items-center
-              border border-gray-300 rounded-[3px]
-              hover:border-gray-400
-              pt-[1px] pb-[1px] pr-[6px] pl-[3px]
-              mt-[3px]
-              transition
-              cursor-pointer
-              group
-            '>
-              <span>
-                <svg className='text-[#777777] group-hover:text-[#555555]' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="17" height="17" strokeWidth="1.5">
-                  <path d="M12 5l0 14"></path>
-                  <path d="M5 12l14 0"></path>
-                </svg>
-              </span>
-              <span className='text-[13px] text-gray-500 font-[400] ml-[3px] group-hover:text-gray-700'>Add Task</span>
-            </button>
-          </td>
-        </tr>
+        <AddRowButton fields={fields} addNewTask={addNewTask} />
       </tbody>
     </table>
     </div>

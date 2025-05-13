@@ -11,7 +11,8 @@ export async function GET(
   
   try {
     // query
-    const [rawValues, fields] = await Promise.all([
+    const [rawValues, rawfields] = await Promise.all([
+      // rawValues
       prisma.w_VALUES.findMany({
         where: { row: { ITEM_ID: id } },
         include: {
@@ -19,6 +20,7 @@ export async function GET(
           field: true,
         },
       }),
+      // rawfields
       prisma.w_FIELDS.findMany({
         where: { ITEM_ID: id },
         select: { ID: true, NAME: true, FIELD_TYPE: true }
@@ -37,7 +39,11 @@ export async function GET(
 
     const object = {
       values: Array.from(rowMap.values()),
-      fields: fields
+      fields: rawfields.map(f => ({
+        id: f.ID,
+        name: f.NAME,
+        type: f.FIELD_TYPE
+      }))
     }
 
     return NextResponse.json(object);

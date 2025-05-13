@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model AUDIT_LOG {
   LOG_SEQ  Int     @id @default(autoincrement())
   LOG_CD   String? @db.VarChar(5)
@@ -21,7 +21,7 @@ model AUDIT_LOG {
   REMARKS  String? @db.VarChar(50)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model BASIS_ITEM {
   SEQ       Int     @id @default(autoincrement())
   ITEM_TYPE String? @db.VarChar(20)
@@ -30,7 +30,7 @@ model BASIS_ITEM {
   ITEM_VAL  String? @db.VarChar(100)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model CBT_LOG {
   LOG_SEQ  Int     @id @default(autoincrement())
   LOG_CD   String? @db.VarChar(5)
@@ -44,7 +44,7 @@ model CBT_LOG {
   REMARKS  String? @db.VarChar(50)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model CBT_USER {
   USER_SEQ       Int     @id @default(autoincrement())
   USER_ID        String? @db.VarChar(10)
@@ -73,7 +73,7 @@ model CBT_USER {
   TEST_YN        String? @db.VarChar(3)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model CBT_USER_AUTH {
   SEQ       Int     @id @default(autoincrement())
   USER_ID   String  @db.VarChar(15)
@@ -82,7 +82,7 @@ model CBT_USER_AUTH {
   @@index([USER_ID], map: "USER_ID")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model CBT_USER_DEPT {
   DEPT_SEQ     Int     @id @default(autoincrement())
   DEPT_CODE    String  @db.VarChar(8)
@@ -100,21 +100,21 @@ model CBT_USER_DEPT {
   ORDER_INDEX  String? @db.VarChar(3)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model CBT_USER_RANK {
   SEQ         Int     @id @default(autoincrement())
   RANK_NAME   String? @db.VarChar(15)
   ORDER_INDEX String? @db.VarChar(3)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model MAIL_BLOCKED {
   SEQ      Int     @id @default(autoincrement())
   SYS_TYPE String? @db.VarChar(5)
   USER_ID  String? @db.VarChar(15)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model MAIL_NOTIFICATION {
   SEQ        Int     @id @default(autoincrement())
   SYS_TYPE   String? @db.VarChar(5)
@@ -122,7 +122,7 @@ model MAIL_NOTIFICATION {
   ENABLED_YN String? @db.VarChar(2)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model MENU_PERMISSIONS {
   SEQ        Int     @id
   MENU_ID    String? @db.VarChar(25)
@@ -132,7 +132,7 @@ model MENU_PERMISSIONS {
   BLOCK_MSG  String? @db.VarChar(60)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model CBT_USER_VRFC {
   SEQ      Int     @id @default(autoincrement())
   USER_ID  String? @db.VarChar(15)
@@ -141,7 +141,7 @@ model CBT_USER_VRFC {
   FAIL_CNT Int
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_ABLT_CONFIG {
   SEQ     Int     @id @default(autoincrement())
   ABLT_YR String? @db.VarChar(5)
@@ -151,7 +151,7 @@ model KPI_ABLT_CONFIG {
   REG_DT  String? @db.VarChar(30)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_ABLT_SCORE {
   SEQ        Int     @id @default(autoincrement())
   CONFIG_SEQ Int?
@@ -159,7 +159,7 @@ model KPI_ABLT_SCORE {
   ABLT_SCORE String? @db.VarChar(5)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_ATTACH {
   SEQ         Int     @id @default(autoincrement())
   DOC_TYPE    String? @db.VarChar(10)
@@ -168,7 +168,7 @@ model KPI_ATTACH {
   ATTACH_FILE String? @db.VarChar(150)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_BD {
   SEQ        Int     @id @default(autoincrement())
   BD_TP      String? @db.VarChar(9)
@@ -182,7 +182,7 @@ model KPI_BD {
   UPD_DT     String? @db.VarChar(30)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_CLOSE {
   CL_YR   Int
   CL_TP   String @db.VarChar(5)
@@ -192,7 +192,7 @@ model KPI_CLOSE {
   @@id([CL_YR, CL_TP, CL_CORP, CL_ID])
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_EDITOR {
   SEQ          Int     @id @default(autoincrement())
   DOC_TYPE     String? @db.VarChar(10)
@@ -200,7 +200,7 @@ model KPI_EDITOR {
   EDTR_CONTENT String? @db.Text
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_FIN {
   FIN_SEQ     Int     @id @default(autoincrement())
   PLAN_SEQ    Int?
@@ -227,7 +227,7 @@ model KPI_FIN {
   REJECT_ID   String? @db.VarChar(15)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_FIN_ABILITY {
   SEQ       Int     @id @default(autoincrement())
   FIN_SEQ   Int?
@@ -238,7 +238,7 @@ model KPI_FIN_ABILITY {
   ABLT_ROW4 String? @db.VarChar(6)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_FIN_COMMENT {
   SEQ            Int     @id @default(autoincrement())
   FIN_SEQ        Int?
@@ -248,7 +248,7 @@ model KPI_FIN_COMMENT {
   COMMENT_AR     String? @db.Text
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_FIN_RESULT {
   SEQ             Int     @id @default(autoincrement())
   FIN_SEQ         Int?
@@ -272,7 +272,7 @@ model KPI_FIN_RESULT {
   DIV_TXT         String? @db.VarChar(25)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_FIN_ROWS {
   ROWS_SEQ         Int     @id @default(autoincrement())
   FIN_SEQ          Int?
@@ -289,7 +289,7 @@ model KPI_FIN_ROWS {
   CONTS_CNF2_OP    String? @db.Text
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_FIN_STATE {
   SEQ           Int     @id @default(autoincrement())
   USER_ID       String? @db.VarChar(15)
@@ -300,7 +300,7 @@ model KPI_FIN_STATE {
   LAST_ACT_USER String? @db.VarChar(15)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_MID {
   MID_SEQ     Int     @id @default(autoincrement())
   PLAN_SEQ    Int?
@@ -327,7 +327,7 @@ model KPI_MID {
   REJECT_ID   String? @db.VarChar(15)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_MID_ABILITY {
   SEQ       Int     @id @default(autoincrement())
   MID_SEQ   Int?
@@ -338,7 +338,7 @@ model KPI_MID_ABILITY {
   ABLT_ROW4 String? @db.VarChar(6)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_MID_COMMENT {
   SEQ            Int     @id @default(autoincrement())
   MID_SEQ        Int?
@@ -348,7 +348,7 @@ model KPI_MID_COMMENT {
   COMMENT_AR     String? @db.Text
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_MID_ROWS {
   ROWS_SEQ         Int     @id @default(autoincrement())
   MID_SEQ          Int?
@@ -364,7 +364,7 @@ model KPI_MID_ROWS {
   CONTS_CNF2_OP    String? @db.Text
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_MID_STATE {
   SEQ           Int     @id @default(autoincrement())
   USER_ID       String? @db.VarChar(15)
@@ -375,7 +375,7 @@ model KPI_MID_STATE {
   LAST_ACT_USER String? @db.VarChar(15)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PLAN {
   PLAN_SEQ     Int     @id
   REG_ID       String  @db.VarChar(15)
@@ -405,7 +405,7 @@ model KPI_PLAN {
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PLAN_COMMENT {
   PLAN_SEQ       Int
   COMMENT_SUBMIT String? @db.Text
@@ -418,7 +418,7 @@ model KPI_PLAN_COMMENT {
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PLAN_M_DESC {
   PLAN_SEQ Int
   MTD_NUM  String  @db.VarChar(3)
@@ -427,7 +427,7 @@ model KPI_PLAN_M_DESC {
   @@ignore
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PLAN_ROWS {
   ROWS_SEQ        Int     @id
   PLAN_SEQ        Int
@@ -445,7 +445,7 @@ model KPI_PLAN_ROWS {
   @@index([PLAN_SEQ], map: "PLAN_SEQ")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PLAN_STATE {
   SEQ           Int     @id @default(autoincrement())
   USER_ID       String? @db.VarChar(15)
@@ -457,7 +457,7 @@ model KPI_PLAN_STATE {
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PRFM_CHG {
   SEQ        Int?
   CONFIG_SEQ Int?
@@ -466,7 +466,7 @@ model KPI_PRFM_CHG {
   @@ignore
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_PRFM_CONFIG {
   SEQ          Int     @id @default(autoincrement())
   PRFM_YR      String? @db.VarChar(5)
@@ -476,7 +476,7 @@ model KPI_PRFM_CONFIG {
   TOTAL_SCORE  Int?
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_RESULT_HARD {
   SEQ             Int     @id @default(autoincrement())
   RSLT_YR         String? @db.VarChar(5)
@@ -491,7 +491,7 @@ model KPI_RESULT_HARD {
   DIV_TXT         String? @db.VarChar(25)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_RESULT_REWARD {
   SEQ      Int     @id @default(autoincrement())
   RSLT_YR  String? @db.VarChar(5)
@@ -504,7 +504,7 @@ model KPI_RESULT_REWARD {
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_TEST {
   TEST_VARCHAR  String? @db.VarChar(20)
   TEST_TEXT     String? @db.Text
@@ -515,7 +515,7 @@ model KPI_TEST {
   @@ignore
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model KPI_USER_EXT {
   EXT_SEQ   Int     @id @default(autoincrement())
   USER_ID   String  @db.VarChar(15)
@@ -523,7 +523,7 @@ model KPI_USER_EXT {
   PLAN_CHG  String? @db.VarChar(2)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model RGNT_IN {
   SEQ        Int     @id @default(autoincrement())
   ORDER_CD   String? @db.VarChar(15)
@@ -536,7 +536,7 @@ model RGNT_IN {
   REMARK     String? @db.VarChar(100)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model RGNT_INFO {
   SEQ            Int     @id @default(autoincrement())
   RGNT_CD        String? @db.VarChar(15)
@@ -548,6 +548,7 @@ model RGNT_INFO {
   DEL_YN         String? @db.VarChar(3)
   DEL_DT         String? @db.VarChar(30)
   INCOMING_DT    String? @db.VarChar(30)
+  CATEGORY_CD    Int?
   NM_EN          String? @db.VarChar(100)
   NM_KO          String? @db.VarChar(100)
   MANUFACTURER   String? @db.VarChar(100)
@@ -559,11 +560,12 @@ model RGNT_INFO {
   EXPIRY_DT      String? @db.VarChar(30)
   COND           String? @db.VarChar(50)
   WRHS_CD        String? @db.VarChar(50)
+  WRHS_DETAIL_CD String? @db.VarChar(50)
   USE_DEPT_CD    String? @db.VarChar(50)
   REMARK         String? @db.Text
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+
 model RGNT_OUT {
   SEQ        Int     @id @default(autoincrement())
   ORDER_CD   String? @db.VarChar(15)
@@ -576,7 +578,12 @@ model RGNT_OUT {
   REMARK     String? @db.VarChar(100)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model RGNT_CATEGORY {
+  CATEGORY_CD Int @id @default(autoincrement())
+  CATEGORY_NM String? @db.VarChar(30)
+}
+
+
 model SMTP_CONFIG {
   SEQ       Int     @id @default(autoincrement())
   SYS_TYPE  String? @db.VarChar(5)

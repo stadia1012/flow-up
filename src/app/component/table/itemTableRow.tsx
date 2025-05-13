@@ -17,6 +17,7 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
   // drag 요소
   const ref = useRef<HTMLTableRowElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
+  const [isDragging, setIsDragging] = useState(false);
 
   // 드래그 앤 드롭 - 드래그
   useEffect(() => {
@@ -29,9 +30,12 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
           element: element,
           canDrag({ element }) {
             // 드래그 비활성화
-            if (element.querySelector('input, .popup-menu')) {
+            console.log(element)
+            if (!element.classList.contains('dragging')) {
+              console.log('f')
               return false;
             }
+            console.log('t')
             return true;
           },
           getInitialData() {
@@ -86,10 +90,10 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
       ref={ref}
       data-row-id={row.original["rowId"]}
       data-order={row.original["order"]}
-      className='relative group hover:bg-[#fbfbfc] transition'
+      className={`relative group hover:bg-[#fbfbfc] transition ${isDragging ? 'dragging' : ''}`}
     >
       <td>
-        <button className='relative invisible group-hover:visible top-[2px] pl-[2px] pr-[3px] cursor-move hover:bg-gray-200/49 transition'>
+        <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[3px] cursor-move hover:bg-gray-200/49 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
             <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
             <path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
@@ -114,17 +118,11 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
             }
           }}
           className={`
-            inline-block
-            relative
-            invisible
-            group-hover:visible
-            w-[14px] h-[14px]
+            inline-block relative invisible group-hover:visible
+            w-[14px] h-[14px] top-[-3px] mr-[5px]
             border rounded-[2px]
             text-center
-            select-none
-            cursor-pointer
-            top-[-3px]
-            mr-[5px]
+            select-none cursor-pointer
             ${checkedIds.has(row.id)
               ? 'bg-blue-500 text-white border-blue-500 visible'
               : 'bg-transparent text-transparent border-gray-400'}
