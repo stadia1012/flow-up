@@ -234,7 +234,8 @@ export default function Project({project, dragStateType}: {project : List, dragS
                 onKeyDown={handleKeyDown}
                 autoComplete="off"
                 spellCheck="false"
-                />
+                maxLength={30}
+              />
             </div>
           ) : (
             <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>

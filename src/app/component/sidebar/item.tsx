@@ -115,7 +115,7 @@ export default function Item({item, project, folder}: {item: List, project: List
   return (
     <div className="group flex items-center p-[2px] pl-6.5 cursor-pointer rounded-[5px] h-[30px] hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1]">
       {/* 아이템 아이콘 */}
-      <button type="button" className="w-[22px] h-[22px] p-[2.3px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[7px] rounded-[4px]" onClick={toggleColorPopup}>
+      <button type="button" className="w-[22px] h-[22px] p-[2.3px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[7px] rounded-[4px] shrink-0" onClick={toggleColorPopup}>
         <svg style={{color: `${item.iconColor}`}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
           <path d="M9 6l11 0"></path>
           <path d="M9 12l11 0"></path>
@@ -144,14 +144,11 @@ export default function Item({item, project, folder}: {item: List, project: List
               onKeyDown={handleKeyDown}
               autoComplete="off"
               spellCheck="false"
+              maxLength={30}
             />
           </div>
         ) : (
-          <Link href={{
-              pathname: `/${project.id}/${folder.id}/${item.id}`,
-            }}
-            draggable={false}
-          >
+          <Link href={{pathname: `/${project.id}/${folder.id}/${item.id}`}} draggable={false} className="w-full ">
             <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1">{itemName}</span>
           </Link>
         )
