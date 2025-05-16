@@ -63,6 +63,7 @@ export async function moveTaskRow({
   }
 }
 
+// task (row) 추가
 export async function addTaskToDB({itemId, name} : {itemId: number, name: string}) {
   // max order 구하기
   const maxOrder = await prisma.w_ROWS.aggregate({
@@ -76,6 +77,7 @@ export async function addTaskToDB({itemId, name} : {itemId: number, name: string
 
   // field 구하기
   const fields = await prisma.w_FIELDS.findMany({
+    include: { fieldType: true },
     where: {
       ITEM_ID: itemId
     }
@@ -93,7 +95,7 @@ export async function addTaskToDB({itemId, name} : {itemId: number, name: string
 
   // value 추가
   fields.forEach(async (f) => {
-    const value = f.FIELD_TYPE === 'name' ? name : ''
+    const value = f.fieldType.DATA_TYPE === 'name' ? name : ''
     await prisma.w_VALUES.create({
       data: {
         ROW_ID: result.ID,
@@ -104,4 +106,99 @@ export async function addTaskToDB({itemId, name} : {itemId: number, name: string
     });
   })
   return result;
+}
+
+// value 수정
+export async function updateValueToDB({
+  rowId, fieldId, value
+}: {
+  rowId: number, fieldId: number, value: string
+}) {
+  await prisma.w_VALUES.updateMany({
+    where: {
+      ROW_ID: rowId,
+      FIELD_ID: fieldId
+    },
+    data: { VALUE: value },
+  });
+}
+
+// field 중복 검사
+export async function checkDuplicateFields({
+  name, type
+}: {
+  name: string, type: string
+}) {
+  const result = await prisma.w_FIELD_TYPES.findMany({
+    where: {
+      NAME: name,
+      DATA_TYPE: type
+    },
+  });
+
+  return {
+    isDuplicate: (0 < result.length),
+    result
+  };
+}
+
+// field 추가
+export async function addFieldToDB({
+  itemId, name, type
+}: {
+  itemId: number, name: string, type: string
+}) {
+  const now = new Date();
+  // field type 추가
+  const fieldType = await prisma.w_FIELD_TYPES.create({
+    data: {
+      NAME: name,
+      DATA_TYPE: type,
+      REG_DT: now
+    },
+  });
+
+  // field maxOrder 조회
+  const maxOrder = await prisma.w_FIELDS.aggregate({
+    where: {
+      ITEM_ID: itemId
+    },
+    _max: {
+      ORDER: true
+    }
+  });
+
+  // field 추가
+  const newField = await prisma.w_FIELDS.create({
+    data: {
+      ITEM_ID: itemId,
+      FIELD_TYPE_ID: fieldType.ID,
+      ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+      WIDTH: 200,
+      REG_DT: now
+    },
+  });
+
+  // row 조회
+  const rows = await prisma.w_ROWS.findMany({
+    where: {
+      ITEM_ID: itemId,
+    },
+  });
+  
+  // row별 value 추가
+  const newDatas: {rowId: number, valueId: number}[] = [];
+  rows.forEach(async (row) => {
+    const newData = await prisma.w_VALUES.create({
+      data: {
+        ROW_ID: row.ID,
+        FIELD_ID: newField.ID,
+        VALUE: '',
+        REG_DT: now
+      },
+    });
+    newDatas.push({ rowId: row.ID, valueId: newData.ID })
+  })
+
+  return newDatas;
 }

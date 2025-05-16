@@ -565,7 +565,6 @@ model RGNT_INFO {
   REMARK         String? @db.Text
 }
 
-
 model RGNT_OUT {
   SEQ        Int     @id @default(autoincrement())
   ORDER_CD   String? @db.VarChar(15)
@@ -583,7 +582,6 @@ model RGNT_CATEGORY {
   CATEGORY_NM String? @db.VarChar(30)
 }
 
-
 model SMTP_CONFIG {
   SEQ       Int     @id @default(autoincrement())
   SYS_TYPE  String? @db.VarChar(5)
@@ -597,7 +595,7 @@ model SMTP_CONFIG {
 
 model W_PROJECTS {
   ID      Int        @id @default(autoincrement())
-  NAME    String?    @db.VarChar(30)
+  NAME    String?    @db.VarChar(50)
   ICON_COLOR String? @db.VarChar(6) 
   ORDER   Int?
   IS_DELETED String @default("N") @db.VarChar(1)            
@@ -612,7 +610,7 @@ model W_PROJECTS {
 model W_FOLDERS {
   ID         Int       @id @default(autoincrement())
   PARENT_ID  Int?
-  NAME       String?   @db.VarChar(30)
+  NAME       String?   @db.VarChar(50)
   ICON_COLOR String? @db.VarChar(6) 
   ORDER      Int?
   IS_DELETED String @default("N") @db.VarChar(1)    
@@ -628,7 +626,7 @@ model W_FOLDERS {
 model W_ITEMS {
   ID        Int       @id @default(autoincrement())
   PARENT_ID Int?
-  NAME      String?   @db.VarChar(30)
+  NAME      String?   @db.VarChar(50)
   ICON_COLOR String? @db.VarChar(6) 
   ORDER     Int?
   IS_DELETED String @default("N") @db.VarChar(1)    
@@ -641,17 +639,30 @@ model W_ITEMS {
 }
 
 model W_FIELDS {
+  ID            Int       @id @default(autoincrement())
+  ITEM_ID       Int?
+  FIELD_TYPE_ID Int
+  ORDER         Int?
+  WIDTH         Int?
+  REG_ID        String?   @db.VarChar(15)
+  REG_DT        DateTime?
+  UPDT_ID       String?   @db.VarChar(15)
+  UPDT_DT       DateTime?
+
+  values     W_VALUES[] @relation("FieldValues")
+  fieldType     W_FIELD_TYPES   @relation("FieldType", fields: [FIELD_TYPE_ID], references: [ID])
+}
+
+model W_FIELD_TYPES {
   ID         Int       @id @default(autoincrement())
-  ITEM_ID    Int?
-  ORDER      Int?
-  NAME       String?   @db.VarChar(30)
-  FIELD_TYPE String?   @db.VarChar(10) // text, number, select
+  NAME       String?   @db.VarChar(50)
+  DATA_TYPE  String?   @db.VarChar(15) @default("text")
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime?
   UPDT_ID    String?   @db.VarChar(15)
   UPDT_DT    DateTime?
 
-  values     W_VALUES[] @relation("FieldValues")
+  fields     W_FIELDS[]   @relation("FieldType")
 }
 
 model W_ROWS {

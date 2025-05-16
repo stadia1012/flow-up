@@ -23,7 +23,7 @@ export async function GET(
       // rawfields
       prisma.w_FIELDS.findMany({
         where: { ITEM_ID: id },
-        select: { ID: true, NAME: true, FIELD_TYPE: true }
+        select: { ID: true, fieldType: true, ORDER: true }
       })
     ])
     
@@ -41,8 +41,9 @@ export async function GET(
       values: Array.from(rowMap.values()),
       fields: rawfields.map(f => ({
         id: f.ID,
-        name: f.NAME,
-        type: f.FIELD_TYPE
+        name: f.fieldType.NAME,
+        type: f.fieldType.DATA_TYPE,
+        order: f.ORDER
       }))
     }
 

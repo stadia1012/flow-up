@@ -8,7 +8,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   } = await res.json();
   return (
     <>
-      <ItemTable fields={data.fields} initialData={data.values} itemId={itemId} />
+      <ItemTable fields={data.fields} initialValues={data.values} itemId={itemId} />
     </>
   );
 }

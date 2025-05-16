@@ -12,43 +12,44 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import ItemTableRow from './itemTableRow';
 import AddRowButton from './addRowButton';
-import { moveTaskRow, addTaskToDB } from '@/app/controllers/taskController';
+import { moveTaskRow, addTaskToDB, updateValueToDB } from '@/app/controllers/taskController';
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/app/store/store";
+import { handleFieldSelector }  from "@/app/store/fieldSlice";
 
-export default function ItemTable({fields, initialData, itemId}: {fields: Field[], initialData: any, itemId: number}) {
-  const [data, setData] = useState<any[]>(initialData);
+export default function ItemTable({fields, initialValues, itemId}: {fields: Field[], initialValues: any, itemId: number}) {
+  const [values, setValues] = useState<any[]>(initialValues);
   const [columns, setColumns] = useState<any[]>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const columnHelper = createColumnHelper<any>();
+  const dispatch: AppDispatch = useDispatch();
 
+  // task (row) 추가
   const addNewTask = (name: string) => {
-    const newData = data.map(el => ({ ...el }));
-
-    // 1. 최대 order 계산
+    const newData = values.map(el => ({ ...el }));
     const maxOrder = newData.reduce(
-      (max, el) => (typeof el.order === 'number' && el.order > max ? el.order : max),
-      0
+      (max, el) => (typeof el.order === 'number' && el.order > max ? el.order : max), 0
     );
 
-    // 2. 임시 rowId 생성
+    // 임시 rowId 생성
     const tempRowId = Date.now();
-
-    // 3. 새 행 객체 생성
     const newRow: Record<string, any> = {
       rowId: tempRowId,
       order: maxOrder + 1,
     };
+
     // 'name' 타입에 name 할당
     const nameField = fields.find(f => f.type === 'name');
     fields.forEach(f => {
       newRow[f.id] = f.id === nameField?.id ? name : '';
     });
 
-    // 4. 상태 업데이트
+    // 상태 업데이트
     newData.push(newRow);
-    setData(newData);
+    setValues(newData);
 
-    // 5. 새로 추가된 행에 플래시 애니메이션 적용
+    // flash
     setTimeout(() => {
       const el = document.querySelector(`[data-row-id="${tempRowId}"]`);
       if (el) {
@@ -61,9 +62,21 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
       itemId: itemId,
       name
     }).then((newTask) => {
-      newRow.rowId = newTask.ID;
-      setData([...newData]);
+      newRow.rowId = newTask.ID;  // 임시 id => 실제 id
+      setValues([...newData]);
     });
+  }
+
+  // value update
+  const updateValue = ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => {
+    // state
+    const newData = values.map(el => ({ ...el }));
+    const targetRow = newData.find((row: any) => row.rowId === rowId);
+    targetRow[fieldId] = value;
+    setValues(newData);
+
+    // DB
+    updateValueToDB({rowId, fieldId, value});
   }
 
   // drop 영역
@@ -75,7 +88,7 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
       try {
         // fields
         if (fields) {
-          setColumns(fields.map((f) => {
+          setColumns([...fields].sort((a, b) => (a.order) - (b.order)).map((f) => {
             return columnHelper.accessor(f.id?.toString(), {
               header: f.name,
               size: 200,
@@ -93,7 +106,7 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
   }, [fields]);
 
   const table = useReactTable({
-    data,
+    data: values,
     columns,
     columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
@@ -110,7 +123,7 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
   };
 
   // 전체 check 여부
-  const isAllChecked = data.length > 0 && checkedIds.size === data.length;
+  const isAllChecked = values.length > 0 && checkedIds.size === values.length;
 
   // 전체 check
   const handleCheckAll = () => {
@@ -150,7 +163,7 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
         let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
 
         // const newData = data.map((el: any) => ({ ...el }));
-        const newData = [...data];
+        const newData = [...values];
         if (updateOrder > Number(sourceData.order)) {
           // 후순서로 이동
           console.log('후순서 이동');
@@ -177,7 +190,7 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
           
         console.log('updateOrder: ', updateOrder);
         console.log('sourceData.order: ', Number(sourceData.order));
-        setData([...newData] as []);
+        setValues([...newData] as []);
 
         // DB 변경
         moveTaskRow({
@@ -195,14 +208,14 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
         }
       },
     });
-  }, [data, data]);
+  }, [values]);
 
   return (
-    <div className="relative pl-[5px] pt-[10px]" style={{ overflowX: 'auto' }}>
+    <div className="relative pl-[5px] pr-[5px] pt-[10px]" style={{ overflowX: 'auto' }}>
     <table className="itemTable border-collapse">
       <thead>
         {table.getHeaderGroups().map(headerGroup => (
-          <tr key={headerGroup.id} className='group'>
+          <tr key={headerGroup.id} className='border-b border-transparent'>
             <th>
               {/* drag button field */}
             </th>
@@ -242,11 +255,7 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
                 colSpan={header.colSpan}
                 className={`
                   relative
-                  text-left text-gray-600 font-[400]
-                  pl-[8px] pt-[3px] pb-[3px]
-                  border-t border-b border-gray-300
-                  cursor-pointer
-                  hover:bg-gray-100
+                  cursor-pointer hover:bg-gray-100
                   transition
                 `}
                 data-type={fields.find((f: any) => {
@@ -257,15 +266,17 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
                   width: header.getSize(),
                 }}
               >
-                {flexRender(
-                  header.column.columnDef.header,
-                  header.getContext()
-                )}
+                <div className='flex items-center border-b border-gray-300 pl-[8px] pt-[3px] pb-[3px] text-left text-gray-500 font-[500] text-[13px] h-[32px]'>
+                  <p>{flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )}</p>
+                </div>
                 {/* 리사이즈 핸들러 */}
                 {header.column.getCanResize() && (
                   <div
                       onMouseDown={(e) => {
-                          header.getResizeHandler()(e);
+                        header.getResizeHandler()(e);
                       }}
                       onTouchStart={(e) => {
                         header.getResizeHandler()(e);
@@ -275,27 +286,29 @@ export default function ItemTable({fields, initialData, itemId}: {fields: Field[
                 )}
               </th>
             ))}
+            {/* field 추가 */}
             <th className='
               text-center text-[#666]
               w-[50px]
-              pl-[14px]
-              border-t border-b border-gray-300
               cursor-pointer
               hover:bg-gray-100
               transition'
+              onClick={() => dispatch(handleFieldSelector({itemId}))}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="21" height="21" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor">
-                <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path>
-                <path d="M16.1 12h-8.5"></path>
-                <path d="M12 7.8v8.7"></path>
-              </svg>
+              <div className='flex items-center pl-[14px] border-b border-gray-300 h-[32px]'>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="21" height="21" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor">
+                  <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path>
+                  <path d="M16.1 12h-8.5"></path>
+                  <path d="M12 7.8v8.7"></path>
+                </svg>
+              </div>
             </th>
           </tr>
         ))}
       </thead>
       <tbody ref={containerRef}>
         {[...table.getRowModel().rows].sort((a, b) => (a.original["order"]) - (b.original["order"])).map((row)  => (
-          <ItemTableRow key={row.id} row={row} checkedIds={checkedIds} handleCheckbox={handleCheckbox} />
+          <ItemTableRow key={row.id} row={row} checkedIds={checkedIds} handleCheckbox={handleCheckbox} updateValue={updateValue} />
         ))}
         <AddRowButton fields={fields} addNewTask={addNewTask} />
       </tbody>

@@ -250,7 +250,7 @@ export default function Folder({folder, dragStateType, project}: {folder: List, 
               onKeyDown={handleKeyDown}
               autoComplete="off"
               spellCheck="false"
-              maxLength={30}
+              maxLength={50}
             />
           </div>
         ) : (

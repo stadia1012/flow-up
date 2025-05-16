@@ -227,8 +227,7 @@ export async function addItemToDB({
         data: {
           ITEM_ID: result.ID,
           ORDER: 0,
-          NAME: "Name",
-          FIELD_TYPE: 'name',
+          FIELD_TYPE_ID: 1,  // 1: 'name' type
           REG_ID: 'system',
           REG_DT: now,
         },
@@ -241,6 +240,7 @@ export async function addItemToDB({
   }
 }
 
+// delete item
 export async function deleteItemFromDB({
   itemType,
   itemId,

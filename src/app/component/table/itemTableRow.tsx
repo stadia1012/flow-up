@@ -13,7 +13,16 @@ type DragState =
   | { type: "idle"; closestEdge?: any }
   | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> }
 
-export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: any, checkedIds: Set<string>, handleCheckbox: React.MouseEventHandler<HTMLSpanElement>}) {
+type ItemTableRowProps = {
+  row: any,
+  checkedIds: Set<string>,
+  handleCheckbox: React.MouseEventHandler<HTMLSpanElement>,
+  updateValue: ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => void
+}
+
+export default function ItemTableRow({
+  row, checkedIds, handleCheckbox, updateValue
+} : ItemTableRowProps) {
   // drag 요소
   const ref = useRef<HTMLTableRowElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
@@ -29,13 +38,9 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
         draggable({
           element: element,
           canDrag({ element }) {
-            // 드래그 비활성화
-            console.log(element)
             if (!element.classList.contains('dragging')) {
-              console.log('f')
               return false;
             }
-            console.log('t')
             return true;
           },
           getInitialData() {
@@ -78,7 +83,6 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
         })
       );
     }, [row]);
-
   return (
     <>
     {/* 드래그 인디케이터 */}
@@ -90,10 +94,13 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
       ref={ref}
       data-row-id={row.original["rowId"]}
       data-order={row.original["order"]}
-      className={`relative group hover:bg-[#fbfbfc] transition ${isDragging ? 'dragging' : ''}`}
+      className={`relative group hover:bg-[#fbfbfc] transition
+        ${isDragging ? 'dragging' : ''}
+        border-b border-gray-200/95
+      `}
     >
-      <td>
-        <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[3px] cursor-move hover:bg-gray-200/49 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
+      <td className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
+        <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[4px] cursor-move hover:bg-gray-200/49 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
             <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
             <path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
@@ -104,7 +111,7 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
           </svg>
         </button>
       </td>
-      <td>
+      <td className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
         <span
           role="checkbox"
           aria-checked={checkedIds.has(row.id)}
@@ -124,7 +131,7 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
             text-center
             select-none cursor-pointer
             ${checkedIds.has(row.id)
-              ? 'bg-blue-500 text-white border-blue-500 visible'
+              ? 'bg-blue-500 text-white border-blue-500 visible _checked'
               : 'bg-transparent text-transparent border-gray-400'}
           `}
         >
@@ -135,12 +142,12 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
         <td
           onClick={() => console.log(cell.id)}
           key={cell.id}
-          className={`border-b border-gray-200/95`}
+          className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}
           style={{
             width: cell.column.getSize(),
           }}
         >
-          <ItemTableColumn cell={cell}>
+          <ItemTableColumn cell={cell} updateValue={updateValue}>
             {flexRender(
               cell.column.columnDef.cell,
               cell.getContext()
@@ -148,7 +155,7 @@ export default function ItemTableRow({row, checkedIds, handleCheckbox} : {row: a
           </ItemTableColumn>
         </td>
       ))}
-      <td className={`border-b border-gray-200/95`}></td>
+      <td className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}></td>
     </tr>
     {/* 드래그 인디케이터 */}
     {dragState.type === "dragging-over" && dragState.closestEdge === 'bottom' && (

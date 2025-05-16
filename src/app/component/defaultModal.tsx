@@ -1,5 +1,4 @@
 'use client'
-
 // ModalProps 타입 정의
 export interface ModalProps {
   type: 'confirm' | 'delete' | 'alert';
@@ -63,6 +62,7 @@ export default function DefaultModal({
               // 확인 버튼
               ["confirm", "delete"].includes(type) &&
               <button
+                id="default-modal-confirm"
                 type="button"
                 className={`${confirmBtnClass} mr-[5px] w-[53px]`}
                 onMouseDown={e => e.preventDefault()}
@@ -71,6 +71,7 @@ export default function DefaultModal({
             }
             { /* cancel 버튼 */ }
             <button
+              id="default-modal-cancel"
               type="button"
               className={`${cancelBtnClass}`}
               onMouseDown={e => e.preventDefault()}

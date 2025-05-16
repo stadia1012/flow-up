@@ -37,5 +37,11 @@ export const showModal = (props: ModalProps): Promise<void> => {
 
     // React Portal로 모달 렌더링
     root.render( DefaultModal(modalProps) as React.ReactElement<ModalProps> );
+
+    requestAnimationFrame(() => {
+      if (props.type === "alert") {
+        document.getElementById("default-modal-cancel")?.focus();
+      }
+    });
   });
 };

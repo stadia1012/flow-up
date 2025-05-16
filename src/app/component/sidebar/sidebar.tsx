@@ -4,7 +4,7 @@ import SidebarAddButton from "./sidebarAddButton";
 import SidebarTreeWrapper from "./sidebarTreeWrapper";
 
 export default function Sidebar({projects}: {projects: List[]}) {
-  const [width, setWidth] = useState(270);
+  const [width, setWidth] = useState(240);
   const isResizing = useRef(false);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -13,7 +13,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
     function handleMouseMove(e: MouseEvent<Document>) {
       if (!isResizing.current || !navRef.current) return;
       const newWidth = e.clientX - navRef.current.getBoundingClientRect().left;
-      setWidth(Math.max(150, Math.min(newWidth, 600))); // 최소 150, 최대 600px 제한
+      setWidth(Math.max(200, Math.min(newWidth, 600))); // 최소 200, 최대 600 제한
     }
     function handleMouseUp() {
       isResizing.current = false;
@@ -64,7 +64,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
       {/* resizer */}
       <div
         onMouseDown={onMouseDown}
-        className="absolute top-0 right-0 h-full w-[4px] cursor-col-resize z-10 hover:bg-blue-100"
+        className="absolute top-0 right-0 h-full w-[4px] cursor-col-resize z-2 hover:bg-blue-100"
       />
     </nav>
   );

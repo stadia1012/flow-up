@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { Providers } from "@/app/component/providers";
 import Header from "./component/header";
 import SidebarWrapper from "./component/sidebar/sidebarWrapper";
+import FieldSelector from "@/app/component/field-Selector/fieldSelector"
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -24,13 +25,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="kr">
-      <body>
+      <body className="overflow-hidden">
         <Providers>
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full relative">
             <Header></Header>
-            <div className="flex flex-row h-full">
+            <div className="flex flex-row h-full relative">
               <SidebarWrapper />
               {children}
+              <FieldSelector />
             </div>
           </div>
         </Providers>

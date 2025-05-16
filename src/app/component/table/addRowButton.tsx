@@ -50,21 +50,20 @@ export default function AddRowButton({fields, addNewTask} : {fields : Field[], a
     handleAddMode();
     addNewTask(newName);
   }
-
   return (
     <>
       {
       !isInAddMode ? 
       <tr className='relative'>
-        <td>{/* default field */}</td>
-        <td>{/* default field */}</td>
+        <td>{/* default field (drag button) */}</td>
+        <td>{/* default field (checkbox) */}</td>
         <td>
           {<button className='
               flex items-center
               border border-gray-300 rounded-[3px]
               hover:border-gray-400
               pt-[1px] pb-[1px] pr-[6px] pl-[3px]
-              mt-[3px]
+              mt-[6px]
               cursor-pointer transition group
             '
             onClick={handleAddMode}

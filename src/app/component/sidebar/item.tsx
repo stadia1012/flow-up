@@ -137,19 +137,19 @@ export default function Item({item, project, folder}: {item: List, project: List
           <div className="flex-1 rename">
             <input
               type="text"
-              className="w-full px-[6px] py-[0px] outline-solid outline-gray-400 outline-1 rounded-[3px] bg-white"
+              className="w-full px-[6px] py-[0px] outline-1 outline-gray-400 rounded-[3px] bg-white"
               defaultValue={itemName}
               onBlur={handleBlur}
               ref={renameRef}
               onKeyDown={handleKeyDown}
               autoComplete="off"
               spellCheck="false"
-              maxLength={30}
+              maxLength={50}
             />
           </div>
         ) : (
-          <Link href={{pathname: `/${project.id}/${folder.id}/${item.id}`}} draggable={false} className="w-full ">
-            <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1">{itemName}</span>
+          <Link href={{pathname: `/${project.id}/${folder.id}/${item.id}`}} draggable={false} className="truncate">
+            <span className="relative top-[1px] cursor-pointer min-w-[80px]">{itemName}</span>
           </Link>
         )
       }

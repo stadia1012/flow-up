@@ -23,7 +23,7 @@ const projectsSlice = createSlice({
     ) => {
       const { type, folderId, isFolded } = action.payload;
 
-      const list : List =  state.projects
+      const list = state.projects
         .flatMap((p) => p.lists || [])
         .find((f) => f.type == type && f.id === folderId) as List;
 

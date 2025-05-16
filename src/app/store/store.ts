@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import projectsReducer from './projectsSlice';
+import fieldReducer from './fieldSlice';
 
 const store = configureStore({
   reducer: {
     projects: projectsReducer,
+    field: fieldReducer,
   },
 });
 
