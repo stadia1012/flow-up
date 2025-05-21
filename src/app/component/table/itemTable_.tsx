@@ -13,29 +13,12 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import ItemTableRow from './itemTableRow';
 import AddRowButton from './addRowButton';
 import { moveTaskRow, addTaskToDB, updateValueToDB } from '@/app/controllers/taskController';
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
-import { setTableData, setValues, handleFieldSelector, setRealId } from "@/app/store/tableSlice";
-import type { RootState } from "@/app/store/store";
+import { handleFieldSelector }  from "@/app/store/tableSlice";
 
-export default function ItemTable({initialTableData, itemId}: {
-  initialTableData: {
-    values: TaskRow[];
-    fields: TaskField[];
-  },
-  itemId: number
-}) {
-  // server에서 받은 projects를 redux에 반영
-  useEffect(() => {
-    dispatch(setTableData({
-      initialTableData: initialTableData
-    }));
-  }, [initialTableData]);
-
-  const {values, fields} = useSelector((state: RootState) =>
-    state.table.data
-  )
-
+export default function ItemTable({fields, initialValues, itemId}: {fields: Field[], initialValues: any, itemId: number}) {
+  const [values, setValues] = useState<any[]>(initialValues);
   const [columns, setColumns] = useState<any[]>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -43,15 +26,15 @@ export default function ItemTable({initialTableData, itemId}: {
   const dispatch: AppDispatch = useDispatch();
 
   // task (row) 추가
-  const addTaskRow = (name: string) => {
-    const newValues = values.map(el => ({ ...el }));
-    const maxOrder = newValues.reduce(
+  const addNewTask = (name: string) => {
+    const newData = values.map(el => ({ ...el }));
+    const maxOrder = newData.reduce(
       (max, el) => (typeof el.order === 'number' && el.order > max ? el.order : max), 0
     );
 
     // 임시 rowId 생성
     const tempRowId = Date.now();
-    const newRow: TaskRow = {
+    const newRow: Record<string, any> = {
       rowId: tempRowId,
       order: maxOrder + 1,
     };
@@ -59,12 +42,12 @@ export default function ItemTable({initialTableData, itemId}: {
     // 'name' 타입에 name 할당
     const nameField = fields.find(f => f.type === 'name');
     fields.forEach(f => {
-      newRow[f.fieldId] = (f.fieldId === nameField?.fieldId) ? name : '';
+      newRow[f.id] = f.id === nameField?.id ? name : '';
     });
 
     // 상태 업데이트
-    newValues.push(newRow);
-    dispatch(setValues({newValues}));
+    newData.push(newRow);
+    setValues(newData);
 
     // flash
     setTimeout(() => {
@@ -78,19 +61,19 @@ export default function ItemTable({initialTableData, itemId}: {
     addTaskToDB({
       itemId: itemId,
       name
-    }).then((res) => {
-      dispatch(setRealId({type: 'row', tempId: tempRowId, realId: res.ID}));
+    }).then((newTask) => {
+      newRow.rowId = newTask.ID;  // 임시 id => 실제 id
+      setValues([...newData]);
     });
   }
 
   // value update
   const updateValue = ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => {
     // state
-    const newValues = values.map(el => ({ ...el }));
-    const targetRow = newValues.find((row: TaskRow) => row.rowId === rowId);
-    if (!targetRow) return;
+    const newData = values.map(el => ({ ...el }));
+    const targetRow = newData.find((row: any) => row.rowId === rowId);
     targetRow[fieldId] = value;
-    dispatch(setValues({newValues}));
+    setValues(newData);
 
     // DB
     updateValueToDB({rowId, fieldId, value});
@@ -106,7 +89,7 @@ export default function ItemTable({initialTableData, itemId}: {
         // fields
         if (fields) {
           setColumns([...fields].sort((a, b) => (a.order) - (b.order)).map((f) => {
-            return columnHelper.accessor(f.fieldId?.toString(), {
+            return columnHelper.accessor(f.id?.toString(), {
               header: f.name,
               size: 200,
               minSize: 100,
@@ -179,13 +162,14 @@ export default function ItemTable({initialTableData, itemId}: {
         const closestEdge = extractClosestEdge(targetData);
         let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
 
-        const newValues = values.map((el: any) => ({ ...el }));
+        // const newData = data.map((el: any) => ({ ...el }));
+        const newData = [...values];
         if (updateOrder > Number(sourceData.order)) {
           // 후순서로 이동
           console.log('후순서 이동');
           // 소스 ~ 타켓 order -1
           updateOrder--; // 조정
-          newValues.forEach((el: any) => {
+          newData.forEach((el: any) => {
             if (el.order >= sourceData.order! && el.order <= updateOrder) {
               el.order -= 1
             }
@@ -194,20 +178,19 @@ export default function ItemTable({initialTableData, itemId}: {
           // 선순서로 이동
           console.log('선순서 이동');
           // 타겟 ~ 소스 order +1
-          newValues.forEach((el: any) => {
+          newData.forEach((el: any) => {
             if (el.order >= updateOrder && el.order <= sourceData.order!) {
               el.order += 1
             }
           });
         }
         // 대상 업데이트
-        const sourceRow = newValues.find((el: TaskRow) => el.rowId === sourceData.rowId);
-        if (!sourceRow) return;
-        sourceRow.order = updateOrder;
+        newData.find((el: any) => el.rowId === sourceData.rowId).order = updateOrder;
+        console.log(newData.find((el: any) => el.rowId === sourceData.rowId))
           
         console.log('updateOrder: ', updateOrder);
         console.log('sourceData.order: ', Number(sourceData.order));
-        dispatch(setValues({newValues: [...newValues]}));
+        setValues([...newData] as []);
 
         // DB 변경
         moveTaskRow({
@@ -226,9 +209,10 @@ export default function ItemTable({initialTableData, itemId}: {
       },
     });
   }, [values]);
+
   return (
-    <div className="relative pl-[5px] pr-[5px] pt-[10px] w-full h-full" style={{ overflowX: 'auto' }}>
-    <table className="itemTable border-collapse w-max">
+    <div className="relative pl-[5px] pr-[5px] pt-[10px]" style={{ overflowX: 'auto' }}>
+    <table className="itemTable border-collapse">
       <thead>
         {table.getHeaderGroups().map(headerGroup => (
           <tr key={headerGroup.id} className='border-b border-transparent'>
@@ -302,13 +286,12 @@ export default function ItemTable({initialTableData, itemId}: {
                 )}
               </th>
             ))}
-            {/* field 추가 버튼 */}
+            {/* field 추가 */}
             <th className='
-              sticky right-[-10px]
               text-center text-[#666]
               w-[50px]
               cursor-pointer
-              bg-white hover:bg-gray-100
+              hover:bg-gray-100
               transition'
               onClick={() => dispatch(handleFieldSelector({itemId}))}
             >
@@ -327,7 +310,7 @@ export default function ItemTable({initialTableData, itemId}: {
         {[...table.getRowModel().rows].sort((a, b) => (a.original["order"]) - (b.original["order"])).map((row)  => (
           <ItemTableRow key={row.id} row={row} checkedIds={checkedIds} handleCheckbox={handleCheckbox} updateValue={updateValue} />
         ))}
-        <AddRowButton fields={fields} addTaskRow={addTaskRow} />
+        <AddRowButton fields={fields} addNewTask={addNewTask} />
       </tbody>
     </table>
     </div>

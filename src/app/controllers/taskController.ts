@@ -187,7 +187,7 @@ export async function addFieldToDB({
   });
   
   // row별 value 추가
-  const newDatas: {rowId: number, valueId: number}[] = [];
+  const newValues: {rowId: number, valueId: number}[] = [];
   rows.forEach(async (row) => {
     const newData = await prisma.w_VALUES.create({
       data: {
@@ -197,8 +197,8 @@ export async function addFieldToDB({
         REG_DT: now
       },
     });
-    newDatas.push({ rowId: row.ID, valueId: newData.ID })
-  })
+    newValues.push({ rowId: row.ID, valueId: newData.ID })
+  });
 
-  return newDatas;
+  return {values: newValues, fields: newField};
 }

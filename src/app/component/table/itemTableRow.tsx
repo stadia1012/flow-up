@@ -151,7 +151,7 @@ export default function ItemTableRow({
             {flexRender(
               cell.column.columnDef.cell,
               cell.getContext()
-            )}
+            ) || ''}
           </ItemTableColumn>
         </td>
       ))}

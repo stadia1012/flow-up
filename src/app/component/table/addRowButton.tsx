@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import { showModal } from '@/app/component/modalUtils';
-export default function AddRowButton({fields, addNewTask} : {fields : Field[], addNewTask: (name: string) => void}) {
+export default function AddRowButton({fields, addTaskRow} : {fields : TaskField[], addTaskRow: (name: string) => void}) {
   const [isInAddMode, setIsInAddMode] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -24,7 +24,6 @@ export default function AddRowButton({fields, addNewTask} : {fields : Field[], a
   // 키 입력
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      console.log('enter')
       handleAddTask();
     }
     if (e.key === "Escape") {
@@ -48,7 +47,7 @@ export default function AddRowButton({fields, addNewTask} : {fields : Field[], a
       }
     }
     handleAddMode();
-    addNewTask(newName);
+    addTaskRow(newName);
   }
   return (
     <>

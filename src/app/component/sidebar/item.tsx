@@ -148,7 +148,7 @@ export default function Item({item, project, folder}: {item: List, project: List
             />
           </div>
         ) : (
-          <Link href={{pathname: `/${project.id}/${folder.id}/${item.id}`}} draggable={false} className="truncate">
+          <Link href={{pathname: `/workspace/${project.id}/${folder.id}/${item.id}`}} draggable={false} className="truncate">
             <span className="relative top-[1px] cursor-pointer min-w-[80px]">{itemName}</span>
           </Link>
         )

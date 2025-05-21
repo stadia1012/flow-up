@@ -2,13 +2,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
-import { handleFieldSelector } from "@/app/store/fieldSlice";
+import { handleFieldSelector, setFields, setRealId } from "@/app/store/tableSlice";
 import { showModal } from "../modalUtils";
 import { checkDuplicateFields, addFieldToDB } from "@/app/controllers/taskController";
+import { flash } from "@/app/animation";
 
 export default function FieldSelector() {
   const fieldState = useSelector((state: RootState) =>
-    state.field.fieldSelector
+    state.table.fieldSelector
+  )
+  const {values, fields} = useSelector((state: RootState) =>
+    state.table.data
   )
   const isOpen = fieldState.isOpen;
   const [isMounted, setIsMounted] = useState(false);
@@ -21,7 +25,7 @@ export default function FieldSelector() {
   useEffect(() => {
     if (isOpen) {
       setIsMounted(true);
-      // 확실하게 ranslate-x-full 다음 프레임에 실행
+      // 확실하게 다음 프레임에 실행
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsSlidingIn(true);
@@ -66,7 +70,7 @@ export default function FieldSelector() {
     }
 
     // 중복 검사
-    const { isDuplicate, result } = await checkDuplicateFields({ name, type: selectedType });
+    const { isDuplicate } = await checkDuplicateFields({ name, type: selectedType });
 
     if (isDuplicate) {
       try {
@@ -82,11 +86,28 @@ export default function FieldSelector() {
       }
     }
 
-    console.log('추가');
-    
-    // addFieldToDB({
-    //   itemId: fieldState.itemId, name, type: selectedType 
-    // });
+    /* 추가 시작 */
+    const maxOrder = Math.max(...fields.map((field) => field.order)) + 1;
+    const tempFieldId = Date.now();
+    const newFields = fields.map(f => ({ ...f }));
+
+    const newField = {
+      fieldId: tempFieldId,
+      name: name,
+      type: selectedType,
+      order: maxOrder,
+      width: 200
+    }
+    newFields.push(newField);
+
+    // redux 업데이트 (임시 id)
+    dispatch(setFields({newFields}));
+
+    addFieldToDB({
+      itemId: fieldState.itemId, name, type: selectedType 
+    }).then((res) => {
+      dispatch(setRealId({type: 'field', tempId: tempFieldId, realId: res.fields.ID}));
+    })
   }
 
   // Type 선택
