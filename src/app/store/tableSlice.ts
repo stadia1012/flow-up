@@ -8,7 +8,7 @@ const tableSlice = createSlice({
       itemId: 0
     },
     data: {
-      values : [] as TaskRow[],
+      rows : [] as TaskRow[],
       fields : [] as TaskField[]
     }
   },
@@ -16,21 +16,21 @@ const tableSlice = createSlice({
     // table data 초기값 설정
     setTableData: (
       state,
-      action: PayloadAction<{ initialTableData : { values: TaskRow[], fields: TaskField[] } }>
+      action: PayloadAction<{ initialTableData : { rows: TaskRow[], fields: TaskField[] } }>
     ) => {
       const { initialTableData } = action.payload;
-      state.data.values = initialTableData.values;
+      state.data.rows = initialTableData.rows;
       state.data.fields = initialTableData.fields;
     },
-    // table data 설정
+    /* table data 설정 */
     setValues: (
       state,
-      action: PayloadAction<{ newValues: TaskRow[] }>
+      action: PayloadAction<{ newRows: TaskRow[] }>
     ) => {
-      const { newValues } = action.payload;
-      state.data.values = newValues;
+      const { newRows } = action.payload;
+      state.data.rows = newRows;
     },
-    // table fields 설정
+    /* table fields 설정 (field 추가 시 temp id 입력) */
     setFields: (
       state,
       action: PayloadAction<{ newFields: TaskField[] }>
@@ -38,23 +38,29 @@ const tableSlice = createSlice({
       const { newFields } = action.payload;
       state.data.fields = newFields;
     },
-    // temp id를 real id로 변경
+    /* temp id를 real id로 변경 */
     setRealId: (
       state,
-      action: PayloadAction<{ type: "row" | "field", tempId: number, realId: number }>
+      action: PayloadAction<{
+        type: "row" | "field",
+        tempId: number,
+        realId: number,
+        fieldTypeId?: number // type = 'field'인 경우만
+      }>
     ) => {
-      const { type, tempId, realId } = action.payload;
+      const { type, tempId, realId, fieldTypeId } = action.payload;
       if (type === "row") {
-        state.data.values.forEach((row) => {
+        state.data.rows.forEach((row) => {
           if (row.rowId === tempId) {
             row.rowId = realId;
           }
         });
       }
-      else if (type === "field") {
+      else if (type === "field" && fieldTypeId) {
         state.data.fields.forEach((field) => {
           if (field.fieldId === tempId) {
             field.fieldId = realId;
+            field.typeId = fieldTypeId;
           }
         });
       }
@@ -78,19 +84,20 @@ const tableSlice = createSlice({
       state.fieldSelector.isOpen = !state.fieldSelector.isOpen;
     },
     // field 추가 시 임시 값 추가하고 추후 DB 값으로 변경함
-    addField: (
-      state,
-      action: PayloadAction<{ fieldId: number, name: string, type: string }>
-    ) => {
-      const { fieldId, name, type } = action.payload;
-      state.data.fields.push({
-        fieldId: fieldId,
-        name: name,
-        type: type,
-        order: 1,
-        width: 200
-      });
-    },
+    // addField: (
+    //   state,
+    //   action: PayloadAction<{ fieldId: number, name: string, type: string }>
+    // ) => {
+    //   const { fieldId, name, type } = action.payload;
+    //   state.data.fields.push({
+    //     fieldId: fieldId,
+    //     name: name,
+    //     typeId: fieldId,
+    //     type: type,
+    //     order: 1,
+    //     width: 200
+    //   });
+    // },
   },
 });
 

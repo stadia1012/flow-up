@@ -1,31 +1,17 @@
 'use client'
 import { useState } from "react";
-
-interface ColorPanelProps {
-  hex: string,
-  selected?: boolean,
-  onSelect?: (hex: string) => void
-} 
-const ColorPanel = ({ hex, selected, onSelect } : ColorPanelProps ) => {
-  return (
-    <div
-      className="inline-block"
-      onClick={() => {onSelect && onSelect(hex); console.log('panel')} }
-    >
-      <button className={`rounded-full w-[22px] h-[22px] border-transparent border-[1px] hover:border-gray-400/80 p-[3px] cursor-pointer`} style={{borderColor: selected ? '#3c7fff' : ''}}>
-        <span className='block rounded-full w-full h-full' style={{backgroundColor: `#${hex}`}}></span>
-      </button>
-    </div>
-  )
-}
+import ColorPanel from "./colorPanel";
 
 interface ColorPickerProps {
   hex: string;
   colorPopupRef: React.RefObject<HTMLDivElement | null>;
   setIsColorPopupOpen: (isColorPopupOpen: boolean) => void;
   applyColor: (hex: string) => void;
+  style?: { top: number, left: number }
 }
-export default function ColorPicker({hex, colorPopupRef, setIsColorPopupOpen, applyColor} : ColorPickerProps) {
+export default function ColorPicker({
+  hex, colorPopupRef, setIsColorPopupOpen, applyColor, style
+}: ColorPickerProps) {
   const [selectedHex, setSelectedHex] = useState(hex);
   const defaultColors = [
     '000000','ff0000','ffa500','f9d900','008000','0050ff','000080','800080','808080','ffc0cb','ff69b4','a52A2a','00ff00','40e0d0','87ceeb',
@@ -33,6 +19,7 @@ export default function ColorPicker({hex, colorPopupRef, setIsColorPopupOpen, ap
   return (
     <div
       className="absolute bg-white p-[10px] pl-[18px] pr-[18px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3 popup-menu w-[230px] pb-[10px] w-[250px] top-[30px]"
+      style={style}
       onClick={(e) => e.stopPropagation()}
       ref={colorPopupRef}
     >

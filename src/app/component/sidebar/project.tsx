@@ -204,7 +204,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
   }, [folders]);
 
   return (
-    <div ref={containerRef} >
+    <div ref={containerRef}>
       <div
         className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
@@ -238,7 +238,8 @@ export default function Project({project, dragStateType}: {project : List, dragS
               />
             </div>
           ) : (
-            <span className="relative top-[1px] cursor-pointer min-w-[80px] flex-1 truncate" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
+            // width를 지정해야 hover 시 overflow가 발생하지 않음
+            <span className="relative top-[1px] cursor-pointer w-[50px] flex-1 truncate" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
           )
         }
         {/* button wrapper */}
@@ -250,14 +251,14 @@ export default function Project({project, dragStateType}: {project : List, dragS
         </div>
       </div>
       {
-        /* 하위 folder List */
-        !isFolded && <div className="relative">
-          {
-            [...(folders ?? [])].sort((a, b) => (a.order) - (b.order)).map((folder) => (
-              <DraggableFolder key={folder.id} folder={folder} project={project} />
-            ))
-          }
-        </div>
+      /* 하위 folder List */
+      !isFolded && <div className="relative">
+        {
+          [...(folders ?? [])].sort((a, b) => (a.order) - (b.order)).map((folder) => (
+            <DraggableFolder key={folder.id} folder={folder} project={project} />
+          ))
+        }
+      </div>
       }
     </div>
   );

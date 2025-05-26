@@ -1,0 +1,145 @@
+'use client';
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import DropdownOption from "@/app/component/field-Selector/dropdownOption";
+import AddDropdownOption from "./addDropdownOption";
+import { addDropdownFieldToDB } from "@/app/controllers/taskController";
+import { showModal } from "../modalUtils";
+import { setFields, setRealId } from "@/app/store/tableSlice";
+
+export default function DropdownOptionList(
+  {
+    nameRef,
+    itemId,
+    setIsSettingOpen,
+    fields,
+    closeFieldSelector
+  }: {
+    nameRef: React.RefObject<HTMLInputElement | null>,
+    itemId: number,
+    setIsSettingOpen: (arg: boolean) => void,
+    fields: TaskField[],
+    closeFieldSelector: () => void
+  }) {
+  const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>([
+    {id: crypto.randomUUID(), order: 0, color: "3dce72", name: "Option 1"},
+    {id: crypto.randomUUID(), order: 1, color: "ff7800", name: "Option 2"},
+    {id: crypto.randomUUID(), order: 2, color: "f7d92b", name: "Option 3"}]
+  );
+  const dispatch = useDispatch();
+  
+  // option 추가
+  const addDropdownOption = (newOption: DropdownOption) => {
+    setDropdownOptions((prev) => [
+      ...prev,
+      newOption
+    ]);
+  }
+  // option 삭제
+  const deleteDropdownOption = (newOption: DropdownOption) => {
+    console.log(newOption);
+    setDropdownOptions((prev) => {
+      return prev.filter(option => option.id !== newOption.id);
+    });
+  }
+
+  // dropdown 유효성 검사
+  const validateDropdownInput = async () => {
+    let emptyNameCount = 0;
+    // name 검사
+    document.querySelectorAll(`input[data-input='optionName']`).forEach((el) => {
+      const input = el as HTMLInputElement
+      if ((input.value) === '') {
+        emptyNameCount++;
+        el.closest('li')?.classList.add('alert');
+        setTimeout(() => {
+          el.closest('li')?.classList.remove('alert');
+        }, 1500);
+      }
+    });
+
+    if (emptyNameCount > 0) {
+      return
+    }
+
+    const maxOrder = Math.max(...fields.map((field) => field.order)) + 1;
+    const tempFieldId = Date.now();
+    const newFields = fields.map(f => ({ ...f }));
+    const name = nameRef.current?.value.trim() || '';
+    const newField = {
+      fieldId: tempFieldId,
+      name: name,
+      typeId: tempFieldId,
+      type: 'dropdown',
+      order: maxOrder,
+      width: 200
+    }
+    newFields.push(newField);
+
+    // redux 업데이트 (임시 id)
+    dispatch(setFields({newFields}));
+
+    // DB 업데이트
+    try {
+      addDropdownFieldToDB({
+        options: dropdownOptions,
+        itemId: itemId,
+        name,
+        type: 'dropdown' 
+      }).then((res) => {
+          // real id로 업데이트
+          dispatch(setRealId({
+            type: 'field',
+            tempId: tempFieldId,
+            realId: res.fields.ID,
+            fieldTypeId: res.fields.FIELD_TYPE_ID
+          }))
+        })
+    } catch(err) {
+      try {
+        await showModal({
+          type: 'alert',
+          title: `DB 저장에 실했습니다. ${err}`
+        });
+        return;
+      } catch {
+        console.log('사용자 취소');
+        return;
+      }
+    }
+    closeFieldSelector();
+  }
+  return (
+    <>
+      <div className="px-[17px]">
+        <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Dropdown Options</p>
+        {/* dropdown option list */}
+        <ul className="max-h-[300px] overflow-y-auto">
+        {
+          [...dropdownOptions].sort((a, b) => a.order - b.order).map((option) => {
+            return (
+              <DropdownOption
+                key={option.id}
+                option={option}
+                deleteOption={deleteDropdownOption}
+              />
+            )
+          })
+        }
+        {/* add dropdown option */}
+        </ul>
+        <AddDropdownOption dropdownOptions={dropdownOptions} addDropdownOption={addDropdownOption} />
+      </div>
+      {/* [Add] / [Cancel] button wrapper of dropdown */}
+      <div className="text-right mr-[14px] text-[13px]">
+        <button
+          type="button"
+          className="border border-blue-500/80 bg-blue-500/80 hover:border-blue-500/90 hover:bg-blue-500/90 w-[70px] rounded-[3px] text-white transition cursor-pointer mr-[5px] py-[2px]"
+          onClick={validateDropdownInput}>
+          <span>Add</span>
+        </button>
+        <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={() => setIsSettingOpen(false)}>Cancel</button>
+      </div>
+    </>
+  );
+}

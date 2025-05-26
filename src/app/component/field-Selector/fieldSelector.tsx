@@ -1,45 +1,27 @@
 'use client'
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { handleFieldSelector, setFields, setRealId } from "@/app/store/tableSlice";
 import { showModal } from "../modalUtils";
 import { checkDuplicateFields, addFieldToDB } from "@/app/controllers/taskController";
 import { flash } from "@/app/animation";
+import DropdownOptionList from "@/app/component/field-Selector/dropdownOptionList";
 
 export default function FieldSelector() {
-  const fieldState = useSelector((state: RootState) =>
-    state.table.fieldSelector
-  )
-  const {values, fields} = useSelector((state: RootState) =>
+  const fieldState = useSelector((state: RootState) => state.table.fieldSelector);
+  const {rows, fields} = useSelector((state: RootState) =>
     state.table.data
   )
-  const isOpen = fieldState.isOpen;
-  const [isMounted, setIsMounted] = useState(false);
-  const [isSlidingIn, setIsSlidingIn] = useState(false);
   const [isPermissionEnabled, setIsPermissionEnabled] = useState(false);
   const [selectedType, setSelectedType] = useState('');
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
   const dispatch = useDispatch();
-
-  // sliding
-  useEffect(() => {
-    if (isOpen) {
-      setIsMounted(true);
-      // 확실하게 다음 프레임에 실행
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsSlidingIn(true);
-        });
-      });
-    } else {
-      setIsSlidingIn(false);
-      setTimeout(() => setIsMounted(false), 300);
-    }
-  }, [isOpen]);
-
   const nameRef = useRef<HTMLInputElement>(null);
+  
 
-  const handleAddField = async () => {
+  // text field 유효성 검사
+  const validateFieldInput = async () => {
     const name = nameRef.current?.value.trim();
     // name 검사
     if (!name) {
@@ -71,7 +53,6 @@ export default function FieldSelector() {
 
     // 중복 검사
     const { isDuplicate } = await checkDuplicateFields({ name, type: selectedType });
-
     if (isDuplicate) {
       try {
         await showModal({
@@ -86,14 +67,25 @@ export default function FieldSelector() {
       }
     }
 
-    /* 추가 시작 */
+    if (selectedType === "text") {
+      addField();
+    } else {
+      // number or dropdown
+      setIsSettingOpen(true);
+    }
+  }
+
+  // text field 추가
+  const addField = async () => {
     const maxOrder = Math.max(...fields.map((field) => field.order)) + 1;
     const tempFieldId = Date.now();
     const newFields = fields.map(f => ({ ...f }));
+    const name = nameRef.current?.value.trim() || '';
 
     const newField = {
       fieldId: tempFieldId,
       name: name,
+      typeId: tempFieldId,
       type: selectedType,
       order: maxOrder,
       width: 200
@@ -103,11 +95,31 @@ export default function FieldSelector() {
     // redux 업데이트 (임시 id)
     dispatch(setFields({newFields}));
 
-    addFieldToDB({
-      itemId: fieldState.itemId, name, type: selectedType 
-    }).then((res) => {
-      dispatch(setRealId({type: 'field', tempId: tempFieldId, realId: res.fields.ID}));
-    })
+    try {
+      addFieldToDB({
+        itemId: fieldState.itemId, name, type: selectedType 
+      }).then((res) => {
+        // real id로 업데이트
+        dispatch(setRealId({
+          type: 'field',
+          tempId: tempFieldId,
+          realId: res.fields.ID,
+          fieldTypeId: res.fields.FIELD_TYPE_ID
+        }));
+      });
+    } catch(err) {
+      try {
+        await showModal({
+          type: 'alert',
+          title: `DB 저장에 실패했습니다. ${err}`
+        });
+        return;
+      } catch {
+        console.log('사용자 취소');
+        return;
+      }
+    }
+    closeFieldSelector();
   }
 
   // Type 선택
@@ -115,28 +127,24 @@ export default function FieldSelector() {
     setSelectedType(e.target.value);
   }
 
+  const closeFieldSelector = () => {
+    dispatch(handleFieldSelector({itemId: fieldState.itemId}));
+  }
+
   return (
     <>
-      {isMounted &&
-      <nav
-        className={`
-          flex flex-col justify-between absolute right-[0px] w-[300px]
-          bg-white shadow-md
-          text-[#46484d] text-[14px]
-          border-b-1 border-l-1 border-gray-300/85 h-full box-border
-          pt-[15px] transition-all
-          transition-all duration-300 ease-in-out
-          ${isSlidingIn ? 'translate-x-0' : 'translate-x-full'}
-        `}
-      >
-        <button type="button" className="absolute right-[6px] hover:bg-[#ecedf1] rounded-[4px] p-[1px] cursor-pointer" onClick={() => dispatch(handleFieldSelector({itemId: fieldState.itemId}))}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" strokeWidth="2">
-            <path d="M18 6l-12 12"></path>
-            <path d="M6 6l12 12"></path>
-          </svg>
-        </button>
-        <div className="flex flex-col">
+      {/* 닫기 버튼 (absolute) */}
+      <button
+        type="button" className="absolute right-[6px] hover:bg-[#ecedf1] rounded-[4px] p-[2px] cursor-pointer" onClick={closeFieldSelector}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" strokeWidth="2">
+          <path d="M18 6l-12 12"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+      {/* nav content */}
+      <div className={`flex flex-col justify-between h-full ${isSettingOpen && 'hidden'}`}>
+        <div className={`flex flex-col`}>
           <div className="px-[17px]">
             <h2 className="text-[16px] font-[500]">Add Field</h2>
           </div>
@@ -156,7 +164,7 @@ export default function FieldSelector() {
               {/* [Text type] */}
               <li className="rounded-[4px] hover:bg-gray-100 py-[4px] transition px-[10px] has-[input:checked]:bg-blue-100">
                 <label htmlFor="add-field-type-text" className="flex items-center cursor-pointer">
-                  <input id="add-field-type-text" type="radio" name="add-field-type" value="text" className="relative top-[1px] mr-[5px] w-[12px] h-[12px]" onChange={handleSelectedType} />
+                  <input id="add-field-type-text" type="radio" name="add-field-type" value="text" className="relative top-[1px] mr-[5px] w-[12px] h-[12px]" onChange={handleSelectedType} checked={selectedType === "text"} />
                   <div className="flex items-center justify-center h-[22px] w-[22px] bg-blue-200/70 rounded-[3px] mr-[7px]">
                     <svg className="text-blue-500" style={{}} xmlns="http://www.w3.org/2000/svg" width="14px" height="14px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path d="M12 3V21M9 21H15M19 6V3H5V6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -168,7 +176,7 @@ export default function FieldSelector() {
               {/* [Number type] */}
               <li className="rounded-[4px] hover:bg-gray-100 py-[4px] transition px-[10px] has-[input:checked]:bg-blue-100">
                 <label htmlFor="add-field-type-number" className="flex items-center cursor-pointer">
-                  <input id="add-field-type-number" type="radio" name="add-field-type" value="number" className="relative top-[1px] mr-[5px] w-[12px] h-[12px]" onChange={handleSelectedType} />
+                  <input id="add-field-type-number" type="radio" name="add-field-type" value="number" className="relative top-[1px] mr-[5px] w-[12px] h-[12px]" onChange={handleSelectedType} checked={selectedType === "number"} />
                   <div className="flex items-center justify-center h-[22px] w-[22px] bg-green-200/65 rounded-[3px] mr-[7px]">
                     <svg className="text-green-600" width="14px" height="14px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.705 8.0675H21.295M2.705 15.9325H21.295M18.0775 2.705L14.5025 21.295M10.2125 2.705L6.6375 21.295" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -180,7 +188,7 @@ export default function FieldSelector() {
               {/* [Dropdown type] */}
               <li className="rounded-[4px] hover:bg-gray-100 py-[4px] transition px-[10px] has-[input:checked]:bg-blue-100">
                 <label htmlFor="add-field-type-dropdown" className="flex items-center cursor-pointer">
-                  <input id="add-field-type-dropdown" type="radio" name="add-field-type" value="dropdown" className="relative top-[1px] mr-[5px] w-[12px] h-[12px]"  onChange={handleSelectedType} />
+                  <input id="add-field-type-dropdown" type="radio" name="add-field-type" value="dropdown" className="relative top-[1px] mr-[5px] w-[12px] h-[12px]"  onChange={handleSelectedType} checked={selectedType === "dropdown"} />
                   <div className="flex items-center justify-center h-[22px] w-[22px] bg-orange-200/70 rounded-[3px] mr-[7px]">
                     <svg className="text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="15px" height="15px" strokeWidth="2">
                       <path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path>
@@ -221,10 +229,16 @@ export default function FieldSelector() {
             </div>
           </div>
         </div>
+        {/* 하단 버튼 */}
         <div className="relative text-center py-[18px]">
           <div className="relative text-right mr-[14px] text-[13px]">
-            <button type="button" className="border border-blue-500/80 bg-blue-500/80 hover:border-blue-500/90 hover:bg-blue-500/90 w-[70px] rounded-[3px] text-white transition cursor-pointer mr-[5px] py-[2px]" onClick={handleAddField}>Add</button>
-            <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={() => dispatch(handleFieldSelector({itemId: fieldState.itemId}))}>Cancel</button>
+            <button
+              type="button"
+              className="border border-blue-500/80 bg-blue-500/80 hover:border-blue-500/90 hover:bg-blue-500/90 w-[70px] rounded-[3px] text-white transition cursor-pointer mr-[5px] py-[2px]"
+              onClick={validateFieldInput}>
+              <span>{(selectedType === "text" || selectedType === "" )? "Add" : "Next"}</span>
+            </button>
+            <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={closeFieldSelector}>Cancel</button>
           </div>
           {/* 구분 선 */}
           <div className="border-t border-gray-200 h-0 my-[17px]"></div>
@@ -232,8 +246,32 @@ export default function FieldSelector() {
             <button type="button" className="border border-gray-400/90 py-[4px] px-[22px] rounded-[5px] hover:bg-blue-100/50 cursor-pointer transition">Add existing fields</button>
           </div>
         </div>
-      </nav>
-      }
+      </div>
+      {/* 추가 설정 */}
+      <div className={`${isSettingOpen ? "block" : "hidden"}`}>
+        <div className="flex flex-col">
+          <div className="flex items-center px-[10px]">
+            <button
+              type="button"
+              className="mr-[7px] hover:bg-gray-200/90 transition cursor-pointer rounded-[4px]"
+              onClick={() => setIsSettingOpen(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
+                <path d="M15 6l-6 6l6 6"></path>
+              </svg>
+            </button>
+            <h2 className="text-[16px] font-[500]">{selectedType.charAt(0).toUpperCase() + selectedType.slice(1) } Setting</h2>
+          </div>
+          {/* dropdown setting */}
+          { selectedType === "dropdown" &&
+          <div className="flex flex-col">
+            {/* 구분 선 */}
+            <div className="border-t border-gray-200 h-0 my-[12px]"></div>
+              <DropdownOptionList nameRef={nameRef} itemId={fieldState.itemId} setIsSettingOpen={setIsSettingOpen} fields={fields} closeFieldSelector={closeFieldSelector} />
+          </div>
+          }
+        </div>
+      </div>
     </>
   );
 }

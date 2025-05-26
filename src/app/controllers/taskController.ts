@@ -199,6 +199,98 @@ export async function addFieldToDB({
     });
     newValues.push({ rowId: row.ID, valueId: newData.ID })
   });
-
   return {values: newValues, fields: newField};
+}
+
+/* dropdown field 추가 */
+export const addDropdownFieldToDB = async ({
+  options, itemId, name, type
+}:{
+  options: DropdownOption[], itemId: number, name: string, type: string
+}) => {
+  if (type !== "dropdown") {
+    throw new Error;
+  }
+  const now = new Date();
+
+  // field type 추가
+  const fieldType = await prisma.w_FIELD_TYPES.create({
+    data: {
+      NAME: name,
+      DATA_TYPE: type,
+      REG_DT: now
+    },
+  });
+
+  // dropdown options 추가
+  options.forEach(async (option, idx) => {
+    await prisma.w_DROPDOWN_OPTIONS.create({
+      data: {
+        FIELD_TYPE_ID: fieldType.ID,
+        ORDER: idx,
+        COLOR: option.color,
+        NAME: option.name,
+        REG_DT: now
+      },
+    });
+  });
+
+  // field maxOrder 조회
+  const maxOrder = await prisma.w_FIELDS.aggregate({
+    where: {
+      ITEM_ID: itemId
+    },
+    _max: {
+      ORDER: true
+    }
+  });
+
+  // field 추가
+  const newField = await prisma.w_FIELDS.create({
+    data: {
+      ITEM_ID: itemId,
+      FIELD_TYPE_ID: fieldType.ID,
+      ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+      WIDTH: 200,
+      REG_DT: now
+    },
+  });
+
+  // row 조회
+  const rows = await prisma.w_ROWS.findMany({
+    where: {
+      ITEM_ID: itemId,
+    },
+  });
+  
+  // row별 value 추가
+  const newValues: {rowId: number, valueId: number}[] = [];
+  rows.forEach(async (row) => {
+    const newData = await prisma.w_VALUES.create({
+      data: {
+        ROW_ID: row.ID,
+        FIELD_ID: newField.ID,
+        VALUE: '',
+        REG_DT: now
+      },
+    });
+    newValues.push({ rowId: row.ID, valueId: newData.ID })
+  });
+  return {values: newValues, fields: newField};
+}
+
+// field width 변경
+export async function updateFieldWidth({
+  fieldId, width
+}: {
+  fieldId: number, width: number
+}) {
+  await prisma.w_FIELDS.update({
+    where: {
+      ID: fieldId,
+    },
+    data: {
+      WIDTH: width
+    }
+  });
 }

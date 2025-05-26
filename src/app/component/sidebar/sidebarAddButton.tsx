@@ -41,6 +41,7 @@ export default function SidebarAddButton({addType, item}: {addType: ListType, it
           <path d="M5 12l14 0"></path>
         </svg>
       </div>
+      {/* mix-blend-multiply 적용 받지 않기위해 밖에서 렌더링 */}
       {isPopupOpen && <SidebarAddPopup popupRef={popupRef} addType={addType} setIsPopupOpen={setIsPopupOpen} item={item} />}
     </div>
   );

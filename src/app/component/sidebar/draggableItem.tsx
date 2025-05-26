@@ -71,7 +71,7 @@ export default function DraggableItem({ item, project, folder }: { item: List, p
 
   return (
     <div ref={ref}
-      className="cursor-grab relative"
+      className="cursor-grab relative w-full"
       data-item-wrapper={item.id}>
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge && (

@@ -666,6 +666,21 @@ model W_FIELD_TYPES {
   UPDT_DT    DateTime?
 
   fields     W_FIELDS[]   @relation("FieldType")
+  dropdownOptions W_DROPDOWN_OPTIONS[] @relation("DropdownType")
+}
+
+model W_DROPDOWN_OPTIONS {
+  ID            Int       @id @default(autoincrement())
+  FIELD_TYPE_ID Int
+  ORDER         Int?
+  COLOR         String?   @db.VarChar(6)
+  NAME          String?   @db.VarChar(50)
+  REG_ID        String?   @db.VarChar(15)
+  REG_DT        DateTime?
+  UPDT_ID       String?   @db.VarChar(15)
+  UPDT_DT       DateTime?
+
+  fieldType W_FIELD_TYPES   @relation("DropdownType", fields: [FIELD_TYPE_ID], references: [ID])
 }
 
 model W_ROWS {

@@ -1,18 +1,19 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import type { Cell } from '@tanstack/react-table'
 
 export default function ItemTableColumn<TData extends { rowId: number }, TValue>({
   children,
-  cell,
-  updateValue
+  updateValue,
+  rowId,
+  fieldId
 }: { 
   children: React.ReactNode,
-  cell: Cell<TData, TValue>,
+  rowId: number,
+  fieldId: number,
   updateValue: ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => void
 }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(() => cell.getValue())
+  const [editValue, setEditValue] = useState(children || '')
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 자동 focus
@@ -24,10 +25,10 @@ export default function ItemTableColumn<TData extends { rowId: number }, TValue>
 
   const handleUpdateValue = () => {
     const value = inputRef.current?.value || '';
-    if (editValue !== cell.getValue()) {
+    if (editValue !== children) {
       updateValue({
-        rowId: Number(cell.row.original['rowId']),
-        fieldId: Number(cell.column.id),
+        rowId: rowId,
+        fieldId: fieldId,
         value: value
       });
     }

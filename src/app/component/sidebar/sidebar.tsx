@@ -8,7 +8,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
   const isResizing = useRef(false);
   const navRef = useRef<HTMLDivElement>(null);
 
-  // 마우스 움직임에 따라 width 업데이트
+  // 마우스로 width 조절
   useEffect(() => {
     function handleMouseMove(e: MouseEvent<Document>) {
       if (!isResizing.current || !navRef.current) return;
@@ -43,7 +43,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
         bg-gray-50/90 shadow-md
         text-[#46484d] text-[14px] border-b-1 border-r-1 border-gray-300/85 h-full box-border
       `}
-      style={{width: `${width}px`}}
+      style={{minWidth: `${width}px`}}
     >
       <div className="border-b-1 border-gray-300/85 p-2 pl-2 pt-3 basis-[150px]">
           <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">Settings</div>

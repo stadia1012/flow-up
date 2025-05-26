@@ -1,10 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import ItemTableColumn from './itemTableColumn';
+import ItemTableColumn from './itemTableCell';
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import {
-  flexRender,
-} from '@tanstack/react-table'
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { DropRowIndicator } from "./dropRowIndicator";
@@ -14,14 +11,15 @@ type DragState =
   | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> }
 
 type ItemTableRowProps = {
-  row: any,
-  checkedIds: Set<string>,
+  row: TaskRow,
+  fields: TaskField[],
+  checkedIds: Set<number>,
   handleCheckbox: React.MouseEventHandler<HTMLSpanElement>,
   updateValue: ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => void
 }
 
 export default function ItemTableRow({
-  row, checkedIds, handleCheckbox, updateValue
+  row, fields, checkedIds, handleCheckbox, updateValue
 } : ItemTableRowProps) {
   // drag 요소
   const ref = useRef<HTMLTableRowElement | null>(null);
@@ -44,7 +42,7 @@ export default function ItemTableRow({
             return true;
           },
           getInitialData() {
-            return { rowId: row.original["rowId"], order: row.original["order"] };
+            return { rowId: row.rowId, order: row.order };
           },
         }),
         // 개별 항목에 dropTarget 등록
@@ -57,7 +55,7 @@ export default function ItemTableRow({
           },
           getData({ input }) {
             // drop 시 targetData
-            return attachClosestEdge({ rowId: row.original["rowId"], order: row.original["order"] }, { element, input, allowedEdges: ["top", "bottom"] });
+            return attachClosestEdge({ rowId: row.rowId, order: row.order }, { element, input, allowedEdges: ["top", "bottom"] });
           },
           getIsSticky() {
             return true;
@@ -90,17 +88,17 @@ export default function ItemTableRow({
       <DropRowIndicator edge="top" gap="0px" />
     )}
     <tr
-      key={row.id}
+      key={row.rowId}
       ref={ref}
-      data-row-id={row.original["rowId"]}
-      data-order={row.original["order"]}
+      data-row-id={row.rowId}
+      data-order={row.order}
       className={`relative group hover:bg-[#fbfbfc] transition
         ${isDragging ? 'dragging' : ''}
         border-b border-gray-200/95
       `}
     >
-      <td className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
-        <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[4px] cursor-move hover:bg-gray-200/49 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
+      <td className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
+        <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[4px] cursor-move hover:bg-gray-200/50 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
             <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
             <path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
@@ -111,12 +109,12 @@ export default function ItemTableRow({
           </svg>
         </button>
       </td>
-      <td className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
+      <td className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
         <span
           role="checkbox"
-          aria-checked={checkedIds.has(row.id)}
+          aria-checked={checkedIds.has(row.rowId)}
           tabIndex={0}
-          data-id={row.id}
+          data-id={row.rowId}
           onClick={handleCheckbox}
           onKeyDown={e => {
             if (e.key === ' ' || e.key === 'Enter') {
@@ -130,7 +128,7 @@ export default function ItemTableRow({
             border rounded-[2px]
             text-center
             select-none cursor-pointer
-            ${checkedIds.has(row.id)
+            ${checkedIds.has(row.rowId)
               ? 'bg-blue-500 text-white border-blue-500 visible _checked'
               : 'bg-transparent text-transparent border-gray-400'}
           `}
@@ -138,24 +136,20 @@ export default function ItemTableRow({
           <span className='block relative top-[2px] text-[9px] font-[400] leading-[100%]'>✔</span>
         </span>
       </td>
-      {row.getVisibleCells().map((cell: any) => (
+      {[...fields].sort((a, b) => (a.order) - (b.order)).map((f) => (
         <td
-          onClick={() => console.log(cell.id)}
-          key={cell.id}
-          className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}
+          key={f.fieldId}
+          className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}
           style={{
-            width: cell.column.getSize(),
+            
           }}
         >
-          <ItemTableColumn cell={cell} updateValue={updateValue}>
-            {flexRender(
-              cell.column.columnDef.cell,
-              cell.getContext()
-            ) || ''}
+          <ItemTableColumn updateValue={updateValue} rowId={row.rowId} fieldId={f.fieldId}>
+            {row.values[f.fieldId]}
           </ItemTableColumn>
         </td>
       ))}
-      <td className={`${checkedIds.has(row.id) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}></td>
+      <td className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}></td>
     </tr>
     {/* 드래그 인디케이터 */}
     {dragState.type === "dragging-over" && dragState.closestEdge === 'bottom' && (

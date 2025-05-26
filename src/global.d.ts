@@ -15,16 +15,24 @@ declare global {
   type TaskField = {
     fieldId: number;
     name: string;
+    typeId: number;
     type: string;
     order: number;
     width: number;
   };
 
   type TaskRow = {
-    [key: number]: string; // number 키와 string 값
+    values: { [key: number]: string } // number 키와 string 값 }
     rowId: number;
     order: number;
   };
+
+  type DropdownOption = {
+    id: string;
+    order: number;
+    color: string;
+    name: string;
+  }
 }
 
 export const ReactNativeWebView = window.ReactNativeWebView;

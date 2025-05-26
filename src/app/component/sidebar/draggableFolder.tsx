@@ -76,10 +76,9 @@ export default function DraggableFolder({ folder, project }: { folder: List, pro
       })
     );
   }, [folder]);
-
   return (
     <div ref={ref}
-      className="cursor-grab relative"
+      className="cursor-grab relative w-full"
       data-folder-wrapper={folder.id}>
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge && (

@@ -25,17 +25,21 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     })
   ])
 
-  const rowMap = new Map<number, Record<string, any>>();
+  const rowMap = new Map<number, TaskRow>();
   rawValues.forEach(({ row, field, VALUE }) => {
     const key = row?.ID as number;
-    if (!rowMap.has(key)) rowMap.set(key, {});
+    if (!rowMap.has(key)) {
+      rowMap.set(key, {
+        values: {},           // 이곳에 숫자 키로 VALUE를 쌓을 것
+        rowId: row?.ID as number,
+        order: row?.ORDER as number,
+      });
+    }
     const entry = rowMap.get(key)!;
-    entry['rowId'] = row?.ID;
-    entry['order'] = row?.ORDER;
-    entry[field?.ID as number] = VALUE;
+    entry.values[field?.ID as number] = VALUE || '';
   });
 
-  const values = Array.from(rowMap.values());
+  const rows = Array.from(rowMap.values());
   const fields: TaskField[] = rawfields.map(f => ({
     fieldId: f.ID,
     name: f.fieldType.NAME || '',
@@ -44,7 +48,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     width: f.WIDTH || 200
   }));
   const data = {
-    values: values as TaskRow[],
+    rows: rows as TaskRow[],
     fields: fields as TaskField[]
   }
   return (

@@ -37,6 +37,11 @@
   ::-webkit-scrollbar-thumb {
     background: rgb(185 185 185);
     border-radius: 10px;
+    transition: background-color ease 0.2s
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(160, 160, 160);
+    border-radius: 10px;
   }
   ::-webkit-scrollbar-track {
     background: rgb(128 128 128 / 25%);
@@ -44,6 +49,11 @@
   }
   ::-webkit-scrollbar-corner {
     background: rgb(255 255 255);
+  }
+
+  .task-table-wrapper::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
   }
   
   html, body {
@@ -125,6 +135,10 @@ button.dft-btn:focus, .dft-btn:focus-visible {
 
 .itemTable th, .itemTable td {
   font-size: 14px;
+}
+
+li[data-li='dropdown-option-list'].alert {
+  border-color: #ffa2a2 !important;
 }
 }
 

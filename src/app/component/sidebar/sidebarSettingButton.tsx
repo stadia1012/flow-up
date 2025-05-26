@@ -30,7 +30,7 @@ export default function SidebarSettingButton({type, handleRename, item}: {type: 
   };
 
   return (
-    <div className="w-[22px] h-[22px] p-[3px] rounded-[7px] transition-all cursor-pointer hover:bg-gray-300 has-[.popup-menu]:bg-gray-300" onClick={(e) => { toggleMenu(e); }}>
+    <div className="relative w-[22px] h-[22px] p-[3px] rounded-[7px] transition-all cursor-pointer hover:bg-gray-300 has-[.popup-menu]:bg-gray-300" onClick={(e) => { toggleMenu(e); }}>
       <svg className="w-full h-full relative top-[1px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="24" height="24" strokeWidth="2">
         <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
         <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
