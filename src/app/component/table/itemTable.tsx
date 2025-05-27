@@ -27,7 +27,7 @@ export default function ItemTable({initialTableData, itemId}: {
   }, [initialTableData]);
 
   const {rows, fields} = useSelector((state: RootState) =>
-    state.table.data
+    state.table.data!
   )
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
   const dispatch: AppDispatch = useDispatch();
@@ -188,14 +188,14 @@ export default function ItemTable({initialTableData, itemId}: {
     });
   }, [rows]);
   return (
-    <div className="relative pl-[5px] pr-[5px] pt-[10px] w-full h-full task-table-wrapper" style={{ overflowX: 'auto' }}>
-    <table className="itemTable border-collapse w-max">
+    <div className="relative pl-[5px] pr-[5px] pt-[10px] w-full h-full scroll-8px" style={{ overflowX: 'auto' }}>
+    <table className="itemTable border-collapse w-max table-fixed">
       <thead>
         <tr className='border-b border-transparent'>
-          <th>
+          <th className='w-[20px]'>
             {/* drag button field */}
           </th>
-          <th data-field="default-check" className=''>
+          <th data-field="default-check" className="w-[19px]">
             <span
               role="checkbox"
               tabIndex={0}

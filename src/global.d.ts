@@ -19,6 +19,7 @@ declare global {
     type: string;
     order: number;
     width: number;
+    dropdownOptions?: DropdownOption[];
   };
 
   type TaskRow = {
@@ -28,7 +29,7 @@ declare global {
   };
 
   type DropdownOption = {
-    id: string;
+    id: string;  // tempId를 uuid로 사용하기 때문에 string으로 정의
     order: number;
     color: string;
     name: string;

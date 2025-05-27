@@ -21,7 +21,16 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     // rawfields
     prisma.w_FIELDS.findMany({
       where: { ITEM_ID: itemId },
-      select: { ID: true, fieldType: true, ORDER: true, WIDTH: true }
+      select: { ID: true, ORDER: true, WIDTH: true, fieldType: {
+        select: {
+          ID: true, NAME: true, DATA_TYPE: true,
+          dropdownOptions: {
+            select: {
+              ID: true, ORDER: true, COLOR: true, NAME: true
+            }
+          }
+        }
+      }}
     })
   ])
 
@@ -43,9 +52,19 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   const fields: TaskField[] = rawfields.map(f => ({
     fieldId: f.ID,
     name: f.fieldType.NAME || '',
+    typeId: f.fieldType.ID || 0,
     type: f.fieldType.DATA_TYPE || '',
     order: f.ORDER || 0,
-    width: f.WIDTH || 200
+    width: f.WIDTH || 200,
+    dropdownOptions: f.fieldType.dropdownOptions.map((opt) => {
+      return {
+        id: opt.ID.toString(),
+        order: opt.ORDER || 0,
+        color: opt.COLOR || '',
+        name: opt.NAME || ''
+      }
+    })
+  
   }));
   const data = {
     rows: rows as TaskRow[],

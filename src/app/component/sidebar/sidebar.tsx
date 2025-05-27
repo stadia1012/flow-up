@@ -13,7 +13,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
     function handleMouseMove(e: MouseEvent<Document>) {
       if (!isResizing.current || !navRef.current) return;
       const newWidth = e.clientX - navRef.current.getBoundingClientRect().left;
-      setWidth(Math.max(200, Math.min(newWidth, 600))); // 최소 200, 최대 600 제한
+      setWidth(Math.max(180, Math.min(newWidth, 600))); // 최소 180, 최대 600 제한
     }
     function handleMouseUp() {
       isResizing.current = false;

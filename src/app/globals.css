@@ -51,7 +51,7 @@
     background: rgb(255 255 255);
   }
 
-  .task-table-wrapper::-webkit-scrollbar {
+  .scroll-8px::-webkit-scrollbar {
     height: 8px;
     width: 8px;
   }

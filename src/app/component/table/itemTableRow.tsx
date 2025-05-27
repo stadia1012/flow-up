@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import ItemTableColumn from './itemTableCell';
+import ItemTableCell from './itemTableCell';
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
@@ -136,17 +136,17 @@ export default function ItemTableRow({
           <span className='block relative top-[2px] text-[9px] font-[400] leading-[100%]'>✔</span>
         </span>
       </td>
-      {[...fields].sort((a, b) => (a.order) - (b.order)).map((f) => (
+      {[...fields].sort((a, b) => (a.order) - (b.order)).map((field) => (
         <td
-          key={f.fieldId}
+          key={field.fieldId}
           className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}
-          style={{
-            
-          }}
         >
-          <ItemTableColumn updateValue={updateValue} rowId={row.rowId} fieldId={f.fieldId}>
-            {row.values[f.fieldId]}
-          </ItemTableColumn>
+          <ItemTableCell
+            updateValue={updateValue}
+            rowId={row.rowId}
+            field={field}
+            value={row.values[field.fieldId]}
+          />
         </td>
       ))}
       <td className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}></td>

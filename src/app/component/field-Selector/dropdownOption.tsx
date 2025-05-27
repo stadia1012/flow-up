@@ -30,7 +30,7 @@ export default function DropdownOption (
         // 현재 팝업만 닫기
         e.stopPropagation();
         e.stopImmediatePropagation();
-        setIsColorPopupOpen(false)
+        setIsColorPopupOpen(false);
       };
     };
 
@@ -52,7 +52,6 @@ export default function DropdownOption (
         top: rect.bottom + window.scrollY, // 하단 기준
         left: rect.left + window.scrollX, // 왼쪽 기준
       });
-      console.log("open 전 준비")
     }
     setIsColorPopupOpen(prev => !prev);
   }
@@ -125,6 +124,5 @@ export default function DropdownOption (
           </svg>
         </button>
       </li>
-
   )
 }

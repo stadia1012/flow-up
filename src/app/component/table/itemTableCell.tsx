@@ -1,74 +1,70 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import DropdownContent from './dropdownContent';
+import TextContent from './textContent';
 
-export default function ItemTableColumn<TData extends { rowId: number }, TValue>({
-  children,
+export default function ItemTableCell({
   updateValue,
   rowId,
-  fieldId
+  field,
+  value
 }: { 
-  children: React.ReactNode,
   rowId: number,
-  fieldId: number,
-  updateValue: ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => void
+  field: TaskField,
+  updateValue: ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => void,
+  value: string
 }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(children || '')
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isEditing, setIsEditing] = useState(false); // 수정모드
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // 자동 focus
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isEditing]);
-
-  const handleUpdateValue = () => {
-    const value = inputRef.current?.value || '';
-    if (editValue !== children) {
+  const handleUpdateValue = ({newValue}: {newValue: string}) => {
+    if (newValue !== value) {
       updateValue({
         rowId: rowId,
-        fieldId: fieldId,
-        value: value
+        fieldId: field.fieldId,
+        value: newValue
       });
     }
     setIsEditing(false);
   }
-
   return (
-    <div className={`
+    <div
+      ref={containerRef}
+      className={`
         border rounded-[4px]
         hover:text-blue-600 ${isEditing ? 'border-blue-400 hover:border-blue-400' : 'border-transparent hover:border-gray-300'}
-        pt-[4px] pb-[4px] pl-[8px] pr-[8px] h-[32px] box-border
+        ${field.type === "dropdown" ? '' : 'pt-[4px] pb-[4px] px-[8px] '}
+        h-[32px] box-border
         cursor-pointer
-        transition`
-      }
+        transition
+      `}
       onClick={() => {
         if (!isEditing) {
           setIsEditing((prev) => !prev);
         }
       }}
     >
-    {isEditing ? (
-      // 수정모드
-      <input
-        type='text'
-        className='w-full outline-none text-blue-600'
-        value={String(editValue)}
-        onChange={e => setEditValue(e.target.value as any)}
-        onBlur={() => handleUpdateValue()}
-        ref={inputRef}
-        spellCheck='false'
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') handleUpdateValue();
-          if (e.key === 'Escape') setIsEditing(false);
-        }}
-        maxLength={200}
-      />
-    ) : (
-      // 조회모드
-      children
-    )}
+      { // text, name 인 경우
+        (["text", "name"].includes(field.type)) && 
+        <TextContent
+          field={field}
+          value={value}
+          handleUpdateValue={handleUpdateValue}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
+      }
+      { // dropdown 인 경우
+        (field.type === "dropdown") && 
+        <DropdownContent
+          containerRef={containerRef}
+          field={field}
+          value={value}
+          handleUpdateValue={handleUpdateValue}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
+      }
     </div>
   )
 }

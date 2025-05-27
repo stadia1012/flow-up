@@ -653,7 +653,7 @@ model W_FIELDS {
   UPDT_DT       DateTime?
 
   values     W_VALUES[] @relation("FieldValues")
-  fieldType     W_FIELD_TYPES   @relation("FieldType", fields: [FIELD_TYPE_ID], references: [ID])
+  fieldType  W_FIELD_TYPES   @relation("FieldType", fields: [FIELD_TYPE_ID], references: [ID])
 }
 
 model W_FIELD_TYPES {
