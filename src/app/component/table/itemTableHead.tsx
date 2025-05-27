@@ -54,7 +54,7 @@ export default function ItemTableHead({field}: {
       }}
     >
       <div className='flex items-center border-b border-gray-300 pl-[8px] pt-[3px] pb-[3px] text-left text-gray-500 font-[500] text-[13px] h-[32px]'>
-        <p>{field.name}</p>
+        <p className="truncate">{field.name}</p>
       </div>
       {/* 리사이즈 핸들러 */}
       <div

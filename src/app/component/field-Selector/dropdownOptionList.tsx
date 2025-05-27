@@ -111,8 +111,8 @@ export default function DropdownOptionList(
   }
   return (
     <>
-      <div className="px-[17px]">
-        <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Dropdown Options</p>
+      <div className="">
+        <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px] mx-[14px]">Dropdown Options</p>
         {/* dropdown option list */}
         <ul className="max-h-[300px] overflow-y-auto">
         {

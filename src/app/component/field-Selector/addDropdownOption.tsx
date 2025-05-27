@@ -33,7 +33,7 @@ export default function AddDropdownOption({
   }
   return (
     <div className={`flex items-center
-      border ${isNameEmpty ? "border-red-300" : "border-gray-300/90 has-[input:focus]:border-blue-500 hover:border-gray-400"} rounded-[5px] hover:bg-blue-100/80 py-[3px] mb-[5px] transition px-[8px] has-[input:focus]:bg-white`}
+      border ${isNameEmpty ? "border-red-300" : "border-gray-300/90 has-[input:focus]:border-blue-500 hover:border-gray-400"} rounded-[5px] hover:bg-blue-100/80 py-[3px] mb-[5px] transition px-[8px] mx-[14px] has-[input:focus]:bg-white`}
     > 
       <button type="button"
         className="flex items-center justify-center mr-[7px] top-[1px] cursor-pointer hover:bg-blue-100/90 border border-transparent hover:border-blue-200 rounded-[4px] p-[1px] transition"

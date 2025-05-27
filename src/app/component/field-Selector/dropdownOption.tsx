@@ -57,28 +57,25 @@ export default function DropdownOption (
   }
 
   return (
-      <li
-        data-id={option.id} data-order={option.order} data-li='dropdown-option-list'
-        className="
-          group flex items-center relative
-          border border-gray-300/90 rounded-[5px] hover:border-gray-400
-          hover:bg-gray-100/80 py-[3px] mb-[5px] transition px-[8px]
-          has-[input:focus]:border-blue-500 has-[input:focus]:bg-white
-        "
-      > 
-        <div className="absolute flex itmes-center w-[50px] h-[30px] left-[-16px]">
-          <button className={`relative invisible group-hover:visible cursor-move hover:bg-gray-200/50 rounded-[2px] transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
-              <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-              <path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-              <path d="M9 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-              <path d="M15 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-              <path d="M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-              <path d="M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
-            </svg>
-          </button>
-        </div>
-        <div ref={colorPopupButton} className="relative mr-[7px] top-[1px]" onClick={handleColorPopupOpen}>
+    <li
+      data-id={option.id} data-order={option.order} data-li='dropdown-option-list'
+      className="group flex items-center mb-[5px]"
+    > 
+      <button className={`flex opacity-0 group-hover:opacity-100 items-center cursor-move hover:bg-gray-200/50 rounded-[2px] transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
+          <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+          <path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+          <path d="M9 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+          <path d="M15 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+          <path d="M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+          <path d="M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+        </svg>
+      </button>
+      <div className="flex items-center relative
+        border border-gray-300/90 rounded-[5px] hover:border-gray-400
+        hover:bg-gray-100/80 py-[3px] transition px-[8px]
+        has-[input:focus]:border-blue-500 has-[input:focus]:bg-white mr-[14px] w-full">
+        <div ref={colorPopupButton} className="" onClick={handleColorPopupOpen}>
           <ColorPanel hex={option.color} selected={false} />
           {isColorPopupOpen && createPortal(
             <ColorPicker
@@ -104,7 +101,8 @@ export default function DropdownOption (
           maxLength={50}
           onChange={(e) => option.name = (e.target as HTMLInputElement).value}
         />
-        <button type="button" className="ml-auto hidden group-hover:flex items-center justify-center cursor-pointer p-[2px] rounded-[3px] hover:bg-gray-200/65 transition" onClick={() => deleteOption(option)}>
+        {/* 삭제 버튼 */}
+        <button type="button" className="ml-auto flex opacity-0 group-hover:opacity-100 items-center justify-center cursor-pointer p-[2px] rounded-[3px] hover:bg-gray-200/65 transition" onClick={() => deleteOption(option)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="17"
@@ -123,6 +121,7 @@ export default function DropdownOption (
             <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
           </svg>
         </button>
-      </li>
+      </div>
+    </li>
   )
 }

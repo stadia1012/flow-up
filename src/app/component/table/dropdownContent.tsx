@@ -30,7 +30,6 @@ export default function DropdownContent({
         color: initialOption.color,
       } : { id: 0, name: '', color: 'ffffff' };
   });
-  const [textColor, setTextColor] = useState<string>('171717');
 
   // 조회모드 option 글자색 변경
   useEffect(() => {
@@ -40,8 +39,7 @@ export default function DropdownContent({
       name: newField?.name || '',
       color: newField?.color || 'ffffff',
     })
-    setTextColor(getTextColor(cellOption.color));
-  }, [cellOption, field]);
+  }, [value, field]);
 
   // 배경색에 따른 option 글자색 변경 (hexColor: #을 제외한 hex 값)
   const getTextColor = (hexColor: string) => {
@@ -93,50 +91,57 @@ export default function DropdownContent({
   }, [isPopupOpen]);
 
   return (
-    <div ref={divRef} className='w-full h-full'>
-      {isPopupOpen ? (
-        // 수정모드
-        createPortal(
-          <div
-            className='absolute bg-white shadow-[var(--popupShadow)] pt-[6px] pb-[10px] z-[10] rounded-[6px] w-[190px]'
-            ref={popupRef}
-            style={{
-              top: (popupPos?.top || 0) + 8,
-              left: (popupPos?.left || 0) - 8,
-            }}
-          >
-            <div className='px-[10px]'>
-              <h2 className='text-[13px] font-[500] text-gray-500/90'>Select an option</h2>
-            </div>
-            {/* 구분 선 */}
-            <div className="border-t border-gray-200 h-0 mt-[5px] mb-[8px] mx-[10px]"></div>
-            <ul className='flex flex-col max-h-[202px] overflow-y-auto px-[7px] py-[1px] scroll-8px'>
-              {field.dropdownOptions?.map((opt) => {
-                return (
-                  <li
-                    key={opt.id} className='group outline outline-transparent hover:outline-blue-300 text-center text-[14px] py-[2px] px-[2px] rounded-[4px] cursor-pointer  transition' 
-                    onClick={() => {
-                      handleUpdateValue({ newValue: opt.id });
-                    }}
-                  >
-                    <div className='group-hover:filter-[brightness(0.94)] py-[5px] rounded-[4px] transition' style={{ backgroundColor: `#${opt.color}`, color: `#${getTextColor(opt.color)}` }}>
-                      {opt.name}
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>, document.body
-        )
+    <div ref={divRef} className='w-full h-full p-[1px]'>
+      {
+      cellOption.name.trim() ? (
+        <div data-option-id={cellOption.id} className="flex items-center justify-center rounded-[3px] h-full w-full px-[8px]" style={{ backgroundColor: `#${cellOption.color}`, color: `#${getTextColor(cellOption.color)}` }}>
+          <span className='truncate'>{cellOption.name.trim() ? cellOption.name : '-'}</span>
+        </div>
       ) : (
-        // 조회모드
-        cellOption.name.trim() ? (
-          <div data-option-id={cellOption.id} className="flex items-center justify-center rounded-[3px] h-full w-full" style={{ backgroundColor: `#${cellOption.color}`, color: `#${textColor}` }}>
-            {cellOption.name.trim() ? cellOption.name : '-'}
+        <div className='flex items-center h-full px-[8px]'>{'-'}</div>
+      )}
+      { // 수정모드 팝업
+      isPopupOpen && createPortal(
+        <div
+          className='absolute bg-white shadow-[var(--popupShadow)] pt-[6px] pb-[10px] z-[10] rounded-[6px] w-[190px]'
+          ref={popupRef}
+          style={{
+            top: (popupPos?.top || 0) + 8,
+            left: (popupPos?.left || 0) - 8,
+          }}
+        >
+          <div className='px-[10px]'>
+            <h2 className='text-[13px] font-[500] text-gray-500/90'>Select an option</h2>
           </div>
-        ) : (
-          <div className='flex items-center h-full px-[8px]'>{'-'}</div>
-        )
+          {/* 구분 선 */}
+          <div className="border-t border-gray-200 h-0 mt-[5px] mb-[8px] mx-[10px]"></div>
+          <ul className='flex flex-col max-h-[202px] overflow-y-auto px-[7px] py-[1px] scroll-8px'>
+            <li
+              className='group outline outline-transparent hover:outline-blue-300 text-center text-[14px] py-[2px] px-[2px] rounded-[4px] cursor-pointer transition'
+              onClick={() => {
+                handleUpdateValue({ newValue: '' });
+              }}
+            >
+              <div className='group-hover:filter-[brightness(0.94)] py-[5px] border border-gray-200 rounded-[4px] transition' style={{ backgroundColor: `#fff`, color: `#171717` }}>
+                {'-'}
+              </div>
+            </li>
+            {field.dropdownOptions?.map((opt) => {
+              return (
+                <li
+                  key={opt.id} className='group outline outline-transparent hover:outline-blue-300 text-center text-[14px] py-[2px] px-[2px] rounded-[4px] cursor-pointer transition' 
+                  onClick={() => {
+                    handleUpdateValue({ newValue: opt.id });
+                  }}
+                >
+                  <div className='flex items-center group-hover:filter-[brightness(0.94)] py-[6px] rounded-[4px] transition px-[8px]' style={{ backgroundColor: `#${opt.color}`, color: `#${getTextColor(opt.color)}` }}>
+                    <span className='truncate inline-block w-full'>{opt.name}</span>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>, document.body
       )}
     </div>
   )
