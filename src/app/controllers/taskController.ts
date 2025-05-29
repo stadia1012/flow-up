@@ -222,17 +222,20 @@ export const addDropdownFieldToDB = async ({
     },
   });
 
+  const newOptions: {[key: number]: number } = {};
   // dropdown options 추가
-  options.forEach(async (option, idx) => {
-    await prisma.w_DROPDOWN_OPTIONS.create({
+  options.forEach(async (option) => {
+    const newOption = await prisma.w_DROPDOWN_OPTIONS.create({
       data: {
         FIELD_TYPE_ID: fieldType.ID,
-        ORDER: idx,
+        ORDER: option.order,
         COLOR: option.color,
         NAME: option.name,
         REG_DT: now
       },
     });
+
+    newOptions[Number(newOption.ORDER)] = newOption.ID
   });
 
   // field maxOrder 조회
@@ -276,7 +279,7 @@ export const addDropdownFieldToDB = async ({
     });
     newValues.push({ rowId: row.ID, valueId: newData.ID })
   });
-  return {values: newValues, fields: newField};
+  return {values: newValues, fields: newField, options: newOptions};
 }
 
 // field width 변경

@@ -78,7 +78,8 @@ export default function DraggableProject({ project }: { project: List }) {
   return (
     <div ref={ref}
       className={`cursor-grab relative w-full`}
-      data-project-wrapper={project.id}>
+      data-project-wrapper={project.id}
+      data-order={project.order}>
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge && (
         <DropIndicator edge={dragState.closestEdge} gap="0px" />

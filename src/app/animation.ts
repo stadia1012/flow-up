@@ -1,6 +1,5 @@
 // animation functions
 
-
 export function flash(el : Element | null) {
   el?.animate([{
     backgroundColor: "#E9F2FF"
@@ -11,3 +10,11 @@ export function flash(el : Element | null) {
     fill: 'forwards'
   });
 }
+
+// export function flash(el: Element | null) {
+//   if (!el) return;
+//   el.classList.add('flashAnimation');
+//   setTimeout(() => {
+//     el.classList.remove('flashAnimation');
+//   }, 500);
+// }

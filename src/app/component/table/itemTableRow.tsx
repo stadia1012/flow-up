@@ -22,13 +22,13 @@ export default function ItemTableRow({
   row, fields, checkedIds, handleCheckbox, updateValue
 } : ItemTableRowProps) {
   // drag 요소
-  const ref = useRef<HTMLTableRowElement | null>(null);
+  const dragRef = useRef<HTMLTableRowElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
   const [isDragging, setIsDragging] = useState(false);
 
   // 드래그 앤 드롭 - 드래그
   useEffect(() => {
-      const element = ref.current;
+      const element = dragRef.current;
       if (!element) return;
   
       return combine(
@@ -89,7 +89,7 @@ export default function ItemTableRow({
     )}
     <tr
       key={row.rowId}
-      ref={ref}
+      ref={dragRef}
       data-row-id={row.rowId}
       data-order={row.order}
       className={`relative group hover:bg-[#fbfbfc] transition
@@ -97,7 +97,7 @@ export default function ItemTableRow({
         border-b border-gray-200/95
       `}
     >
-      <td className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
+      <td className={`${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-blue-100/50' : 'bg-white'} sticky left-[-5px]`}>
         <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[4px] cursor-move hover:bg-gray-200/50 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
             <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
@@ -109,7 +109,7 @@ export default function ItemTableRow({
           </svg>
         </button>
       </td>
-      <td className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}>
+      <td className={`${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-blue-100/50' : 'bg-white'} sticky left-[15px]`}>
         <span
           role="checkbox"
           aria-checked={checkedIds.has(row.rowId)}
@@ -139,7 +139,11 @@ export default function ItemTableRow({
       {[...fields].sort((a, b) => (a.order) - (b.order)).map((field) => (
         <td
           key={field.fieldId}
-          className={`${checkedIds.has(row.rowId) && 'border-b border-t border-blue-400 bg-blue-100/50'}`}
+          className={`
+            ${field.type === "name" ? 'sticky left-[30px] z-1' : ''}
+            ${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-[#edf4fe]' 
+              : field.type === "name" ? 'bg-white' : ''}
+          `}
         >
           <ItemTableCell
             updateValue={updateValue}

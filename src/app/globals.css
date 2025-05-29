@@ -140,6 +140,14 @@ button.dft-btn:focus, .dft-btn:focus-visible {
 li[data-li='dropdown-option-list'].alert {
   border-color: #ffa2a2 !important;
 }
+
+@keyframes flash {
+  0%   { background-color: #E9F2FF;  }
+  100% { background-color: transparent; }
+}
+.flashAnimation {
+  animation: flash 500ms cubic-bezier(0.25,0.1,0.25,1) forwards !important;
+}
 }
 
 @layer utilities {

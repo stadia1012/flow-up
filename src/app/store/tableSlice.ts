@@ -42,10 +42,10 @@ const tableSlice = createSlice({
     setRealId: (
       state,
       action: PayloadAction<{
-        type: "row" | "field",
+        type: "row" | "field" | "dropdownOptions",
         tempId: number,
         realId: number,
-        fieldTypeId?: number // type = 'field'인 경우만
+        fieldTypeId?: number, // 'field'인 경우만
       }>
     ) => {
       const { type, tempId, realId, fieldTypeId } = action.payload;
@@ -65,6 +65,24 @@ const tableSlice = createSlice({
         });
       }
     },
+    /* dropdown option의 temp id를 real id로 변경 */
+    setDropdownOptionsId: (
+      state,
+      action: PayloadAction<{
+        fieldTypeId: number,
+        options: {[key: number]: number } // [order]: id
+      }>
+    ) => {
+      const { fieldTypeId, options } = action.payload;
+      state.data.fields.forEach((field) => {
+        if (field.typeId === fieldTypeId) {
+          field.dropdownOptions?.forEach((opt) => {
+            console.log(options[opt.order])
+            opt.id = (options[opt.order])?.toString();
+          })
+        }
+      });
+    },
     // fieldSelector open / close
     setFieldSelector: (
       state,
@@ -83,21 +101,6 @@ const tableSlice = createSlice({
       state.fieldSelector.itemId = itemId;
       state.fieldSelector.isOpen = !state.fieldSelector.isOpen;
     },
-    // field 추가 시 임시 값 추가하고 추후 DB 값으로 변경함
-    // addField: (
-    //   state,
-    //   action: PayloadAction<{ fieldId: number, name: string, type: string }>
-    // ) => {
-    //   const { fieldId, name, type } = action.payload;
-    //   state.data.fields.push({
-    //     fieldId: fieldId,
-    //     name: name,
-    //     typeId: fieldId,
-    //     type: type,
-    //     order: 1,
-    //     width: 200
-    //   });
-    // },
   },
 });
 
@@ -106,6 +109,7 @@ export const {
   setValues,
   setFields,
   setRealId,
+  setDropdownOptionsId,
   setFieldSelector,
   handleFieldSelector
 } = tableSlice.actions;

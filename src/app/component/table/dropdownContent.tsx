@@ -126,7 +126,7 @@ export default function DropdownContent({
                 {'-'}
               </div>
             </li>
-            {field.dropdownOptions?.map((opt) => {
+            {[...(field.dropdownOptions) || []].sort((a, b) => a.order - b.order).map((opt) => {
               return (
                 <li
                   key={opt.id} className='group outline outline-transparent hover:outline-blue-300 text-center text-[14px] py-[2px] px-[2px] rounded-[4px] cursor-pointer transition' 

@@ -43,9 +43,8 @@ export default function ItemTableHead({field}: {
     <th
       ref={thRef}
       className={`
-        relative
-        cursor-pointer hover:bg-gray-100
-        transition
+        relative cursor-pointer hover:bg-gray-100 transition
+        ${field.type == 'name' && 'sticky left-[30px] bg-white z-1'}
       `}
       data-field-id={field.fieldId}
       data-type={field.type}

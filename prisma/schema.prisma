@@ -555,10 +555,8 @@ model RGNT_INFO {
   MANUFACTURER   String? @db.VarChar(100)
   CAS_NO         String? @db.VarChar(100)
   CATALOG_NO     String? @db.VarChar(100)
-  PACKAGING_VOL  String? @db.VarChar(10)
-  PACKAGING_UNIT String? @db.VarChar(10)
+  PACKAGING_UNIT String? @db.VarChar(20)
   SAFETY_STOCK   String? @db.VarChar(12)
-  AMT            String? @db.VarChar(12)
   BATCH_NO       String? @db.VarChar(100)
   EXPIRY_DT      String? @db.VarChar(30)
   COND           String? @db.VarChar(50)
@@ -595,13 +593,13 @@ model SMTP_CONFIG {
   SMTP_NAME String? @db.VarChar(15)
 }
 
-
 model W_PROJECTS {
   ID      Int        @id @default(autoincrement())
   NAME    String?    @db.VarChar(50)
   ICON_COLOR String? @db.VarChar(6) 
   ORDER   Int?
-  IS_DELETED String @default("N") @db.VarChar(1)            
+  IS_DELETED String @default("N") @db.VarChar(1)
+  FOLDERS_VERSION Int?
   REG_ID  String?    @db.VarChar(15)
   REG_DT  DateTime?  @db.DateTime(0)
   UPDT_ID String?    @db.VarChar(15)
@@ -616,7 +614,8 @@ model W_FOLDERS {
   NAME       String?   @db.VarChar(50)
   ICON_COLOR String? @db.VarChar(6) 
   ORDER      Int?
-  IS_DELETED String @default("N") @db.VarChar(1)    
+  IS_DELETED String @default("N") @db.VarChar(1)  
+  ITEMS_VERSION Int?
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime? @db.DateTime(0)
   UPDT_ID    String?   @db.VarChar(15)
@@ -632,7 +631,9 @@ model W_ITEMS {
   NAME      String?   @db.VarChar(50)
   ICON_COLOR String? @db.VarChar(6) 
   ORDER     Int?
-  IS_DELETED String @default("N") @db.VarChar(1)    
+  IS_DELETED String @default("N") @db.VarChar(1)
+  ROWS_VERSION Int?
+  FIELDS_VERSION Int?
   REG_ID    String?   @db.VarChar(15)
   REG_DT    DateTime? @db.DateTime(0)
   UPDT_ID   String?   @db.VarChar(15)
@@ -647,6 +648,7 @@ model W_FIELDS {
   FIELD_TYPE_ID Int
   ORDER         Int?
   WIDTH         Int?
+  IS_DELETED    String @default("N") @db.VarChar(1)
   REG_ID        String?   @db.VarChar(15)
   REG_DT        DateTime?
   UPDT_ID       String?   @db.VarChar(15)
@@ -660,6 +662,8 @@ model W_FIELD_TYPES {
   ID         Int       @id @default(autoincrement())
   NAME       String?   @db.VarChar(50)
   DATA_TYPE  String?   @db.VarChar(15) @default("text")
+  IS_DELETED String @default("N") @db.VarChar(1)
+  OPTIONS_VERSION Int?
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime?
   UPDT_ID    String?   @db.VarChar(15)
@@ -687,6 +691,7 @@ model W_ROWS {
   ID         Int       @id @default(autoincrement())
   ITEM_ID    Int?
   ORDER      Int?
+  IS_DELETED String @default("N") @db.VarChar(1)
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime?
   UPDT_ID    String?   @db.VarChar(15)

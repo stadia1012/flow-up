@@ -59,9 +59,9 @@ export default function ItemTable({initialTableData, itemId}: {
 
     // flash
     setTimeout(() => {
-      const el = document.querySelector(`[data-row-id="${tempRowId}"]`);
+      const el = document.querySelectorAll(`[data-row-id="${tempRowId}"] td`);
       if (el) {
-        flash(el);
+        el.forEach(td => flash(td));
       }
     }, 10);
 
@@ -85,10 +85,8 @@ export default function ItemTable({initialTableData, itemId}: {
 
     // DB update
     updateValueToDB({rowId, fieldId, value});
+    console.log(rowId,',', fieldId,',', value)
   }
-
-  // drop 영역
-  const containerRef = useRef<HTMLTableSectionElement>(null);
 
   const handleCheckbox: React.MouseEventHandler<HTMLSpanElement> = (e) => {
     const id = Number(e.currentTarget.dataset.id);
@@ -115,6 +113,7 @@ export default function ItemTable({initialTableData, itemId}: {
   };
 
   // 드래그 앤 드롭 - 드롭 영역
+  const containerRef = useRef<HTMLTableSectionElement>(null);
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -178,12 +177,12 @@ export default function ItemTable({initialTableData, itemId}: {
         })
 
         // 이동 후 flash
-        const element: Element | null = document.querySelector(`[data-row-id="${sourceData.rowId}"]`);
-        if (element instanceof Element) {
-          setTimeout(() => {
-            flash(element);
-          }, 10)
-        }
+        setTimeout(() => {
+          const el = document.querySelectorAll(`[data-row-id="${sourceData.rowId}"] td`);
+          if (el) {
+            el.forEach(td => flash(td));
+          }
+        }, 10);
       },
     });
   }, [rows]);
@@ -192,10 +191,10 @@ export default function ItemTable({initialTableData, itemId}: {
     <table className="itemTable border-collapse w-max table-fixed">
       <thead>
         <tr className='border-b border-transparent'>
-          <th className='w-[20px]'>
+          <th className='w-[20px] sticky left-[-5px] bg-white z-1'>
             {/* drag button field */}
           </th>
-          <th data-field="default-check" className="w-[19px]">
+          <th data-field="default-check" className="w-[19px] sticky left-[15px] bg-white z-1">
             <span
               role="checkbox"
               tabIndex={0}

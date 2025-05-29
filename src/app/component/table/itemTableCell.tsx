@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import DropdownContent from './dropdownContent';
 import TextContent from './textContent';
+import NameContent from './nameContent';
 
 export default function ItemTableCell({
   updateValue,
@@ -43,9 +44,19 @@ export default function ItemTableCell({
           setIsEditing((prev) => !prev);
         }
       }}
-    >
+    > 
+      { // name 인 경우
+        (field.type === "name") && 
+        <NameContent
+          field={field}
+          value={value}
+          handleUpdateValue={handleUpdateValue}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
+      }
       { // text, name 인 경우
-        (["text", "name"].includes(field.type)) && 
+        (field.type === "text") && 
         <TextContent
           field={field}
           value={value}

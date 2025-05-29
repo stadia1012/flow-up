@@ -221,7 +221,7 @@ export default function Folder({folder, dragStateType, project}: {folder: List, 
       <div
         className={`group folder ${state} flex items-center p-[2px] pl-4 cursor-default rounded-[5px] h-[30px] hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
-        <button type="button" className="w-[23px] h-[23px] p-[1.8px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[8px] rounded-[4px]" onClick={toggleColorPopup}>
+        <button type="button" className="w-[23px] h-[23px] p-[1.8px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[6px] rounded-[4px]" onClick={toggleColorPopup}>
           {/* 폴더 아이콘 [foled] */}
           <svg style={{color: `${folder.iconColor}`}} className="relative ic_folded group-[.folded]:block group-[.unfolded]:hidden left-[1px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={folder.iconColor === "000000" ? "none" : "currentColor"} fillOpacity="0.15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
             <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"></path>

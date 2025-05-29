@@ -36,29 +36,27 @@ const strokeSize = 1;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 
-export function DropRowIndicator({ edge, gap }: { edge: Edge; gap: string }) {
+export function DropOptionIndicator({ edge, gap }: { edge: Edge; gap: string }) {
   const lineOffset = `calc(-0.5 * (${gap} + ${strokeSize}px))`;
   const orientation = edgeToOrientationMap[edge];
 
   return (
-    <tr className='relative z-2'>
-      <td colSpan={0}
-        style={
-          {
-            '--line-thickness': `${strokeSize}px`,
-            // '--line-offset': `${lineOffset}`,
-            '--terminal-size': `${terminalSize}px`,
-            '--terminal-radius': `${terminalSize / 2}px`,
-            '--negative-terminal-size': `-${terminalSize}px`,
-            '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
-          } as CSSProperties
-        }
-        className={`absolute
-          box-border border-b border-blue-400 pointer-events-none
-          before:content-[''] before:w-[8px] before:h-[8px] before:absolute before:border before:border-blue-400 before:rounded-full before:bg-white ${
-          orientationStyles[orientation]
-        } ${[edgeStyles[edge]]} left-[10px] before:top-[-3.5px]`}
-      ></td>
-    </tr>
+    <div
+      style={
+        {
+          '--line-thickness': `${strokeSize}px`,
+          // '--line-offset': `${lineOffset}`,
+          '--terminal-size': `${terminalSize}px`,
+          '--terminal-radius': `${terminalSize / 2}px`,
+          '--negative-terminal-size': `-${terminalSize}px`,
+          '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
+        } as CSSProperties
+      }
+      className={`absolute mx-[5px] w-[283px]
+        box-border border-b border-blue-400 pointer-events-none
+        before:content-[''] before:w-[8px] before:h-[8px] before:absolute before:border before:border-blue-400 before:rounded-full before:bg-white before:bottom-[-4px]
+        ${(edge === 'bottom') && 'bottom-[-3px]'}
+        ${(edge === 'top') && 'top-[-3px]'}`}
+    ></div>
   );
 }

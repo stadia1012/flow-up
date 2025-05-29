@@ -8,6 +8,8 @@ import { checkDuplicateFields, addFieldToDB } from "@/app/controllers/taskContro
 import { flash } from "@/app/animation";
 import DropdownOptionList from "@/app/component/field-Selector/dropdownOptionList";
 
+type PopupState = 'add' | 'setting' | 'edit';
+
 export default function FieldSelector() {
   const fieldState = useSelector((state: RootState) => state.table.fieldSelector);
   const {rows, fields} = useSelector((state: RootState) =>
