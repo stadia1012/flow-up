@@ -209,11 +209,20 @@ export default function Project({project, dragStateType}: {project : List, dragS
         className={`group folder flex items-center p-[2px] pl-1 cursor-default rounded-[5px] h-[30px] w-full hover:bg-[#ecedf1] has-[.popup-menu]:bg-[#ecedf1] transition-colors ${dragStateType === "dragging-folder-over" ? "bg-blue-100/70" : ""}`}>
         {/* 폴더 아이콘 */}
         <button type="button" className="basis-[22px] h-[22px] p-[1.8px] hover:bg-[#d7dadf] transition-all cursor-pointer mr-[5px] rounded-[4px]" onClick={toggleColorPopup}>
+          {isFolded ?
           <svg style={{color: `${project.iconColor}`}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={project.iconColor === "000000" ? "none" : "currentColor"} fillOpacity="0.15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
             <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"></path>
             <path d="M3 10h18"></path>
             <path d="M10 3v18"></path>
+          </svg> :
+          <svg style={{color: `${project.iconColor}`}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={project.iconColor === "000000" ? "none" : "currentColor"} fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12.5 21h-7.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v7.5" />
+            <path d="M3 10h18" />
+            <path d="M10 3v18" />
+            <path d="M19 16v6" />
+            <path d="M22 19l-3 3l-3 -3" />
           </svg>
+          }
         </button>
         {isColorPopupOpen &&
         <ColorPicker
@@ -239,7 +248,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
             </div>
           ) : (
             // width를 지정해야 hover 시 overflow가 발생하지 않음
-            <span className="relative top-[1px] cursor-pointer w-[50px] flex-1 truncate" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
+            <span className="relative top-[1px] cursor-pointer w-[10px] flex-1 truncate" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
           )
         }
         {/* button wrapper */}

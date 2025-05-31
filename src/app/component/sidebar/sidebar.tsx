@@ -13,7 +13,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
     function handleMouseMove(e: MouseEvent<Document>) {
       if (!isResizing.current || !navRef.current) return;
       const newWidth = e.clientX - navRef.current.getBoundingClientRect().left;
-      setWidth(Math.max(180, Math.min(newWidth, 600))); // 최소 180, 최대 600 제한
+      setWidth(Math.max(120, Math.min(newWidth, 600))); // 최소 180, 최대 600 제한
     }
     function handleMouseUp() {
       isResizing.current = false;
@@ -51,7 +51,7 @@ export default function Sidebar({projects}: {projects: List[]}) {
       </div>
       <div className="p-2 pr-3">
         <div className="flex">
-          <div className="font-[600] pl-2">Workspace</div>
+          <div className="font-[600] pl-2 truncate flex-1 w-[10px]">Workspace</div>
           <div className="ml-auto">
             <SidebarAddButton
               addType="project"
