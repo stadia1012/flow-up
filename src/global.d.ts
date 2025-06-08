@@ -35,5 +35,7 @@ declare global {
     name: string;
   }
 }
+ // fieldSidebar types
+type FieldSidebarType = 'add' | 'addDropdown' | 'edit';
 
 export const ReactNativeWebView = window.ReactNativeWebView;

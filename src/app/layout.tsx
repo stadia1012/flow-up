@@ -4,7 +4,7 @@ import localFont from "next/font/local";
 import { Providers } from "@/app/component/providers";
 import Header from "./component/header";
 import SidebarWrapper from "./component/sidebar/sidebarWrapper";
-import FieldSelectorWrapper from "./component/field-Selector/fieldSelectorWrapper";
+import FieldSidebarWrapper from "./component/field-Sidebar/fieldSidebarWrapper";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -32,7 +32,7 @@ export default function RootLayout({
             <div className="flex flex-row h-full relative">
               <SidebarWrapper />
               {children}
-              <FieldSelectorWrapper />
+              <FieldSidebarWrapper />
             </div>
           </div>
         </Providers>

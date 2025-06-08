@@ -42,6 +42,7 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
 
   return (
     <div className="absolute bg-white p-[10px] pl-[7px] pr-[7px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3 popup-menu" ref={popupRef} onClick={(e) => e.stopPropagation()}>
+      {/* 이름 변경 */}
       <div
         className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer"
         style={{transition:'background-color 0.15s'}}
@@ -61,6 +62,7 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
         {/* 설정 이름 */}
         <div className="w-[100px]">이름 변경</div>
       </div>
+      {/* 이동 */}
       {type !== 'project' && <div className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer">
         {/* 설정 아이콘 */}
         <div className="relative top-[-1px] w-[19px] h-[19px] mr-[8px]">
@@ -73,7 +75,8 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
         </div>
         {/* 설정 이름 */}
         <div className="w-[100px]">이동</div>
-      </div> }
+      </div>}
+      {/* 삭제 */}
       <div
         className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer"
         onClick={(e) => {

@@ -297,3 +297,24 @@ export async function updateFieldWidth({
     }
   });
 }
+
+// item에서 field 제거
+export async function deleteItemFieldFromDB({
+  fieldId
+}: {
+  fieldId: number,
+}) {
+  // 해당 field 값 제거
+  await prisma.w_VALUES.deleteMany({
+    where: {
+      FIELD_ID: fieldId,
+    }
+  });
+
+  // field 제거
+  await prisma.w_FIELDS.delete({
+    where: {
+      ID: fieldId,
+    }
+  });
+}

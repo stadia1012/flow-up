@@ -76,8 +76,8 @@ export default function DropdownContent({
       const isOutside = !popupRef.current.contains(target);
       if (isOutside) {
         // 현재 팝업만 닫기
-        e.stopPropagation();
-        e.stopImmediatePropagation();
+        // e.stopPropagation();
+        // e.stopImmediatePropagation();
         setIsPopupOpen(false);
         setIsEditing(false); // 수정모드 종료
       };
@@ -122,7 +122,7 @@ export default function DropdownContent({
                 handleUpdateValue({ newValue: '' });
               }}
             >
-              <div className='group-hover:filter-[brightness(0.94)] py-[5px] border border-gray-200 rounded-[4px] transition' style={{ backgroundColor: `#fff`, color: `#171717` }}>
+              <div className='group-hover:filter-[brightness(0.94)] py-[3px] border border-gray-200 rounded-[4px] transition' style={{ backgroundColor: `#fff`, color: `#171717` }}>
                 {'-'}
               </div>
             </li>
@@ -134,7 +134,7 @@ export default function DropdownContent({
                     handleUpdateValue({ newValue: opt.id });
                   }}
                 >
-                  <div className='flex items-center group-hover:filter-[brightness(0.94)] py-[6px] rounded-[4px] transition px-[8px]' style={{ backgroundColor: `#${opt.color}`, color: `#${getTextColor(opt.color)}` }}>
+                  <div className='flex items-center group-hover:filter-[brightness(0.94)] py-[4px] rounded-[4px] transition px-[8px]' style={{ backgroundColor: `#${opt.color}`, color: `#${getTextColor(opt.color)}` }}>
                     <span className='truncate inline-block w-full'>{opt.name}</span>
                   </div>
                 </li>

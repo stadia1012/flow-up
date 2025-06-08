@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DropdownOption from "@/app/component/field-Selector/dropdownOption";
+import DropdownOption from "@/app/component/field-Sidebar/dropdownOption";
 import AddDropdownOption from "./addDropdownOption";
 import { addDropdownFieldToDB } from "@/app/controllers/taskController";
 import { showModal } from "../modalUtils";
@@ -9,20 +9,21 @@ import { setDropdownOptionsId, setFields, setRealId } from "@/app/store/tableSli
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flash } from "@/app/animation";
+import { FieldSidebarType } from "@/global";
 
 export default function DropdownOptionList(
   {
     nameRef,
     itemId,
-    setIsSettingOpen,
+    setSidebarType,
     fields,
-    closeFieldSelector
+    closefieldSidebar
   }: {
     nameRef: React.RefObject<HTMLInputElement | null>,
     itemId: number,
-    setIsSettingOpen: (arg: boolean) => void,
+    setSidebarType: (arg: FieldSidebarType) => void,
     fields: TaskField[],
-    closeFieldSelector: () => void
+    closefieldSidebar: () => void
   }) {
   const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>([
     {id: crypto.randomUUID(), order: 0, color: "3dce72", name: "Option 1"},
@@ -116,7 +117,7 @@ export default function DropdownOptionList(
         return;
       }
     }
-    closeFieldSelector();
+    closefieldSidebar();
   }
 
   // 드래그 앤 드롭 - 드롭 영역
@@ -217,7 +218,7 @@ export default function DropdownOptionList(
           onClick={validateDropdownInput}>
           <span>Add</span>
         </button>
-        <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={() => setIsSettingOpen(false)}>Cancel</button>
+        <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={() => setSidebarType("add")}>Cancel</button>
       </div>
     </>
   );

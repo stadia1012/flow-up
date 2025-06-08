@@ -8,9 +8,9 @@ import AddRowButton from './addRowButton';
 import { moveTaskRow, addTaskToDB, updateValueToDB } from '@/app/controllers/taskController';
 import { useSelector, useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
-import { setTableData, setValues, handleFieldSelector, setRealId } from "@/app/store/tableSlice";
+import { setTableData, setValues, setRealId } from "@/app/store/tableSlice";
 import type { RootState } from "@/app/store/store";
-import ItemTableHead from './itemTableHead';
+import ItemTableHeadContainer from './itemTableHeadContainer';
 
 export default function ItemTable({initialTableData, itemId}: {
   initialTableData: {
@@ -188,64 +188,11 @@ export default function ItemTable({initialTableData, itemId}: {
   }, [rows]);
   return (
     <div className="relative pl-[5px] pr-[5px] pt-[10px] w-full h-full scroll-8px" style={{ overflowX: 'auto' }}>
-    <table className="itemTable border-collapse w-max table-fixed">
+    <table className="itemTable border-collapse w-min table-fixed">
       <thead>
-        <tr className='border-b border-transparent'>
-          <th className='w-[20px] sticky left-[-5px] bg-white z-1'>
-            {/* drag button field */}
-          </th>
-          <th data-field="default-check" className="w-[19px] sticky left-[15px] bg-white z-1">
-            <span
-              role="checkbox"
-              tabIndex={0}
-              aria-checked={isAllChecked}
-              onClick={handleCheckAll}
-              onKeyDown={e => {
-                if (e.key === ' ' || e.key === 'Enter') {
-                  e.preventDefault();
-                  handleCheckAll();
-                }
-              }}
-              className={`
-                inline-block
-                relative
-                w-[14px] h-[14px]
-                border rounded-[2px]
-                text-center
-                select-none
-                cursor-pointer
-                top-[-3px]
-                mr-[5px]
-                ${isAllChecked 
-                  ? 'bg-blue-500 text-white border-blue-500'
-                  : 'bg-transparent text-transparent border-gray-400'}
-              `}
-            >
-              <span className='block relative top-[2px] text-[9px] font-[400] leading-[100%]'>✔</span>
-            </span>
-          </th>
-          {[...fields].sort((a, b) => (a.order) - (b.order)).map((field) => (
-            <ItemTableHead key={field.fieldId} field={field} />
-          ))}
-          {/* field 추가 버튼 */}
-          <th className='
-            sticky right-[-10px]
-            text-center text-[#666]
-            w-[50px]
-            cursor-pointer
-            bg-white hover:bg-gray-100
-            transition'
-            onClick={() => dispatch(handleFieldSelector({itemId}))}
-          >
-            <div className='flex items-center pl-[14px] border-b border-gray-300 h-[32px]'>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="21" height="21" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor">
-                <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path>
-                <path d="M16.1 12h-8.5"></path>
-                <path d="M12 7.8v8.7"></path>
-              </svg>
-            </div>
-          </th>
-        </tr>
+        <ItemTableHeadContainer
+          fields={fields} handleCheckAll={handleCheckAll} isAllChecked={isAllChecked} itemId={itemId}
+        />  
       </thead>
       <tbody ref={containerRef}>
         {[...rows].sort((a, b) => (a.order) - (b.order)).map((row)  => (

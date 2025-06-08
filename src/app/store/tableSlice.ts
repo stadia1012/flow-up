@@ -1,11 +1,15 @@
+import type { FieldSidebarType } from '@/global';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 const tableSlice = createSlice({
   name: 'table',
   initialState: {
-    fieldSelector: {
+    fieldSidebar: {
       isOpen: false,
-      itemId: 0
+      itemId: 0,
+      fieldType: '',
+      fieldTypeId: 0,
+      sidebarType: 'add' as FieldSidebarType
     },
     data: {
       rows : [] as TaskRow[],
@@ -83,23 +87,37 @@ const tableSlice = createSlice({
         }
       });
     },
-    // fieldSelector open / close
-    setFieldSelector: (
+    // fieldSidebar open / close
+    setfieldSidebar: (
       state,
       action: PayloadAction<{ isOpen: boolean, itemId: number }>
     ) => {
       const { isOpen, itemId } = action.payload;
-      state.fieldSelector.isOpen = isOpen;
-      state.fieldSelector.itemId = itemId;
+      state.fieldSidebar.isOpen = isOpen;
+      state.fieldSidebar.itemId = itemId;
     },
-    // fieldSelector isOpen 반대값으로 변경
-    handleFieldSelector: (
+    // field 추가 sidebar open/close
+    handleAddFieldSidebar: (
       state,
       action: PayloadAction<{ itemId: number }>
     ) => {
       const { itemId } = action.payload;
-      state.fieldSelector.itemId = itemId;
-      state.fieldSelector.isOpen = !state.fieldSelector.isOpen;
+      state.fieldSidebar.sidebarType = 'add';
+      state.fieldSidebar.itemId = itemId;
+      state.fieldSidebar.isOpen = !state.fieldSidebar.isOpen;
+    },
+    // field 수정 sidebar open/close
+    handleEditFieldSidebar: (
+      state,
+      action: PayloadAction<{
+        field: TaskField
+      }>
+    ) => {
+      const { field } = action.payload;
+      state.fieldSidebar.sidebarType = 'edit';
+      state.fieldSidebar.fieldType = field.type;
+      state.fieldSidebar.fieldTypeId = field.typeId;
+      state.fieldSidebar.isOpen = !state.fieldSidebar.isOpen;
     },
   },
 });
@@ -110,8 +128,9 @@ export const {
   setFields,
   setRealId,
   setDropdownOptionsId,
-  setFieldSelector,
-  handleFieldSelector
+  setfieldSidebar,
+  handleAddFieldSidebar,
+  handleEditFieldSidebar
 } = tableSlice.actions;
 
 export default tableSlice.reducer;

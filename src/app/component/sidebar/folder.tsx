@@ -204,7 +204,7 @@ export default function Folder({folder, dragStateType, project}: {folder: List, 
           });
 
           // 이동 후 flash
-          const element :Element | null = document.querySelector(`[data-folder-wrapper="${sourceData.itemId}"]`);
+          const element :Element | null = document.querySelector(`[data-item-wrapper="${sourceData.itemId}"]`);
           if (element instanceof Element) {
             setTimeout(() => {
               flash(element);

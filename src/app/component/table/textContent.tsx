@@ -44,7 +44,7 @@ export default function TextContent({
         />
       ) : (
         // 조회모드
-        <div className={`truncate`}>
+        <div className={`truncate w-auto`}>
           {cellValue}
         </div>
       )}

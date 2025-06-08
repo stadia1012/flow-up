@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
-import FieldSelector from "./fieldSelector";
+import FieldSidebar from "./editFieldSidebar";
 
-export default function FieldSelectorWrapper() {
-  const fieldState = useSelector((state: RootState) => state.table.fieldSelector);
+export default function fieldSidebarWrapper() {
+  const fieldState = useSelector((state: RootState) => state.table.fieldSidebar);
   const isOpen = fieldState.isOpen;
   const [isMounted, setIsMounted] = useState(false);
   const [isSlidingIn, setIsSlidingIn] = useState(false);
@@ -40,7 +40,7 @@ export default function FieldSelectorWrapper() {
           ${isSlidingIn ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
-        <FieldSelector></FieldSelector>
+        <FieldSidebar></FieldSidebar>
       </nav>
       }
     </>
