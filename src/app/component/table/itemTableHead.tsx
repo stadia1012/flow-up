@@ -7,6 +7,7 @@ import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-d
 import { DropHeadIndicator } from "./dropHeadIndicator";
 import { createPortal } from "react-dom";
 import FieldSettingsPopup from "./fieldSettingsPopup";
+import FieldSidebarWrapper from "../field-Sidebar/fieldSidebarWrapper";
 export default function ItemTableHead({field, fields}: {
   field: TaskField,
   fields: TaskField[]
@@ -16,6 +17,10 @@ export default function ItemTableHead({field, fields}: {
   const thRef = useRef<HTMLTableCellElement>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null); // popup 위치
+
+  // sidebar
+  const [isMountSidebar, setIsMountSidebar] = useState(false);
+  const [closeSidebar, setCloseSidebar] = useState(false); // 닫기
 
   // 마우스로 width 조절
   useEffect(() => {
@@ -53,18 +58,41 @@ export default function ItemTableHead({field, fields}: {
       console.log(isOutside, 'isOutside')
       if (isOutside) {
         // 현재 팝업만 닫기
-        // e.stopPropagation();
-        // e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         setIsPopupOpen(false);
       };
     };
 
     // 팝업이 열려 있을 때만 이벤트 등록
     if (isPopupOpen) {
-      document.addEventListener('click', handleClickOutside, true);
+      document.addEventListener('click', handleClickOutside);
     }
-    return () => document.removeEventListener('click', handleClickOutside, true);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [isPopupOpen]);
+
+  // sidebar 외부 클릭 감지
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!sidebarRef.current) return;
+
+      const isOutside = !sidebarRef.current.contains(target);
+      if (isOutside) {
+        // 현재 팝업만 닫기
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        setCloseSidebar(true);
+      };
+    };
+
+    // 팝업이 열려 있을 때만 이벤트 등록
+    if (isMountSidebar) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isMountSidebar]);
 
   // popup 위치 조정
   const handleIsPopupOpen = () => {
@@ -149,6 +177,7 @@ export default function ItemTableHead({field, fields}: {
     e.preventDefault();
   };
   return (
+    <>
     <th
       ref={thRef}
       className={`
@@ -170,11 +199,33 @@ export default function ItemTableHead({field, fields}: {
         onMouseDown={onMouseDown}
         className='absolute right-0 top-0 h-full w-[8px] cursor-col-resize select-none border-r-[4px] border-transparent hover:border-blue-300 transition-all'
       />
-      {
-        isPopupOpen && field.type !== 'name' && createPortal(
-          <FieldSettingsPopup ref={popupRef} popupPos={popupPos} field={field} fields={fields} />, document.body
-        )
-      }
     </th>
+    {
+      // th 밖에 위치해야 onClick={handleIsPopupOpen}으로 인해 팝업 클릭 시 팝업 닫힘 방지
+      isPopupOpen && field.type !== 'name' && createPortal(
+        <FieldSettingsPopup
+          popupRef={popupRef}
+          setIsPopupOpen={setIsPopupOpen}
+          popupPos={popupPos}
+          field={field}
+          fields={fields}
+          setIsMountSidebar={setIsMountSidebar}
+          setCloseSidebar={setCloseSidebar}
+        />, document.body
+      )
+    }
+    {
+      isMountSidebar && createPortal(
+        <FieldSidebarWrapper
+          type={'edit'}
+          setIsMountSidebar={setIsMountSidebar}
+          field={field}
+          sidebarRef={sidebarRef}
+          closeSidebar={closeSidebar}
+        />
+        , document.getElementById("content-container") as Element
+      )
+    }
+    </>
   )
 }

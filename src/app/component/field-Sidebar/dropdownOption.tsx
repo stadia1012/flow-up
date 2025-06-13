@@ -148,7 +148,7 @@ export default function DropdownOption (
       </button>
       <div className="flex items-center relative
         border border-gray-300/90 rounded-[5px] hover:border-gray-400
-        hover:bg-gray-100/80 py-[3px] transition px-[8px]
+        hover:bg-gray-100/80 py-[3px] px-[8px] transition
         has-[input:focus]:border-blue-500 has-[input:focus]:bg-white mr-[14px] w-full">
         <div ref={colorPopupButton} className="mr-[2px]" onClick={handleColorPopupOpen}>
           <ColorPanel hex={option.color} selected={false} />
@@ -182,7 +182,13 @@ export default function DropdownOption (
           onChange={(e) => option.name = (e.target as HTMLInputElement).value}
         />
         {/* 삭제 버튼 */}
-        <button type="button" className="ml-auto flex opacity-0 group-hover:opacity-100 items-center justify-center cursor-pointer p-[2px] rounded-[3px] hover:bg-gray-200/65 transition" onClick={() => deleteOption(option)}>
+        <button
+          type="button" className="ml-auto flex opacity-0 group-hover:opacity-100 items-center justify-center cursor-pointer p-[2px] rounded-[3px] hover:bg-gray-200/65 transition"
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteOption(option);
+          }}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="17"

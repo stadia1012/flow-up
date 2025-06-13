@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState } from 'react';
+// dropdownOptionList에서 option 추가 버튼
 export default function AddDropdownOption({
   addDropdownOption,
   dropdownOptions

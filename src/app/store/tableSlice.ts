@@ -1,16 +1,8 @@
-import type { FieldSidebarType } from '@/global';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 const tableSlice = createSlice({
   name: 'table',
   initialState: {
-    fieldSidebar: {
-      isOpen: false,
-      itemId: 0,
-      fieldType: '',
-      fieldTypeId: 0,
-      sidebarType: 'add' as FieldSidebarType
-    },
     data: {
       rows : [] as TaskRow[],
       fields : [] as TaskField[]
@@ -74,50 +66,19 @@ const tableSlice = createSlice({
       state,
       action: PayloadAction<{
         fieldTypeId: number,
-        options: {[key: number]: number } // [order]: id
+        options: {[key: string]: number } // [tempId]: realId
       }>
     ) => {
       const { fieldTypeId, options } = action.payload;
       state.data.fields.forEach((field) => {
         if (field.typeId === fieldTypeId) {
           field.dropdownOptions?.forEach((opt) => {
-            console.log(options[opt.order])
-            opt.id = (options[opt.order])?.toString();
+            if ( Object.keys(options).includes(opt.id) ) {
+              opt.id = (options[opt.id])?.toString() || '0';
+            }
           })
         }
       });
-    },
-    // fieldSidebar open / close
-    setfieldSidebar: (
-      state,
-      action: PayloadAction<{ isOpen: boolean, itemId: number }>
-    ) => {
-      const { isOpen, itemId } = action.payload;
-      state.fieldSidebar.isOpen = isOpen;
-      state.fieldSidebar.itemId = itemId;
-    },
-    // field 추가 sidebar open/close
-    handleAddFieldSidebar: (
-      state,
-      action: PayloadAction<{ itemId: number }>
-    ) => {
-      const { itemId } = action.payload;
-      state.fieldSidebar.sidebarType = 'add';
-      state.fieldSidebar.itemId = itemId;
-      state.fieldSidebar.isOpen = !state.fieldSidebar.isOpen;
-    },
-    // field 수정 sidebar open/close
-    handleEditFieldSidebar: (
-      state,
-      action: PayloadAction<{
-        field: TaskField
-      }>
-    ) => {
-      const { field } = action.payload;
-      state.fieldSidebar.sidebarType = 'edit';
-      state.fieldSidebar.fieldType = field.type;
-      state.fieldSidebar.fieldTypeId = field.typeId;
-      state.fieldSidebar.isOpen = !state.fieldSidebar.isOpen;
     },
   },
 });
@@ -127,10 +88,7 @@ export const {
   setValues,
   setFields,
   setRealId,
-  setDropdownOptionsId,
-  setfieldSidebar,
-  handleAddFieldSidebar,
-  handleEditFieldSidebar
+  setDropdownOptionsId
 } = tableSlice.actions;
 
 export default tableSlice.reducer;

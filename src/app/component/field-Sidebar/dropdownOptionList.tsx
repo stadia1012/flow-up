@@ -15,13 +15,13 @@ export default function DropdownOptionList(
   {
     nameRef,
     itemId,
-    setSidebarType,
+    setAdditionalSetting,
     fields,
     closefieldSidebar
   }: {
     nameRef: React.RefObject<HTMLInputElement | null>,
     itemId: number,
-    setSidebarType: (arg: FieldSidebarType) => void,
+    setAdditionalSetting: (arg: FieldSidebarType) => void,
     fields: TaskField[],
     closefieldSidebar: () => void
   }) {
@@ -218,7 +218,7 @@ export default function DropdownOptionList(
           onClick={validateDropdownInput}>
           <span>Add</span>
         </button>
-        <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={() => setSidebarType("add")}>Cancel</button>
+        <button type="button" className="border border-gray-300 bg-white hover:border-gray-300 hover:bg-gray-100 w-[70px] rounded-[3px] transition cursor-pointer py-[2px]" onClick={() => setAdditionalSetting('default')}>Cancel</button>
       </div>
     </>
   );

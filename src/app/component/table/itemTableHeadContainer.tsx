@@ -1,12 +1,11 @@
 'use client'
 import { flash } from "@/app/animation";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "@/app/store/store";
-import { handleAddFieldSidebar } from "@/app/store/tableSlice";
 import ItemTableHead from './itemTableHead';
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import { createPortal } from "react-dom";
+import FieldSidebarWrapper from "../field-Sidebar/fieldSidebarWrapper";
 
 export default function ItemTableHeadContainer({
   fields,
@@ -19,7 +18,31 @@ export default function ItemTableHeadContainer({
   isAllChecked: boolean,
   itemId: number
 }) {
-  const dispatch: AppDispatch = useDispatch();
+  const [isMountSidebar, setIsMountSidebar] = useState(false);
+  const [closeSidebar, setCloseSidebar] = useState(false); // 닫기
+
+  // add field sidebar 외부 클릭 감지
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!sidebarRef.current) return;
+
+      const isOutside = !sidebarRef.current.contains(target);
+      if (isOutside) {
+        // 현재 팝업만 닫기
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        setCloseSidebar(true);
+      };
+    };
+
+    // 팝업이 열려 있을 때만 이벤트 등록
+    if (isMountSidebar) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isMountSidebar]);
 
   // 드래그 앤 드롭 - 드롭 영역
   const containerRef = useRef<HTMLUListElement>(null);
@@ -127,7 +150,10 @@ export default function ItemTableHeadContainer({
         cursor-pointer
         bg-white hover:bg-gray-100
         transition'
-        onClick={() => dispatch(handleAddFieldSidebar({itemId}))}
+        onClick={() => {
+          setIsMountSidebar(true);
+          setCloseSidebar(false); // 초기화
+        }}
       >
         <div className='flex items-center pl-[14px] border-b border-gray-300 h-[32px]'>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="21" height="21" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor">
@@ -136,6 +162,18 @@ export default function ItemTableHeadContainer({
             <path d="M12 7.8v8.7"></path>
           </svg>
         </div>
+        {
+          isMountSidebar && createPortal(
+            <FieldSidebarWrapper
+              type={'add'}
+              setIsMountSidebar={setIsMountSidebar}
+              itemId={itemId}
+              sidebarRef={sidebarRef}
+              closeSidebar={closeSidebar}
+            />
+            , document.getElementById("content-container") as Element
+          )
+        }
       </th>
     </tr>
   );

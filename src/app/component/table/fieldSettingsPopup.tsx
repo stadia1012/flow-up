@@ -1,15 +1,19 @@
+'use client'
 import { showModal } from "../modalUtils";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
 import { deleteItemFieldFromDB } from "@/app/controllers/taskController";
-import { handleEditFieldSidebar, handleAddFieldSidebar, setFields } from "@/app/store/tableSlice";
+import { setFields } from "@/app/store/tableSlice";
 export default function FieldSettingsPopup(
-  {ref, popupPos, field, fields}:
+  {popupRef, popupPos, field, fields, setIsPopupOpen, setIsMountSidebar, setCloseSidebar}:
   {
-    ref: React.RefObject<HTMLDivElement | null>,
+    popupRef: React.RefObject<HTMLDivElement | null>,
     popupPos: {top: number, left: number} | null,
     field: TaskField,
-    fields: TaskField[]
+    fields: TaskField[],
+    setIsPopupOpen: (arg: boolean) => void,
+    setIsMountSidebar: (arg: boolean) => void,
+    setCloseSidebar: (arg: boolean) => void
   }) {
     const dispatch: AppDispatch = useDispatch();
     const handleDeleteField = async () => {
@@ -35,19 +39,21 @@ export default function FieldSettingsPopup(
         console.log('사용자 취소');
       }
     };
+
   return (
-    <div ref={ref} className="absolute " style={{ top: popupPos?.top, left: popupPos?.left }}>
+    <div ref={popupRef} className="absolute" style={{ top: popupPos?.top, left: popupPos?.left }}>
       <div
       className='bg-white p-[10px] pl-[7px] pr-[7px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3'
       >
         {/* 필드 수정 */}
         <div
           className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer"
-          onClick={() => dispatch(
-            handleEditFieldSidebar({
-              field: field
-            })
-          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMountSidebar(true);
+            setCloseSidebar(false); // 초기화
+            setIsPopupOpen(false);
+          }}
         >
           {/* 설정 아이콘 */}
           <div className="relative top-[-1px] w-[19px] h-[19px] mr-[8px]">
@@ -66,13 +72,16 @@ export default function FieldSettingsPopup(
           </div>
           {/* 설정 이름 */}
           <div
-            className="w-[100px]"
+            className="w-[100px] text-[14px]"
           >필드 수정</div>
         </div>
         {/* 삭제 */}
         <div
           className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer"
-          onClick={handleDeleteField}
+          onClick={() => {
+            setIsPopupOpen(false);
+            handleDeleteField();
+          }}
         >
           {/* 설정 아이콘 */}
           <div className="relative top-[-1px] w-[19px] h-[19px] mr-[8px]">
@@ -86,7 +95,7 @@ export default function FieldSettingsPopup(
           </div>
           {/* 설정 이름 */}
           <div
-            className="w-[100px]"
+            className="w-[100px] text-[14px]"
           >삭제</div>
         </div>
       </div>

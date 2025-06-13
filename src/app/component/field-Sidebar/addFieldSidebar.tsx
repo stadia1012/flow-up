@@ -2,23 +2,29 @@
 import { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
-import { handleAddFieldSidebar, setFields, setRealId } from "@/app/store/tableSlice";
+import { setFields, setRealId } from "@/app/store/tableSlice";
 import { showModal } from "../modalUtils";
 import { checkDuplicateFields, addFieldToDB } from "@/app/controllers/taskController";
 import { flash } from "@/app/animation";
 import DropdownOptionList from "@/app/component/field-Sidebar/dropdownOptionList";
-import type { FieldSidebarType } from "@/global";
+import FieldTypeList from "./fieldTypeList";
+import { FieldSidebarType } from "@/global";
 
-export default function FieldSidebar() {
-  const fieldState = useSelector((state: RootState) => state.table.fieldSidebar);
+export default function AddFieldSidebar(
+  {
+    setIsSidebarOpen, itemId
+  }:
+  {
+    setIsSidebarOpen: (arg: boolean) => void,
+    itemId: number
+  }
+) {
   const {rows, fields} = useSelector((state: RootState) =>
     state.table.data
   )
   const [isPermissionEnabled, setIsPermissionEnabled] = useState(false);
   const [selectedType, setSelectedType] = useState('');
-  const [sidebarType, setSidebarType] = useState<FieldSidebarType>(fieldState.sidebarType);
-  // type: add, addDropdown, edit
-  // add에서 dropdown 선택 시 addDropdown으로 넘어감
+  const [additionalSetting, setAdditionalSetting] = useState<FieldSidebarType>('default');
   const dispatch = useDispatch();
   const nameRef = useRef<HTMLInputElement>(null);
   
@@ -73,7 +79,7 @@ export default function FieldSidebar() {
       addField();
     } else if (selectedType === "dropdown") {
       // dropdown
-      setSidebarType('addDropdown');
+      setAdditionalSetting('dropdown');
     }
   }
 
@@ -99,7 +105,7 @@ export default function FieldSidebar() {
 
     try {
       addFieldToDB({
-        itemId: fieldState.itemId, name, type: selectedType 
+        itemId, name, type: selectedType 
       }).then((res) => {
         // real id로 업데이트
         dispatch(setRealId({
@@ -130,7 +136,7 @@ export default function FieldSidebar() {
   }
 
   const closefieldSidebar = () => {
-    dispatch(handleAddFieldSidebar({itemId: fieldState.itemId}));
+    setIsSidebarOpen(false);
   }
 
   return (
@@ -145,9 +151,7 @@ export default function FieldSidebar() {
         </svg>
       </button>
       {/* sidebarType: add => field 추가 */}
-      {
-      ['add', 'addDropdown'].includes(sidebarType) &&
-      <div className={`flex flex-col justify-between h-full ${sidebarType === "addDropdown" && 'hidden'}`}>
+      <div className={`flex flex-col justify-between h-full ${additionalSetting !== 'default' && 'hidden'}`}>
         <div className={`flex flex-col`}>
           <div className="px-[17px]">
             <h2 className="text-[16px] font-[500]">Add Field</h2>
@@ -247,55 +251,62 @@ export default function FieldSidebar() {
           {/* 구분 선 */}
           <div className="border-t border-gray-200 h-0 my-[17px]"></div>
           <div>
-            <button type="button" className="border border-gray-400/90 py-[4px] px-[22px] rounded-[5px] hover:bg-blue-100/50 cursor-pointer transition">Add existing fields</button>
-          </div>
-        </div>
-      </div>
-      }
-      {/* sidebarType: addDropdown => dropdown field 추가설정 */}
-      {
-      ['add', 'addDropdown'].includes(sidebarType) &&
-      <div className={`${sidebarType === "addDropdown" ? "block" : "hidden"}`}>
-        <div className="flex flex-col">
-          <div className="flex items-center px-[10px]">
             <button
-              type="button"
-              className="mr-[7px] hover:bg-gray-200/90 transition cursor-pointer rounded-[4px]"
-              onClick={() => setSidebarType("add")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
-                <path d="M15 6l-6 6l6 6"></path>
-              </svg>
-            </button>
-            <h2 className="text-[16px] font-[500]">{selectedType.charAt(0).toUpperCase() + selectedType.slice(1) } Setting</h2>
+              type="button" className="border border-gray-400/90 py-[4px] px-[22px] rounded-[5px] hover:bg-blue-100/50 cursor-pointer transition"
+              onClick={(e) => { e.stopPropagation(); setAdditionalSetting('existing'); }}
+            >Add existing fields</button>
           </div>
-          {/* dropdown setting */}
-          { selectedType === "dropdown" &&
-          <div className="flex flex-col">
-            {/* 구분 선 */}
-            <div className="border-t border-gray-200 h-0 my-[12px]"></div>
-              <DropdownOptionList nameRef={nameRef} itemId={fieldState.itemId} setSidebarType={setSidebarType} fields={fields} closefieldSidebar={closefieldSidebar} />
-          </div>
-          }
         </div>
       </div>
-      }
-      {/* sidebarType: edit => text/number field 수정 */}
+      {/* dropdown field 추가설정 */}
       {
-        sidebarType === "edit" &&
+      additionalSetting === 'dropdown' &&
+      <div className="flex flex-col">
+        <div className="flex items-center px-[10px]">
+          <button
+            type="button"
+            className="mr-[7px] hover:bg-gray-200/90 transition cursor-pointer rounded-[4px]"
+            onClick={(e) => { e.stopPropagation(); setAdditionalSetting('default'); }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
+              <path d="M15 6l-6 6l6 6"></path>
+            </svg>
+          </button>
+          <h2 className="text-[16px] font-[500]">{selectedType.charAt(0).toUpperCase() + selectedType.slice(1) } Setting</h2>
+        </div>
+        {/* dropdown setting */}
+        { selectedType === "dropdown" &&
         <div className="flex flex-col">
-          <div className="flex items-center px-[10px]">
-            <h2 className="text-[16px] font-[500]">Edit Field</h2>
-          </div>
           {/* 구분 선 */}
           <div className="border-t border-gray-200 h-0 my-[12px]"></div>
-          <div className="px-[17px]">
-            <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Name</p>
-            <input id="field-id" ref={nameRef} type="text" maxLength={50} autoComplete="off" spellCheck="false"
-              className="bg-white border border-gray-400 outline-none focus:border-blue-400 rounded-[3px] px-[6px] py-[1px] transition"
-            />
-          </div>
+            <DropdownOptionList nameRef={nameRef} itemId={itemId} setAdditionalSetting={setAdditionalSetting} fields={fields} closefieldSidebar={closefieldSidebar} />
         </div>
+        }
+      </div>
+      }
+      {/* 기존 필드 추가 (Add existing field) */}
+      {
+      additionalSetting === 'existing' &&
+      <div className="flex flex-col">
+        <div className="flex items-center px-[10px]">
+          <button
+            type="button"
+            className="mr-[7px] hover:bg-gray-200/90 transition cursor-pointer rounded-[4px]"
+            onClick={(e) => { e.stopPropagation(); setAdditionalSetting('default'); }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="24" height="24" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor">
+              <path d="M15 6l-6 6l6 6"></path>
+            </svg>
+          </button>
+          <h2 className="text-[16px] font-[500]">Existing Fields</h2>
+        </div>
+        {/* dropdown setting */}
+        <div className="flex flex-col px-[10px]">
+          {/* 구분 선 */}
+          <div className="border-t border-gray-200 h-0 my-[12px]"></div>
+          <FieldTypeList />
+        </div>
+      </div>
       }
     </>
   );

@@ -36,6 +36,16 @@ declare global {
   }
 }
  // fieldSidebar types
-type FieldSidebarType = 'add' | 'addDropdown' | 'edit';
+type FieldSidebarType = "default" | "dropdown" | "existing";
+
+// fieldType
+type TaskFieldType = {
+  fieldTypeId: number,
+  name: string,
+  type: FieldDataType,
+  dropdownOptions: DropdownOption[]
+}
+
+type FieldDataType = 'text' | 'number' | 'dropdown';
 
 export const ReactNativeWebView = window.ReactNativeWebView;

@@ -1,4 +1,5 @@
 'use server'
+import { TaskFieldType } from '@/global';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -222,21 +223,22 @@ export const addDropdownFieldToDB = async ({
     },
   });
 
-  const newOptions: {[key: number]: number } = {};
-  // dropdown options 추가
-  options.forEach(async (option) => {
-    const newOption = await prisma.w_DROPDOWN_OPTIONS.create({
+
+  const newOptions: {[key: string]: number } = {}; // [tempId]: realId
+  // dropdown option 추가
+  const promises = options.map(async (option) => {
+    const res = await prisma.w_DROPDOWN_OPTIONS.create({
       data: {
         FIELD_TYPE_ID: fieldType.ID,
         ORDER: option.order,
         COLOR: option.color,
         NAME: option.name,
-        REG_DT: now
+        REG_DT: now,
       },
     });
-
-    newOptions[Number(newOption.ORDER)] = newOption.ID
+    newOptions[option.id] = res.ID;
   });
+  await Promise.all(promises);
 
   // field maxOrder 조회
   const maxOrder = await prisma.w_FIELDS.aggregate({
@@ -317,4 +319,135 @@ export async function deleteItemFieldFromDB({
       ID: fieldId,
     }
   });
+}
+
+// field 수정
+export async function updateFieldTypeFromDB({
+  fieldTypeId,
+  name,
+  dropdownOptions
+}: {
+  fieldTypeId: number,
+  name: string,
+  dropdownOptions?: DropdownOption[]
+}) {
+  const now = new Date();
+  // name 업데이트
+  await prisma.w_FIELD_TYPES.update({
+    where: { ID: fieldTypeId },
+    data: {
+      NAME: name,
+      UPDT_ID: 'USER_ID',
+      UPDT_DT: now,
+      // 옵션이 넘어왔을 때만 버전 올리기
+      ...(dropdownOptions && { OPTIONS_VERSION: { increment: 1 } }),
+    },
+  });
+  
+  // dropdownOprions가 있는 경우 update
+  if (dropdownOptions) {
+    // 1) 기존 option ID 목록
+    const existingOptions = await prisma.w_DROPDOWN_OPTIONS.findMany({
+      where: { FIELD_TYPE_ID: fieldTypeId },
+      select: { ID: true },
+    });
+    const existingIds = existingOptions.map(o => o.ID);
+
+    // 2) toUpdate, toCreate, toDelete 계산
+    // update: {DB: O && state: O}
+    const toUpdate = dropdownOptions
+      .filter(o => existingIds.includes(Number(o.id)))
+      .map(o => ({
+        id: Number(o.id),
+        data: {
+          ORDER: o.order,
+          COLOR: o.color,
+          NAME:  o.name,
+          UPDT_ID: 'USER_ID',
+          UPDT_DT: now,
+        },
+    }));
+
+    // create: {DB: X && state: O}
+    const toCreate = dropdownOptions
+      .filter(o => !existingIds.includes(Number(o.id)))
+      .map(o => ({
+        ID: o.id, // temp id
+        FIELD_TYPE_ID: fieldTypeId,
+        ORDER:       o.order,
+        COLOR:       o.color,
+        NAME:        o.name,
+        REG_ID:      'USER_ID',
+        REG_DT:      now,
+    }));
+
+    // delete: {DB: O && state: X}
+    const clientIds = dropdownOptions.map(o => Number(o.id));
+    const toDeleteIds = existingIds.filter(id => !clientIds.includes(id));
+
+    // 4) transaction으로 한 번에 처리
+    await prisma.$transaction([
+      // 삭제
+      prisma.w_DROPDOWN_OPTIONS.deleteMany({
+        where: { ID: { in: toDeleteIds } },
+      }),
+
+      // 업데이트
+      ...toUpdate.map(({ id, data }) =>
+        prisma.w_DROPDOWN_OPTIONS.update({
+          where: { ID: id },
+          data,
+        })
+      ),
+    ]);
+
+    // 생성 - createMany는 결과가 여러개인 경우 count만 return되어 create 사용
+    const newOptions: {[key: string]: number } = {}; // [tempId]: realId
+    const promises = toCreate.map(async (data) => {
+      const res = await prisma.w_DROPDOWN_OPTIONS.create({
+        data: {
+          FIELD_TYPE_ID: data.FIELD_TYPE_ID,
+          ORDER: data.ORDER,
+          COLOR: data.COLOR,
+          NAME: data.NAME,
+          REG_ID: data.REG_ID,
+          REG_DT: data.REG_DT,
+        },
+      });
+      newOptions[data.ID] = res.ID;
+    });
+
+    await Promise.all(promises);
+    return newOptions;
+  }
+}
+
+// 전체 fieldType List
+export async function getFieldTypes() {
+  const fieldTypesRecord = await prisma.w_FIELD_TYPES.findMany({
+    select: {
+      ID: true, NAME: true, DATA_TYPE: true,
+      dropdownOptions: {
+        select: {
+          ID: true, ORDER: true, COLOR: true, NAME: true
+        }
+      }
+    }
+  });
+  const fieldTypes: TaskFieldType[] = fieldTypesRecord.map((fieldType) => {
+    return {
+      fieldTypeId: fieldType.ID || 0,
+      name: fieldType.NAME || '',
+      type: fieldType.DATA_TYPE as TaskFieldType['type'] || 'text',
+      dropdownOptions: fieldType.dropdownOptions.map((opt) => {
+        return {
+          id: opt.ID.toString(),
+          order: opt.ORDER || 0,
+          color: opt.COLOR || '',
+          name: opt.NAME || ''
+        }
+      })
+    }
+  })
+  return fieldTypes;
 }

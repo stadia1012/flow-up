@@ -4,7 +4,6 @@ import localFont from "next/font/local";
 import { Providers } from "@/app/component/providers";
 import Header from "./component/header";
 import SidebarWrapper from "./component/sidebar/sidebarWrapper";
-import FieldSidebarWrapper from "./component/field-Sidebar/fieldSidebarWrapper";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -29,10 +28,9 @@ export default function RootLayout({
         <Providers>
           <div className="flex flex-col h-full relative">
             <Header></Header>
-            <div className="flex flex-row h-full relative">
+            <div id="content-container" className="flex flex-row h-full relative">
               <SidebarWrapper />
               {children}
-              <FieldSidebarWrapper />
             </div>
           </div>
         </Providers>
