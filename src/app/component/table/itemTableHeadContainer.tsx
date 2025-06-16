@@ -6,6 +6,8 @@ import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { createPortal } from "react-dom";
 import FieldSidebarWrapper from "../field-Sidebar/fieldSidebarWrapper";
+import { useDispatch, useSelector } from "react-redux";
+import { setFields } from "@/app/store/tableSlice";
 
 export default function ItemTableHeadContainer({
   fields,
@@ -18,6 +20,7 @@ export default function ItemTableHeadContainer({
   isAllChecked: boolean,
   itemId: number
 }) {
+  const dispatch = useDispatch();
   const [isMountSidebar, setIsMountSidebar] = useState(false);
   const [closeSidebar, setCloseSidebar] = useState(false); // 닫기
 
@@ -45,7 +48,7 @@ export default function ItemTableHeadContainer({
   }, [isMountSidebar]);
 
   // 드래그 앤 드롭 - 드롭 영역
-  const containerRef = useRef<HTMLUListElement>(null);
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -69,15 +72,16 @@ export default function ItemTableHeadContainer({
 
         const targetOrder = Number(targetData.order);
         const closestEdge = extractClosestEdge(targetData);
-        let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
+        let updateOrder = closestEdge === "left" ? targetOrder : targetOrder + 1;
+        console.log(closestEdge)
 
-        const newOptions = fields.map((el: any) => ({ ...el }));
+        const newFields = fields.map((el: any) => ({ ...el }));
         if (updateOrder > Number(sourceData.order)) {
           // 후순서로 이동
           console.log('후순서 이동');
           // 소스 ~ 타켓 order -1
           updateOrder--; // 조정
-          newOptions.forEach((el: any) => {
+          newFields.forEach((el: any) => {
             if (el.order >= sourceData.order! && el.order <= updateOrder) {
               el.order -= 1
             }
@@ -86,13 +90,23 @@ export default function ItemTableHeadContainer({
           // 선순서로 이동
           console.log('선순서 이동');
           // 타겟 ~ 소스 order +1
-          newOptions.forEach((el: any) => {
+          newFields.forEach((el: any) => {
             if (el.order >= updateOrder && el.order <= sourceData.order!) {
               el.order += 1
             }
           });
         }
         // 대상 업데이트
+        const sourceRow = newFields.find((el: TaskField) => el.fieldId === sourceData.fieldId);
+        if (!sourceRow) return;
+        sourceRow.order = updateOrder;
+
+        console.log('updateOrder: ', updateOrder);
+        console.log('sourceData.order: ', Number(sourceData.order));
+        dispatch(setFields({newFields: [...newFields]}));
+
+        // DB 변경
+
 
         // 이동 후 flash
         const element = document.querySelector(`[data-field-id="${sourceData.fieldId}"]`);
@@ -105,7 +119,7 @@ export default function ItemTableHeadContainer({
     });
   }, [fields]);
   return (
-    <tr className='border-b border-transparent'>
+    <tr className='border-b border-transparent' ref={containerRef}>
       <th className='w-[20px] sticky left-[-5px] bg-white z-1'>
         {/* drag button field */}
       </th>

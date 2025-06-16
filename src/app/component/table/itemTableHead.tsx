@@ -8,6 +8,7 @@ import { DropHeadIndicator } from "./dropHeadIndicator";
 import { createPortal } from "react-dom";
 import FieldSettingsPopup from "./fieldSettingsPopup";
 import FieldSidebarWrapper from "../field-Sidebar/fieldSidebarWrapper";
+import { DropThIndicator } from "./dropThIndicator";
 export default function ItemTableHead({field, fields}: {
   field: TaskField,
   fields: TaskField[]
@@ -112,11 +113,10 @@ export default function ItemTableHead({field, fields}: {
   type DragState =
   | { type: "idle"; closestEdge?: any }
   | { type: "dragging-over"; closestEdge: ReturnType<typeof extractClosestEdge> }
-  const dragRef = useRef<HTMLLIElement | null>(null);
   const [dragState, setDragState] = useState<DragState>({ type: "idle" });
   
   useEffect(() => {
-    const element = dragRef.current;
+    const element = thRef.current;
     if (!element) return;
 
     return combine(
@@ -124,7 +124,7 @@ export default function ItemTableHead({field, fields}: {
       draggable({
         element: element,
         canDrag({ element }) {
-          if (!element.classList.contains('dragging')) {
+          if (element.dataset.fieldId === '1') {
             return false;
           }
           return true;
@@ -139,23 +139,23 @@ export default function ItemTableHead({field, fields}: {
         canDrop({ source }) {
           // 자신에게 드롭 방지
           if (source.element === element) return false;
-          return source.data != null && "optionId" in source.data;
+          return source.data != null && "fieldId" in source.data;
         },
         getData({ input }) {
           // drop 시 targetData
-          return attachClosestEdge({ fieldId: field.fieldId, order: field.order }, { element, input, allowedEdges: ["top", "bottom"] });
+          return attachClosestEdge({ fieldId: field.fieldId, order: field.order }, { element, input, allowedEdges: ["left", "right"] });
         },
         getIsSticky() {
           return true;
         },
         onDragEnter({ self, source }) {
-          if ("optionId" in source.data) {
+          if ("fieldId" in source.data) {
             const closestEdge = extractClosestEdge(self.data);
             setDragState({ type: "dragging-over", closestEdge });
           }
         },
         onDrag({ self, source }) {
-          if ("optionId" in source.data) {
+          if ("fieldId" in source.data) {
             const closestEdge = extractClosestEdge(self.data);
             setDragState({ type: "dragging-over", closestEdge });
           }
@@ -181,7 +181,7 @@ export default function ItemTableHead({field, fields}: {
     <th
       ref={thRef}
       className={`
-        relative cursor-pointer hover:bg-gray-100 transition
+        relative cursor-pointer hover:bg-[#f3f4f6] transition
         ${field.type == 'name' && 'sticky left-[30px] bg-white z-1'}
       `}
       data-field-id={field.fieldId}
@@ -191,6 +191,10 @@ export default function ItemTableHead({field, fields}: {
       }}
       onClick={handleIsPopupOpen}
     >
+      {/* 드래그 인디케이터 */}
+      {dragState.type === "dragging-over" && dragState.closestEdge === 'left' && (
+        <DropThIndicator edge="left" gap="0px" />
+      )}
       <div className='flex items-center border-b border-gray-300 pl-[8px] pt-[3px] pb-[3px] text-left text-gray-500 font-[500] text-[13px] h-[32px]'>
         <p className="truncate">{field.name}</p>
       </div>
@@ -199,6 +203,10 @@ export default function ItemTableHead({field, fields}: {
         onMouseDown={onMouseDown}
         className='absolute right-0 top-0 h-full w-[8px] cursor-col-resize select-none border-r-[4px] border-transparent hover:border-blue-300 transition-all'
       />
+      {/* 드래그 인디케이터 */}
+      {dragState.type === "dragging-over" && dragState.closestEdge === 'right' && (
+        <DropThIndicator edge="right" gap="0px" />
+      )}
     </th>
     {
       // th 밖에 위치해야 onClick={handleIsPopupOpen}으로 인해 팝업 클릭 시 팝업 닫힘 방지
