@@ -36,7 +36,7 @@ export async function moveTaskRow({
           ORDER: {
             gte: sourceOrder,
             lte: updateOrder
-          } 
+          }
         },
         data: { ORDER: { decrement: 1 } },
       });
@@ -200,7 +200,7 @@ export async function addFieldToDB({
     });
     newValues.push({ rowId: row.ID, valueId: newData.ID })
   });
-  return {values: newValues, fields: newField};
+  return {values: newValues, field: newField};
 }
 
 /* dropdown field 추가 */
@@ -300,23 +300,19 @@ export async function updateFieldWidth({
   });
 }
 
-// item에서 field 제거
+// item에서 field 숨기기
 export async function deleteItemFieldFromDB({
   fieldId
 }: {
   fieldId: number,
 }) {
-  // 해당 field 값 제거
-  await prisma.w_VALUES.deleteMany({
-    where: {
-      FIELD_ID: fieldId,
-    }
-  });
-
-  // field 제거
-  await prisma.w_FIELDS.delete({
+  // field 숨기기
+  await prisma.w_FIELDS.update({
     where: {
       ID: fieldId,
+    },
+    data: {
+      IS_HIDDEN: 'Y'
     }
   });
 }
@@ -423,7 +419,7 @@ export async function updateFieldTypeFromDB({
 }
 
 // 전체 fieldType List
-export async function getFieldTypes() {
+export async function getAllFieldTypes() {
   const fieldTypesRecord = await prisma.w_FIELD_TYPES.findMany({
     select: {
       ID: true, NAME: true, DATA_TYPE: true,
@@ -450,4 +446,123 @@ export async function getFieldTypes() {
     }
   })
   return fieldTypes;
+}
+
+// 특정 item fieldType List
+export async function getFieldTypes({itemId}: {itemId: number}) {
+  const fieldTypesRecord = await prisma.w_FIELDS.findMany({
+    where: {
+      ITEM_ID: itemId,
+      IS_HIDDEN: 'N'
+    },
+    select: {
+      FIELD_TYPE_ID: true,
+      ORDER: true
+    },
+    orderBy: {
+      ORDER: 'asc'
+    }
+  });
+  const fieldTypes: {id: number, order: number}[] = fieldTypesRecord
+    .map(f => {
+      return {id: f.FIELD_TYPE_ID, order: f.ORDER || 0}
+    });
+  return fieldTypes;
+}
+
+// 필드 숨기고 표시하기
+export async function hadleFieldHiddenFromDB(
+  {
+    fieldTypeId,
+    itemId,
+    isHidden
+  }:
+  {
+    fieldTypeId: number,
+    itemId: number,
+    isHidden: boolean
+  }
+) {
+  if (isHidden) {
+    // 숨기기
+    await prisma.w_FIELDS.updateMany({
+      where: {
+        ITEM_ID: itemId,
+        FIELD_TYPE_ID: fieldTypeId
+      },
+      data: {
+        IS_HIDDEN: 'Y'
+      }
+    });
+  } else {
+    // 표시하기
+    // max order
+    const maxOrder = await prisma.w_FIELDS.aggregate({
+      where: {
+        ITEM_ID: itemId
+      },
+      _max: {
+        ORDER: true
+      }
+    });
+
+    // 기존 필드가 있는지 검사
+    const field =  await prisma.w_FIELDS.findFirst({
+      where: {
+        ITEM_ID: itemId,
+        FIELD_TYPE_ID: fieldTypeId
+      },
+    });
+
+    if (field) {
+      /* 기존 필드가 있으면 update */
+      await prisma.w_FIELDS.updateMany({
+        where: {
+          ITEM_ID: itemId,
+          FIELD_TYPE_ID: fieldTypeId
+        },
+        data: {
+          IS_HIDDEN: 'N',
+          ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+        }
+      });
+
+      return field;
+    } else {
+      /* 기존 필드가 없으면 create */
+      // field 추가
+      const newField = await prisma.w_FIELDS.create({
+        data: {
+          ITEM_ID: itemId,
+          FIELD_TYPE_ID: fieldTypeId,
+          ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+          WIDTH: 200,
+          REG_DT: new Date()
+        },
+      });
+
+       // row 조회
+      const rows = await prisma.w_ROWS.findMany({
+        where: {
+          ITEM_ID: itemId,
+        },
+      });
+      
+      // row별 value 추가
+      const newValues: {rowId: number, valueId: number}[] = [];
+      rows.forEach(async (row) => {
+        const newData = await prisma.w_VALUES.create({
+          data: {
+            ROW_ID: row.ID,
+            FIELD_ID: newField.ID,
+            VALUE: '',
+            REG_DT: new Date()
+          },
+        });
+        newValues.push({ rowId: row.ID, valueId: newData.ID })
+      });
+
+      return newField;
+    }
+  }
 }

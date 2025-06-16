@@ -14,7 +14,7 @@ export default function TextContent({
   handleUpdateValue: ({newValue}: {newValue: string}) => void,
   setIsEditing: (isEditing: boolean) => void
 }) {
-  const [cellValue, setCellValue] = useState(value);
+  const [cellValue, setCellValue] = useState(value ?? '');
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   // 자동 focus

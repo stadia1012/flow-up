@@ -1,54 +1,150 @@
 'use client'
-import { getFieldTypes } from "@/app/controllers/taskController";
+import { getAllFieldTypes, getFieldTypes, hadleFieldHiddenFromDB } from "@/app/controllers/taskController";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/app/store/store";
 import { TaskFieldType } from "@/global";
 import { useEffect, useState } from "react";
+import FieldType from "./fieldType";
+import { setFields, setRealId } from "@/app/store/tableSlice";
+import { showModal } from "../modalUtils";
 
-export default function FieldTypeList() {
-  const [fields, setFields] = useState<TaskFieldType[]>([]);
-  const typeIcons = {
-    'text' : `
-      <svg className="text-blue-500" style={{}} xmlns="http://www.w3.org/2000/svg" width="14px" height="14px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path d="M12 3V21M9 21H15M19 6V3H5V6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>`,
-    'number' : `
-      <svg className="text-green-600" width="14px" height="14px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2.705 8.0675H21.295M2.705 15.9325H21.295M18.0775 2.705L14.5025 21.295M10.2125 2.705L6.6375 21.295" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      </svg>`,
-    'dropdown' : `
-      <svg className="text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="15px" height="15px" strokeWidth="2">
-      <path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path>
-      <path d="M9 11l3 3l3 -3"></path>
-    </svg>`,
-  }
+export default function FieldTypeList({itemId}: {itemId: number}) {
+  const dispatch = useDispatch();
+  const [fieldTypes, setFieldTypes] = useState<TaskFieldType[]>([]);
+  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set()); // 등록된 id 목록
+  const [lastToggledId, setLastToggledId] = useState<number | null>(null); // 변경된 id
+  const {rows, fields} = useSelector((state: RootState) =>
+    state.table.data
+  )
+
+  // DB에서 item fieldTypes 가져오기
   useEffect(() => {
-    getFieldTypes()
+    getFieldTypes({itemId})
       .then((res) => {
-        setFields(res);
-        console.log(res);
+        setCheckedIds(prev => {
+          const next = new Set(prev);
+          res.forEach(f => next.add(f.id));
+          return next;
+        });
       })
       .catch((err) => {
         console.error("Failed to load field types:", err);
       });
   }, []);
+
+  // DB에서 fieldTypes 가져오기
+  useEffect(() => {
+    getAllFieldTypes()
+      .then((res) => {
+        setFieldTypes(res);
+      })
+      .catch((err) => {
+        console.error("Failed to load field types:", err);
+      });
+  }, []);
+
+  // check 상태 변경
+  const handleCheckbox: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+    const id = Number(e.currentTarget.closest('li')?.dataset.id);
+    if (!id) return;
+    // 상태 변경
+    setCheckedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+    setLastToggledId(id);
+  };
+
+  // 변경된 field DB에서 변경
+  useEffect(() => {
+    if (lastToggledId === null) return;
+    const isChecked = checkedIds.has(lastToggledId);
+
+    // 대상 fieldType
+    const newFieldType = fieldTypes.find(ft => ft.fieldTypeId == lastToggledId);
+    if (isChecked) {
+      // redux 업데이트 준비
+      const maxOrder = Math.max(...fields.map((field) => field.order)) + 1;
+      const tempFieldId = Date.now();
+      const newFields = fields.map(f => ({ ...f }));
+
+      const newField = {
+        fieldId: tempFieldId,
+        name: newFieldType?.name || '',
+        typeId: tempFieldId,
+        type: newFieldType?.type || 'text',
+        order: maxOrder,
+        width: 200,
+        dropdownOptions: newFieldType?.dropdownOptions
+      }
+      newFields.push(newField);
+
+      // redux 업데이트 (임시 id)
+      dispatch(setFields({newFields}));
+
+      // DB field 추가
+      try {
+        hadleFieldHiddenFromDB({
+          fieldTypeId: lastToggledId,
+          itemId: itemId,
+          isHidden: false
+        }).then((res) => {
+          // real id로 업데이트
+          if (!res?.ID || !res?.FIELD_TYPE_ID) return
+          dispatch(setRealId({
+            type: 'field',
+            tempId: tempFieldId,
+            realId: res.ID,
+            fieldTypeId: res.FIELD_TYPE_ID
+          }));
+        });
+      } catch (err) {
+        alert('DB 저장에 실패했습니다.');
+      }
+    } else {
+      // redux 업데이트 (숨기기)
+      const newFields = fields.filter((f) => f.typeId !== newFieldType?.fieldTypeId);
+      dispatch(setFields({newFields}));
+
+      try {
+        // DB field 숨기기
+        hadleFieldHiddenFromDB({
+          fieldTypeId: lastToggledId,
+          itemId: itemId,
+          isHidden: true
+        });
+      } catch (err) {
+        alert('DB 저장에 실패했습니다.');
+      }
+      
+    }
+  }, [checkedIds, lastToggledId]);
   return (
-    <>
-      {fields
-        .filter((f) => f.fieldTypeId !== 1) // name은 제거
-        .map((field, i) => (
-          <li key={i}
-            className="flex items-center relative cursor-pointer
-              rounded-[5px] hover:border-gray-400 hover:bg-gray-200/70 py-[6px] px-[15px] transition"
-            onClick={(e) => {e.stopPropagation();}}
-          >
-            {/* icon */}
-            <div className="flex items-center justify-center h-[22px] w-[22px] bg-orange-200/70 rounded-[3px] mr-[7px]">
-              {typeIcons[field.type]}
-            </div>
-            {/* name */}
-            <p className="ml-[5px]">{field.name}</p>
-          </li>
+    <ul>
+      <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Shown</p>
+      {Array.from(checkedIds).map((id, i) => {
+        const ft = fieldTypes.find(f => f.fieldTypeId === id)
+        if (!ft || ft.fieldTypeId === 1) return null;
+        return (
+          <FieldType
+            key={i}
+            fieldType={ft}
+            handleCheckbox={handleCheckbox}
+            isChecked={true}
+          />
+        )
+      })}
+      {/* 구분 선 */}
+      <div className="border-t border-gray-200 h-0 my-[12px]"></div>
+      <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Hidden</p>
+      {fieldTypes
+        .filter((f) => f.fieldTypeId !== 1 && !checkedIds.has(f.fieldTypeId))
+        // name 제거(id: 1), 체크 안된 항목만
+        .map((fieldType, i) => (
+          <FieldType key={i} fieldType={fieldType} handleCheckbox={handleCheckbox} isChecked={false} />
         )
       )}
-    </>
+    </ul>
   )
 }

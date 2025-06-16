@@ -17,24 +17,23 @@ export default function FieldSettingsPopup(
   }) {
     const dispatch: AppDispatch = useDispatch();
     const handleDeleteField = async () => {
-      const title = `'${field.name}' 필드를 삭제하시겠습니까? \n복구할 수 없습니다.`;
+      const title = `'${field.name}' 필드를 삭제하시겠습니까?`;
       try {
         await showModal({
           type: 'delete',
           title: title
         });
+        const newFields = fields.filter((f) => f.fieldId !== field.fieldId);
+
+        // 숨김 처리 (store)
+        dispatch(setFields({
+          newFields: newFields
+        }));
   
-        // 삭제 처리 (DB)
+        // 숨김 처리 (DB)
         await deleteItemFieldFromDB({
           fieldId: field.fieldId
         });
-
-        const newFields = fields.filter((f) => f.fieldId !== field.fieldId);
-
-        // 삭제 처리 (store)
-        dispatch(setFields({
-          newFields: newFields
-        }))
       } catch {
         console.log('사용자 취소');
       }

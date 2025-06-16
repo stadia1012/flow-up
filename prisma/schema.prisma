@@ -638,7 +638,7 @@ model W_FIELDS {
   FIELD_TYPE_ID Int
   ORDER         Int?
   WIDTH         Int?
-  IS_DELETED    String @default("N") @db.VarChar(1)
+  IS_HIDDEN     String @default("N") @db.VarChar(1)
   REG_ID        String?   @db.VarChar(15)
   REG_DT        DateTime?
   UPDT_ID       String?   @db.VarChar(15)

@@ -111,8 +111,8 @@ export default function AddFieldSidebar(
         dispatch(setRealId({
           type: 'field',
           tempId: tempFieldId,
-          realId: res.fields.ID,
-          fieldTypeId: res.fields.FIELD_TYPE_ID
+          realId: res.field.ID,
+          fieldTypeId: res.field.FIELD_TYPE_ID
         }));
       });
     } catch(err) {
@@ -287,7 +287,7 @@ export default function AddFieldSidebar(
       {/* 기존 필드 추가 (Add existing field) */}
       {
       additionalSetting === 'existing' &&
-      <div className="flex flex-col">
+      <div className="flex flex-col h-full">
         <div className="flex items-center px-[10px]">
           <button
             type="button"
@@ -300,11 +300,10 @@ export default function AddFieldSidebar(
           </button>
           <h2 className="text-[16px] font-[500]">Existing Fields</h2>
         </div>
-        {/* dropdown setting */}
-        <div className="flex flex-col px-[10px]">
-          {/* 구분 선 */}
-          <div className="border-t border-gray-200 h-0 my-[12px]"></div>
-          <FieldTypeList />
+        {/* 구분 선 */}
+        <div className="border-t border-gray-200 h-0 my-[12px]"></div>
+        <div className="flex flex-col px-[10px] overflow-y-auto">
+          <FieldTypeList itemId={itemId} />
         </div>
       </div>
       }

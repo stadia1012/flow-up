@@ -43,7 +43,7 @@ type TaskFieldType = {
   fieldTypeId: number,
   name: string,
   type: FieldDataType,
-  dropdownOptions: DropdownOption[]
+  dropdownOptions: DropdownOption[],
 }
 
 type FieldDataType = 'text' | 'number' | 'dropdown';

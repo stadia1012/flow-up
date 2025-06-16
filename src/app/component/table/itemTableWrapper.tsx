@@ -20,7 +20,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     }),
     // rawfields
     prisma.w_FIELDS.findMany({
-      where: { ITEM_ID: itemId },
+      where: { ITEM_ID: itemId, IS_HIDDEN: 'N' },
       select: { ID: true, ORDER: true, WIDTH: true, fieldType: {
         select: {
           ID: true, NAME: true, DATA_TYPE: true,
@@ -39,7 +39,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     const key = row?.ID as number;
     if (!rowMap.has(key)) {
       rowMap.set(key, {
-        values: {},           // 이곳에 숫자 키로 VALUE를 쌓을 것
+        values: {},           // 이곳에 숫자 키로 VALUE를 쌓기
         rowId: row?.ID as number,
         order: row?.ORDER as number,
       });
