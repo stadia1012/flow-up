@@ -14,7 +14,7 @@ export default function ColorPicker({
 }: ColorPickerProps) {
   const [selectedHex, setSelectedHex] = useState(hex);
   const defaultColors = [
-    '000000','ff0000','ff7800','f7d92b','008000','0050ff','000080','800080','808080','ffc0cb','ff69b4','a52A2a','3dce72','40e0d0','87ceeb',
+    '000000','ff0000','ff7800','f7d92b','008000','0050ff','000080','800080','808080', 'b5bcc2', 'ffc0cb','ff69b4','a52A2a','3dce72','2cbdd3','87ceeb',
   ];
   return (
     <div

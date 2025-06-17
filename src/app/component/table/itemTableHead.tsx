@@ -4,11 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { DropHeadIndicator } from "./dropHeadIndicator";
 import { createPortal } from "react-dom";
 import FieldSettingsPopup from "./fieldSettingsPopup";
 import FieldSidebarWrapper from "../field-Sidebar/fieldSidebarWrapper";
-import { DropThIndicator } from "./dropThIndicator";
+import { DropHeadIndicator } from "./dropHeadIndicator";
 export default function ItemTableHead({field, fields}: {
   field: TaskField,
   fields: TaskField[]
@@ -124,7 +123,7 @@ export default function ItemTableHead({field, fields}: {
       draggable({
         element: element,
         canDrag({ element }) {
-          if (element.dataset.fieldId === '1') {
+          if (element.dataset.type === 'name') {
             return false;
           }
           return true;
@@ -139,6 +138,7 @@ export default function ItemTableHead({field, fields}: {
         canDrop({ source }) {
           // 자신에게 드롭 방지
           if (source.element === element) return false;
+          if (element.dataset.type === "name") return false;
           return source.data != null && "fieldId" in source.data;
         },
         getData({ input }) {
@@ -193,7 +193,7 @@ export default function ItemTableHead({field, fields}: {
     >
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge === 'left' && (
-        <DropThIndicator edge="left" gap="0px" />
+        <DropHeadIndicator edge="left" gap="0px" />
       )}
       <div className='flex items-center border-b border-gray-300 pl-[8px] pt-[3px] pb-[3px] text-left text-gray-500 font-[500] text-[13px] h-[32px]'>
         <p className="truncate">{field.name}</p>
@@ -205,7 +205,7 @@ export default function ItemTableHead({field, fields}: {
       />
       {/* 드래그 인디케이터 */}
       {dragState.type === "dragging-over" && dragState.closestEdge === 'right' && (
-        <DropThIndicator edge="right" gap="0px" />
+        <DropHeadIndicator edge="right" gap="0px" />
       )}
     </th>
     {

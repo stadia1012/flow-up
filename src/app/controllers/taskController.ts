@@ -30,7 +30,7 @@ export async function moveTaskRow({
 }) {
   try {
     if (updateOrder > sourceOrder) {
-      // 후순서로 이동
+      // 후순서로 이동하는 경우
       await prisma.w_ROWS.updateMany({
         where: { 
           ORDER: {
@@ -41,7 +41,7 @@ export async function moveTaskRow({
         data: { ORDER: { decrement: 1 } },
       });
     } else {
-      // 선순서로 이동
+      // 선순서로 이동하는 경우
       await prisma.w_ROWS.updateMany({
         where: { 
           ORDER: {
@@ -59,13 +59,23 @@ export async function moveTaskRow({
     });
     return;
   } catch (error) {
-    console.error('item name 업데이트 실패:', error);
-    throw new Error('item name 업데이트 실패');
+    console.error('row order 업데이트 실패:', error);
+    throw new Error('row order 업데이트 실패');
   }
 }
 
 // task (row) 추가
-export async function addTaskToDB({itemId, name} : {itemId: number, name: string}) {
+export async function addTaskRowToDB(
+  {
+    itemId,
+    fieldId,
+    name
+  }:
+  {
+    itemId: number,
+    fieldId: number,
+    name: string
+  }) {
   // max order 구하기
   const maxOrder = await prisma.w_ROWS.aggregate({
     where: {
@@ -73,14 +83,6 @@ export async function addTaskToDB({itemId, name} : {itemId: number, name: string
     },
     _max: {
       ORDER: true
-    }
-  });
-
-  // field 구하기
-  const fields = await prisma.w_FIELDS.findMany({
-    include: { fieldType: true },
-    where: {
-      ITEM_ID: itemId
     }
   });
 
@@ -94,33 +96,42 @@ export async function addTaskToDB({itemId, name} : {itemId: number, name: string
     },
   });
 
-  // value 추가
-  fields.forEach(async (f) => {
-    const value = f.fieldType.DATA_TYPE === 'name' ? name : ''
-    await prisma.w_VALUES.create({
-      data: {
-        ROW_ID: result.ID,
-        FIELD_ID: f.ID,
-        VALUE: value,
-        REG_DT: now
-      },
-    });
-  })
+  // name 값 입력
+  await prisma.w_VALUES.create({
+    data: {
+      ROW_ID: result.ID,
+      FIELD_ID: fieldId,
+      VALUE: name,
+      REG_DT: now
+    },
+  });
+
   return result;
 }
 
-// value 수정
+// value 수정 (upsert)
 export async function updateValueToDB({
   rowId, fieldId, value
 }: {
   rowId: number, fieldId: number, value: string
 }) {
-  await prisma.w_VALUES.updateMany({
+  await prisma.w_VALUES.upsert({
     where: {
-      ROW_ID: rowId,
-      FIELD_ID: fieldId
+      unique_row_field: {
+        ROW_ID: rowId,
+        FIELD_ID: fieldId
+      }
     },
-    data: { VALUE: value },
+    update: {
+      VALUE: value,
+      UPDT_DT: new Date()
+    },
+    create: {
+      ROW_ID: rowId,
+      FIELD_ID: fieldId,
+      VALUE: value,
+      REG_DT: new Date()
+    }
   });
 }
 
@@ -179,31 +190,10 @@ export async function addFieldToDB({
       REG_DT: now
     },
   });
-
-  // row 조회
-  const rows = await prisma.w_ROWS.findMany({
-    where: {
-      ITEM_ID: itemId,
-    },
-  });
-  
-  // row별 value 추가
-  const newValues: {rowId: number, valueId: number}[] = [];
-  rows.forEach(async (row) => {
-    const newData = await prisma.w_VALUES.create({
-      data: {
-        ROW_ID: row.ID,
-        FIELD_ID: newField.ID,
-        VALUE: '',
-        REG_DT: now
-      },
-    });
-    newValues.push({ rowId: row.ID, valueId: newData.ID })
-  });
-  return {values: newValues, field: newField};
+  return {field: newField};
 }
 
-/* dropdown field 추가 */
+/* dropdown field type 추가 */
 export const addDropdownFieldToDB = async ({
   options, itemId, name, type
 }:{
@@ -261,27 +251,7 @@ export const addDropdownFieldToDB = async ({
     },
   });
 
-  // row 조회
-  const rows = await prisma.w_ROWS.findMany({
-    where: {
-      ITEM_ID: itemId,
-    },
-  });
-  
-  // row별 value 추가
-  const newValues: {rowId: number, valueId: number}[] = [];
-  rows.forEach(async (row) => {
-    const newData = await prisma.w_VALUES.create({
-      data: {
-        ROW_ID: row.ID,
-        FIELD_ID: newField.ID,
-        VALUE: '',
-        REG_DT: now
-      },
-    });
-    newValues.push({ rowId: row.ID, valueId: newData.ID })
-  });
-  return {values: newValues, fields: newField, options: newOptions};
+  return {fields: newField, options: newOptions};
 }
 
 // field width 변경
@@ -470,7 +440,7 @@ export async function getFieldTypes({itemId}: {itemId: number}) {
   return fieldTypes;
 }
 
-// 필드 숨기고 표시하기
+// 필드 숨기고 표시하기 - 해당 item에 없는 경우 추가
 export async function hadleFieldHiddenFromDB(
   {
     fieldTypeId,
@@ -506,63 +476,88 @@ export async function hadleFieldHiddenFromDB(
       }
     });
 
-    // 기존 필드가 있는지 검사
-    const field =  await prisma.w_FIELDS.findFirst({
+    const field = await prisma.w_FIELDS.upsert({
       where: {
-        ITEM_ID: itemId,
-        FIELD_TYPE_ID: fieldTypeId
-      },
-    });
-
-    if (field) {
-      /* 기존 필드가 있으면 update */
-      await prisma.w_FIELDS.updateMany({
-        where: {
-          ITEM_ID: itemId,
-          FIELD_TYPE_ID: fieldTypeId
-        },
-        data: {
-          IS_HIDDEN: 'N',
-          ORDER: (maxOrder._max.ORDER ?? -1) + 1,
-        }
-      });
-
-      return field;
-    } else {
-      /* 기존 필드가 없으면 create */
-      // field 추가
-      const newField = await prisma.w_FIELDS.create({
-        data: {
+        // 스키마에 복합 유니크 키가 정의되어 있다면
+        unique_item_fieldType: {
           ITEM_ID: itemId,
           FIELD_TYPE_ID: fieldTypeId,
-          ORDER: (maxOrder._max.ORDER ?? -1) + 1,
-          WIDTH: 200,
-          REG_DT: new Date()
         },
-      });
-
-       // row 조회
-      const rows = await prisma.w_ROWS.findMany({
-        where: {
-          ITEM_ID: itemId,
-        },
-      });
-      
-      // row별 value 추가
-      const newValues: {rowId: number, valueId: number}[] = [];
-      rows.forEach(async (row) => {
-        const newData = await prisma.w_VALUES.create({
-          data: {
-            ROW_ID: row.ID,
-            FIELD_ID: newField.ID,
-            VALUE: '',
-            REG_DT: new Date()
-          },
-        });
-        newValues.push({ rowId: row.ID, valueId: newData.ID })
-      });
-
-      return newField;
-    }
+      },
+      update: {
+        IS_HIDDEN: 'N',
+        ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+      },
+      create: {
+        ITEM_ID: itemId,
+        FIELD_TYPE_ID: fieldTypeId,
+        ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+        WIDTH: 200,
+        REG_DT: new Date(),
+      },
+    });
+    return field;
   }
+}
+
+// row order 변경
+export async function moveTaskField({
+  fieldId,
+  sourceOrder,
+  updateOrder,
+}: {
+  fieldId: number;
+  sourceOrder: number;
+  updateOrder: number;
+}) {
+  try {
+    if (updateOrder > sourceOrder) {
+      // 후순서로 이동하는 경우
+      await prisma.w_FIELDS.updateMany({
+        where: { 
+          ORDER: {
+            gte: sourceOrder,
+            lte: updateOrder
+          }
+        },
+        data: { ORDER: { decrement: 1 } },
+      });
+    } else {
+      // 선순서로 이동하는 경우
+      await prisma.w_FIELDS.updateMany({
+        where: { 
+          ORDER: {
+            gte: updateOrder,
+            lte: sourceOrder
+          } 
+        },
+        data: { ORDER: { increment: 1 } },
+      });
+    }
+    // 대상 업데이트
+    await prisma.w_FIELDS.update({
+      where: { ID: fieldId },
+      data: { ORDER: updateOrder },
+    });
+    return;
+  } catch (error) {
+    console.error('field order 업데이트 실패:', error);
+    throw new Error('field order 업데이트 실패');
+  }
+}
+
+// delete Row
+export async function deleteTaskRowFromDB({
+  deleteIds
+}: {
+  deleteIds: number[],
+}) {
+  // field 숨기기
+  await prisma.w_ROWS.deleteMany({
+    where: {
+      ID: {
+        in: deleteIds
+      } 
+    }
+  });
 }

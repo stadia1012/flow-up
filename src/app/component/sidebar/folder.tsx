@@ -239,7 +239,7 @@ export default function Folder({folder, dragStateType, project}: {folder: List, 
         />}
         {/* 폴더 이름 */}
         { isRename ? ( /* 이름변경 시 */
-          <div className="flex-1 rename peer">
+          <div className="flex-1 w-[10px] rename peer">
             <input
               type="text"
               className="w-full px-[6px] py-[0px] outline-solid outline-gray-400 outline-1 rounded-[3px] bg-white"
@@ -257,13 +257,15 @@ export default function Folder({folder, dragStateType, project}: {folder: List, 
           <span className="relative top-[1px] cursor-pointer w-[10px] flex-1 truncate" onClick={handleIsFolded}>{folderName}</span>
         )
       }
-      {/* button wrapper */}
-      <div className="p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
-        {/* button - add */}
-        <SidebarAddButton addType="item" item={folder} />
-        {/* button - setting */}
-        <SidebarSettingButton type="folder" handleRename={handleRename} item={folder} />
-      </div>
+      {/* button wrapper */
+        !isRename &&
+        <div className="p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
+          {/* button - add */}
+          <SidebarAddButton addType="item" item={folder} />
+          {/* button - setting */}
+          <SidebarSettingButton type="folder" handleRename={handleRename} item={folder} />
+        </div>
+      }
     </div>
     {
       /* 하위 Item List */

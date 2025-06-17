@@ -26,7 +26,7 @@ export default async function Main({
   });
 
   return (
-    <div className='flex flex-col p-[15px] pt-[20px] overflow-auto w-full'>
+    <div className='flex flex-col p-[15px] pt-[20px] overflow-auto w-max min-w-[390px]'>
       <div className='pl-[15px]'>
         <div className='text-[13.5px] text-gray-500 mb-[10px] font-[400]'>
           <span className='inline-block'>{project?.name || 'Unknown'}</span>
@@ -35,9 +35,8 @@ export default async function Main({
           <span className='inline-block ml-[10px] mr-[10px]'>/</span>
           <span className='inline-block'>{item?.name || 'Unknown'}</span>
         </div>
-        <h1 className='text-[15px] font-[600] '>{item?.name || 'Unknown'}</h1>
       </div>
-      <ItemTableWrapper itemId={Number(itemId)} />
+      <ItemTableWrapper item={item as List} />
     </div>
   );
 }

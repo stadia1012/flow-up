@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import DropdownContent from './dropdownContent';
 import TextContent from './textContent';
 import NameContent from './nameContent';
+import NumberContent from './numberContent';
 
 export default function ItemTableCell({
   updateValue,
@@ -55,9 +56,19 @@ export default function ItemTableCell({
           setIsEditing={setIsEditing}
         />
       }
-      { // text, name 인 경우
+      { // text 인 경우
         (field.type === "text") && 
         <TextContent
+          field={field}
+          value={value}
+          handleUpdateValue={handleUpdateValue}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
+      }
+      { // number 인 경우
+        (field.type === "number") && 
+        <NumberContent
           field={field}
           value={value}
           handleUpdateValue={handleUpdateValue}

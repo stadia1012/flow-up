@@ -5,19 +5,20 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import ItemTableRow from './itemTableRow';
 import AddRowButton from './addRowButton';
-import { moveTaskRow, addTaskToDB, updateValueToDB } from '@/app/controllers/taskController';
+import { moveTaskRow, addTaskRowToDB, updateValueToDB, deleteTaskRowFromDB } from '@/app/controllers/taskController';
 import { useSelector, useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
 import { setTableData, setValues, setRealId } from "@/app/store/tableSlice";
 import type { RootState } from "@/app/store/store";
 import ItemTableHeadContainer from './itemTableHeadContainer';
+import { showModal } from '../modalUtils';
 
-export default function ItemTable({initialTableData, itemId}: {
+export default function ItemTable({initialTableData, item}: {
   initialTableData: {
     rows: TaskRow[];
     fields: TaskField[];
   },
-  itemId: number
+  item: List
 }) {
   // server에서 받은 projects를 redux에 반영
   useEffect(() => {
@@ -66,8 +67,9 @@ export default function ItemTable({initialTableData, itemId}: {
     }, 10);
 
     // DB에 추가
-    addTaskToDB({
-      itemId: itemId,
+    addTaskRowToDB({
+      itemId: item.id,
+      fieldId: nameField?.fieldId || 0,
       name
     }).then((res) => {
       dispatch(setRealId({type: 'row', tempId: tempRowId, realId: res.ID}));
@@ -174,7 +176,7 @@ export default function ItemTable({initialTableData, itemId}: {
           rowId: Number(sourceData.rowId),
           sourceOrder: Number(sourceData.order),
           updateOrder
-        })
+        });
 
         // 이동 후 flash
         setTimeout(() => {
@@ -186,21 +188,70 @@ export default function ItemTable({initialTableData, itemId}: {
       },
     });
   }, [rows]);
+
+  // row 삭제
+  const handleDeleteRow = () => {
+    const deleteIds = Array.from(checkedIds)
+    // redux update
+    const newRows = rows.map((el: any) => ({ ...el }))
+      .filter((row) => !deleteIds.includes(row.rowId));
+    dispatch(setValues({newRows: [...newRows]}));
+
+    // DB update
+    deleteTaskRowFromDB({deleteIds});
+  }
   return (
-    <div className="relative pl-[5px] pr-[5px] pt-[10px] w-full h-full scroll-8px" style={{ overflowX: 'auto' }}>
-    <table className="itemTable border-collapse w-min table-fixed">
-      <thead>
-        <ItemTableHeadContainer
-          fields={fields} handleCheckAll={handleCheckAll} isAllChecked={isAllChecked} itemId={itemId}
-        />  
-      </thead>
-      <tbody ref={containerRef}>
-        {[...rows].sort((a, b) => (a.order) - (b.order)).map((row)  => (
-          <ItemTableRow key={row.rowId} row={row} fields={fields} checkedIds={checkedIds} handleCheckbox={handleCheckbox} updateValue={updateValue} />
-        ))}
-        <AddRowButton fields={fields} addTaskRow={addTaskRow} />
-      </tbody>
-    </table>
-    </div>
+    <>
+      <div className='flex items-center h-[32px] pl-[15px]'>
+        <h1 className='text-[15px] font-[600] '>{item?.name || 'Unknown'}</h1>
+        { /* delete button */
+        (checkedIds.size !== 0) &&
+        <button
+          type="button"
+          className="
+            flex items-center transition ml-auto hover:bg-red-100/80 cursor-pointer
+            p-[3px] pr-[6px] rounded-[4px] box-content"
+          onClick={async () => {
+            try {
+              await showModal({
+                type: 'delete',
+                title: `선택한 행을 삭제하시겠습니까? (${checkedIds.size}개 행)`
+              });
+              handleDeleteRow();
+
+              return;
+            } catch {
+              console.log('사용자 취소');
+              return;
+            }
+          }}
+        >
+          <svg className="h-[21px] w-[21px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#db0000" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 7l16 0" />
+            <path d="M10 11l0 6" />
+            <path d="M14 11l0 6" />
+            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+          </svg>
+          <span className='relative top-[1px] ml-[2px] text-[14px] text-[#db0000]'>Delete</span>
+        </button>
+        }
+      </div>
+      <div className="relative pl-[5px] pr-[5px] pt-[5px] w-full h-full scroll-8px mb-[60px]" style={{ overflowX: 'auto' }}>
+        <table className="itemTable border-collapse w-min table-fixed">
+          <thead>
+            <ItemTableHeadContainer
+              fields={fields} handleCheckAll={handleCheckAll} isAllChecked={isAllChecked} itemId={item.id}
+            />  
+          </thead>
+          <tbody ref={containerRef}>
+            {[...rows].sort((a, b) => (a.order) - (b.order)).map((row)  => (
+              <ItemTableRow key={row.rowId} row={row} fields={fields} checkedIds={checkedIds} handleCheckbox={handleCheckbox} updateValue={updateValue} />
+            ))}
+            <AddRowButton fields={fields} addTaskRow={addTaskRow} />
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

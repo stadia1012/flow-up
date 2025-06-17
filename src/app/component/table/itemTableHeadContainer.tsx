@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import FieldSidebarWrapper from "../field-Sidebar/fieldSidebarWrapper";
 import { useDispatch, useSelector } from "react-redux";
 import { setFields } from "@/app/store/tableSlice";
+import { moveTaskField } from "@/app/controllers/taskController";
 
 export default function ItemTableHeadContainer({
   fields,
@@ -106,7 +107,11 @@ export default function ItemTableHeadContainer({
         dispatch(setFields({newFields: [...newFields]}));
 
         // DB 변경
-
+        moveTaskField({
+          fieldId: Number(sourceData.fieldId),
+          sourceOrder: Number(sourceData.order),
+          updateOrder
+        })
 
         // 이동 후 flash
         const element = document.querySelector(`[data-field-id="${sourceData.fieldId}"]`);
@@ -159,24 +164,23 @@ export default function ItemTableHeadContainer({
       {/* field 추가 버튼 */}
       <th className='
         sticky right-[-10px]
-        text-center text-[#666]
         w-[50px]
-        cursor-pointer
-        bg-white hover:bg-gray-100
         transition'
         onClick={() => {
           setIsMountSidebar(true);
           setCloseSidebar(false); // 초기화
         }}
       >
-        <div className='flex items-center pl-[14px] border-b border-gray-300 h-[32px]'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="21" height="21" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor">
-            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path>
-            <path d="M16.1 12h-8.5"></path>
-            <path d="M12 7.8v8.7"></path>
-          </svg>
+        <div className="text-center text-[#666] cursor-pointer bg-white hover:bg-gray-100">
+          <div className='flex items-center pl-[14px] border-b border-gray-300 h-[32px]'>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="21" height="21" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" stroke="currentColor">
+              <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"></path>
+              <path d="M16.1 12h-8.5"></path>
+              <path d="M12 7.8v8.7"></path>
+            </svg>
+          </div>
         </div>
-        {
+        { /* field sidebar */
           isMountSidebar && createPortal(
             <FieldSidebarWrapper
               type={'add'}

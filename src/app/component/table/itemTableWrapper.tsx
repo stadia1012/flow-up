@@ -2,7 +2,7 @@
 import ItemTable from '@/app/component/table/itemTable'
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-export default async function ItemTableWrapper({itemId} : {itemId: number}) {
+export default async function ItemTableWrapper({item} : {item: List}) {
   // const res = await fetch(`http://localhost:3000/api/values/${itemId}`);
   // const data: {
   //   fields: Field[];
@@ -12,7 +12,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   const [rawValues, rawfields] = await Promise.all([
     // rawValues
     prisma.w_VALUES.findMany({
-      where: { row: { ITEM_ID: itemId } },
+      where: { row: { ITEM_ID: item.id } },
       include: {
         row: true,
         field: true,
@@ -20,7 +20,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     }),
     // rawfields
     prisma.w_FIELDS.findMany({
-      where: { ITEM_ID: itemId, IS_HIDDEN: 'N' },
+      where: { ITEM_ID: item.id, IS_HIDDEN: 'N' },
       select: { ID: true, ORDER: true, WIDTH: true, fieldType: {
         select: {
           ID: true, NAME: true, DATA_TYPE: true,
@@ -72,7 +72,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   }
   return (
     <>
-      <ItemTable initialTableData={data} itemId={itemId} />
+      <ItemTable initialTableData={data} item={item  as List} />
     </>
   );
 }

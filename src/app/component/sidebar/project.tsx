@@ -233,7 +233,7 @@ export default function Project({project, dragStateType}: {project : List, dragS
         />}
         {/* 프로젝트 이름 */}
         { isRename ? ( /* 이름변경 시 */
-            <div className="flex-1 rename peer">
+            <div className="flex-1 w-[10px] rename peer">
               <input
                 type="text"
                 className="w-full px-[6px] py-[0px] outline-solid outline-gray-400 outline-1 rounded-[3px] bg-white"
@@ -251,13 +251,15 @@ export default function Project({project, dragStateType}: {project : List, dragS
             <span className="relative top-[1px] cursor-pointer w-[10px] flex-1 truncate" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
           )
         }
-        {/* button wrapper */}
-        <div className="relative p-[3px] basis-[50px] items-center hidden group-hover:flex has-[.popup-menu]:flex peer-[.rename]:flex peer-[.rename]:opacity-0 peer-[.rename]:pointer-events-none">
-          {/* button - add */}
-          <SidebarAddButton addType="folder" item={project} />
-          {/* button -setting */}
-          <SidebarSettingButton type="project" handleRename={handleRename} item={project} />
-        </div>
+        {/* button wrapper */
+          !isRename &&
+          <div className="relative p-[3px] basis-[50px] items-center hidden group-hover:flex has-[.popup-menu]:flex peer-[.rename]:flex peer-[.rename]:opacity-0 peer-[.rename]:pointer-events-none">
+            {/* button - add */}
+            <SidebarAddButton addType="folder" item={project} />
+            {/* button -setting */}
+            <SidebarSettingButton type="project" handleRename={handleRename} item={project} />
+          </div>
+        }
       </div>
       {
       /* 하위 folder List */

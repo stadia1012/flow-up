@@ -35,6 +35,7 @@ export default function TextContent({
           onChange={(e) => {setCellValue(e.target.value)}}
           onBlur={(e) => handleUpdateValue({newValue: cellValue})}
           ref={inputRef}
+          autoComplete='off'
           spellCheck='false'
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleUpdateValue({newValue: (e.target as HTMLInputElement).value});

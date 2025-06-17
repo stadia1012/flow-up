@@ -134,7 +134,7 @@ export default function Item({item, project, folder}: {item: List, project: List
       />}
       {/* 아이템 이름 */}
       { isRename ? ( /* 이름변경 시 */
-          <div className="flex-1 rename">
+          <div className="flex-1 w-[10px] rename">
             <input
               type="text"
               className="w-full px-[6px] py-[0px] outline-1 outline-gray-400 rounded-[3px] bg-white"
@@ -154,10 +154,12 @@ export default function Item({item, project, folder}: {item: List, project: List
           </Link>
         )
       }
-      {/* button wrapper */}
-      <div className="flex p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
-        <SidebarSettingButton type="item" handleRename={handleRename} item={item} />
-      </div>
+      {/* button wrapper */
+        !isRename &&
+        <div className="flex p-[3px] ml-auto items-center hidden group-hover:flex has-[.popup-menu]:flex">
+          <SidebarSettingButton type="item" handleRename={handleRename} item={item} />
+        </div>
+      }
     </div>
   );
 }

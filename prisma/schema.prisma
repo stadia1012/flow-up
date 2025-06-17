@@ -646,6 +646,7 @@ model W_FIELDS {
 
   values     W_VALUES[] @relation("FieldValues")
   fieldType  W_FIELD_TYPES   @relation("FieldType", fields: [FIELD_TYPE_ID], references: [ID])
+  @@unique([ITEM_ID, FIELD_TYPE_ID], name: "unique_item_fieldType")
 }
 
 model W_FIELD_TYPES {
@@ -702,6 +703,7 @@ model W_VALUES {
 
   row        W_ROWS?   @relation("RowValues", fields: [ROW_ID], references: [ID])
   field      W_FIELDS? @relation("FieldValues", fields: [FIELD_ID], references: [ID])
+  @@unique([ROW_ID, FIELD_ID], name: "unique_row_field")
 }
 
 model W_USER_ACTIVITY_LOGS {
