@@ -218,7 +218,6 @@ export default function ItemTable({initialTableData, item}: {
                 title: `선택한 행을 삭제하시겠습니까? (${checkedIds.size}개 행)`
               });
               handleDeleteRow();
-
               return;
             } catch {
               console.log('사용자 취소');
@@ -237,7 +236,7 @@ export default function ItemTable({initialTableData, item}: {
         </button>
         }
       </div>
-      <div className="relative pl-[5px] pr-[5px] pt-[5px] w-full h-full scroll-8px mb-[60px]" style={{ overflowX: 'auto' }}>
+      <div className="relative pl-[5px] pr-[5px] pt-[5px] w-full h-full scroll-8px" style={{ overflowX: 'auto' }}>
         <table className="itemTable border-collapse w-min table-fixed">
           <thead>
             <ItemTableHeadContainer

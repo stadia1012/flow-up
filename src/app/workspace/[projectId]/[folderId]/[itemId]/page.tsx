@@ -26,7 +26,7 @@ export default async function Main({
   });
 
   return (
-    <div className='flex flex-col p-[15px] pt-[20px] overflow-auto w-max min-w-[390px]'>
+    <div className='flex flex-col p-[15px] pt-[20px] overflow-auto w-max min-w-[400px]'>
       <div className='pl-[15px]'>
         <div className='text-[13.5px] text-gray-500 mb-[10px] font-[400]'>
           <span className='inline-block'>{project?.name || 'Unknown'}</span>

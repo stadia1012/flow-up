@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model AUDIT_LOG {
@@ -43,13 +44,12 @@ model CBT_LOG {
 
 
 model CBT_USER {
-  USER_SEQ       Int     @id @default(autoincrement())
-  USER_ID        String? @db.VarChar(10)
+  USER_ID        String  @id @db.VarChar(15)
   USER_NAME      String? @db.VarChar(8)
   USER_CORP      String? @db.VarChar(10)
   USER_DEPT_CODE String? @db.VarChar(8)
   USE_YN         String? @default("Y") @db.VarChar(3)
-  DELETE_YN      String? @db.VarChar(3)
+  DELETE_YN      String? @default("N") @db.VarChar(3)
   USER_PW        String? @db.VarChar(300)
   USER_MAIL      String? @db.VarChar(30)
   USER_RANK      String? @db.VarChar(8)
@@ -67,9 +67,12 @@ model CBT_USER {
   LAST_LOGIN_DT  String? @db.VarChar(30)
   LOGIN_FAIL_CNT Int?    @default(0)
   LOCKED_YN      String? @default("N") @db.VarChar(1)
-  TEST_YN        String? @db.VarChar(3)
-}
+  TEST_YN        String? @default("N") @db.VarChar(3)
 
+  userDept       CBT_USER_DEPT? @relation("UserToDept", fields: [USER_DEPT_CODE], references: [DEPT_CODE])
+  userPermissions W_USER_PERMISSIONS[] @relation("CBTUserToPermissions")
+  adminUser      W_ADMIN_USERS? @relation("CBTUserToAdmin")
+}
 
 model CBT_USER_AUTH {
   SEQ       Int     @id @default(autoincrement())
@@ -79,10 +82,31 @@ model CBT_USER_AUTH {
   @@index([USER_ID], map: "USER_ID")
 }
 
-
 model CBT_USER_DEPT {
   DEPT_SEQ     Int     @id @default(autoincrement())
-  DEPT_CODE    String  @db.VarChar(8)
+  DEPT_CODE    String  @unique @db.VarChar(8)
+  DEPT_NAME    String? @db.VarChar(25)
+  INITIAL_NAME String? @db.VarChar(10)
+  CORP_INITIAL String? @db.VarChar(10)
+  USE_YN       String? @default("Y") @db.VarChar(3)
+  DEPT_TYPE    String? @db.VarChar(5)
+  DIV_CODE     String? @db.VarChar(8)
+  DIV_PATH     String? @db.VarChar(100)
+  DEPT_REMARKS String? @db.Text
+  TEST_YN      String? @default("N") @db.VarChar(3)
+  REG_DT       String? @db.VarChar(30)
+  REGR         String? @db.VarChar(15)
+  ORDER_INDEX  String? @db.VarChar(3)
+
+  users        CBT_USER[]  @relation("UserToDept")
+  deptPermissions W_DEPT_PERMISSIONS[] @relation("CBTDeptToPermissions")
+  closureAncestror CBT_DEPT_CLOSURE[] @relation("ClosureAncestror")
+  closureDescendant CBT_DEPT_CLOSURE[] @relation("ClosureDescendant")
+}
+
+model CBT_USER_DEPT_BCK {
+  DEPT_SEQ     Int     @id @default(autoincrement())
+  DEPT_CODE    String  @unique @db.VarChar(8)
   DEPT_NAME    String? @db.VarChar(25)
   INITIAL_NAME String? @db.VarChar(10)
   CORP_INITIAL String? @db.VarChar(10)
@@ -96,7 +120,6 @@ model CBT_USER_DEPT {
   REGR         String? @db.VarChar(15)
   ORDER_INDEX  String? @db.VarChar(3)
 }
-
 
 model CBT_USER_RANK {
   SEQ         Int     @id @default(autoincrement())
@@ -655,6 +678,7 @@ model W_FIELD_TYPES {
   DATA_TYPE  String?   @db.VarChar(15) @default("text")
   IS_DELETED String @default("N") @db.VarChar(1)
   OPTIONS_VERSION Int?
+  IS_ALLOW_ALL String? @db.VarChar(1) @default("N")
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime?
   UPDT_ID    String?   @db.VarChar(15)
@@ -706,11 +730,80 @@ model W_VALUES {
   @@unique([ROW_ID, FIELD_ID], name: "unique_row_field")
 }
 
-model W_USER_ACTIVITY_LOGS {
+model W_USER_LOGS {
   ID        Int       @id @default(autoincrement())
   USER_ID   String?   @db.VarChar(15)
   ITEM_TYPE String?   @db.VarChar(8)
   ITEM_ID    Int?
   ACTION     String?   @db.VarChar(20)
   REG_DT     DateTime? @db.DateTime(0)
+}
+
+// model W_GROUPS {
+//   ID      Int       @id @default(autoincrement())
+//   NAME    String?   @db.VarChar(15)
+//   REG_ID  String?   @db.VarChar(15)
+//   REG_DT  DateTime?
+//   userGroups W_USER_GROUPS[]
+//   permissions W_GROUP_PERMISSIONS[]
+// }
+
+// model W_USER_GROUPS {
+//   USER_ID  String @db.VarChar(15)
+//   GROUP_ID Int
+//   group    W_GROUPS   @relation(fields: [GROUP_ID],  references: [ID])
+//   REG_ID  String?   @db.VarChar(15)
+//   REG_DT  DateTime?
+
+//   @@id([USER_ID, GROUP_ID])
+// }
+
+// model W_GROUP_PERMISSIONS {
+//   GROUP_ID Int
+//   group    W_GROUPS   @relation(fields: [GROUP_ID],  references: [ID])
+//   RESOURCE_ID Int
+//   RESOURCE_TYPE String @db.VarChar(20) // project, folder, item, field
+//   REG_ID  String?   @db.VarChar(15)
+//   REG_DT  DateTime?
+
+//   @@id([RESOURCE_TYPE, RESOURCE_ID, GROUP_ID])
+// }
+
+model W_USER_PERMISSIONS {
+  USER_ID String @db.VarChar(15)
+  user     CBT_USER   @relation("CBTUserToPermissions", fields: [USER_ID],  references: [USER_ID])
+  RESOURCE_ID Int
+  RESOURCE_TYPE String @db.VarChar(20) // project, folder, item, field
+  REG_ID  String?   @db.VarChar(15)
+  REG_DT  DateTime?
+
+  @@id([RESOURCE_TYPE, RESOURCE_ID, USER_ID])
+}
+
+model W_DEPT_PERMISSIONS {
+  DEPT_CODE String @db.VarChar(8)
+  dept     CBT_USER_DEPT   @relation("CBTDeptToPermissions", fields: [DEPT_CODE],  references: [DEPT_CODE])
+  RESOURCE_ID Int
+  RESOURCE_TYPE String @db.VarChar(20) // project, folder, item, field
+  REG_ID  String?   @db.VarChar(15)
+  REG_DT  DateTime?
+
+  @@id([RESOURCE_TYPE, RESOURCE_ID, DEPT_CODE])
+}
+
+model W_ADMIN_USERS {
+  USER_ID String @id  @db.VarChar(15)
+  user     CBT_USER   @relation("CBTUserToAdmin", fields: [USER_ID],  references: [USER_ID])
+  IS_ACTIVE String @default("Y") @db.VarChar(1)
+  REG_ID  String?   @db.VarChar(15)
+  REG_DT  DateTime?
+}
+
+model CBT_DEPT_CLOSURE {
+  ANCESTOR_SEQ Int
+  ancestror CBT_USER_DEPT @relation("ClosureAncestror", fields: [ANCESTOR_SEQ], references: [DEPT_SEQ])
+  DESCENDANT_SEQ Int
+  descendant CBT_USER_DEPT @relation("ClosureDescendant", fields: [DESCENDANT_SEQ], references: [DEPT_SEQ])
+  DEPTH Int
+  @@id([ANCESTOR_SEQ, DESCENDANT_SEQ])
 }

@@ -109,7 +109,7 @@ export default function DropdownOptionList(
       try {
         await showModal({
           type: 'alert',
-          title: `DB 저장에 실했습니다. ${err}`
+          title: `DB 저장에 실패했습니다. ${err}`
         });
         return;
       } catch {

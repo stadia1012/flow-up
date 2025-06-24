@@ -46,6 +46,7 @@ export async function GET(
       fieldId: f.ID,
       name: f.fieldType.NAME || '',
       type: f.fieldType.DATA_TYPE || '',
+      typeId: f.fieldType.ID,
       order: f.ORDER || 0,
       width: f.WIDTH || 200
     }));

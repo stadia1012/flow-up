@@ -51,6 +51,7 @@ export default function ItemTableHead({field, fields}: {
   const popupRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      if (e.defaultPrevented) return;
       const target = e.target as Node;
       if (!popupRef.current) return;
 
@@ -75,6 +76,7 @@ export default function ItemTableHead({field, fields}: {
   const sidebarRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      if (e.defaultPrevented) return;
       const target = e.target as Node;
       if (!sidebarRef.current) return;
 

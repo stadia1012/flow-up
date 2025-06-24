@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
 import { Providers } from "@/app/component/providers";
-import Header from "./component/header";
-import SidebarWrapper from "./component/sidebar/sidebarWrapper";
+import AuthProvider from "./authProvider";
+import { ToastProvider } from "./context/ToastContext";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -25,15 +25,13 @@ export default function RootLayout({
   return (
     <html lang="kr">
       <body className="overflow-hidden">
-        <Providers>
-          <div className="flex flex-col h-full relative">
-            <Header></Header>
-            <div id="content-container" className="flex flex-row h-full relative">
-              <SidebarWrapper />
-              {children}
-            </div>
-          </div>
-        </Providers>
+        <AuthProvider>
+          <Providers>
+            <ToastProvider>
+            {children}
+            </ToastProvider>
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   );

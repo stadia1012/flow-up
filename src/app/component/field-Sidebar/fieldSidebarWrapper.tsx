@@ -22,7 +22,7 @@ export default function FieldSidebarWrapper(
   useEffect(() => {
     if (isSidebarOpen) {
       setIsShow(true);
-      // 확실하게 다음 프레임에 실행
+      // 확실하게 마운트 다음 프레임에 슬라이드 실행
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsSlidingIn(true);

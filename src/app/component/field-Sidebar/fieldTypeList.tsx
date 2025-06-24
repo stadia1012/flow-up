@@ -6,7 +6,6 @@ import { TaskFieldType } from "@/global";
 import { useEffect, useState } from "react";
 import FieldType from "./fieldType";
 import { setFields, setRealId } from "@/app/store/tableSlice";
-import { showModal } from "../modalUtils";
 
 export default function FieldTypeList({itemId}: {itemId: number}) {
   const dispatch = useDispatch();

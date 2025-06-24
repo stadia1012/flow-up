@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, MouseEvent } from "react";
 import SidebarAddButton from "./sidebarAddButton";
 import SidebarTreeWrapper from "./sidebarTreeWrapper";
+import Link from "next/link";
 
 export default function Sidebar({projects}: {projects: List[]}) {
   const [width, setWidth] = useState(240);
@@ -46,8 +47,15 @@ export default function Sidebar({projects}: {projects: List[]}) {
       style={{minWidth: `${width}px`}}
     >
       <div className="border-b-1 border-gray-300/85 p-2 pl-2 pt-3 basis-[150px]">
-          <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">Settings</div>
-          <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">Logs</div>
+        <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
+          <Link href={{pathname: `/settings`}}>Settings</Link>
+        </div>
+        {/* <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
+          <Link  href={{pathname: `/groups`}}>User Groups</Link>
+        </div> */}
+        <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
+          <Link href={{pathname: `/logs`}}>Logs</Link>
+        </div>
       </div>
       <div className="p-2 pr-3">
         <div className="flex">

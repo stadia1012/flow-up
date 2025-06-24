@@ -478,7 +478,7 @@ export async function hadleFieldHiddenFromDB(
 
     const field = await prisma.w_FIELDS.upsert({
       where: {
-        // 스키마에 복합 유니크 키가 정의되어 있다면
+        // 복합 유니크 키가 정의되어 있다면
         unique_item_fieldType: {
           ITEM_ID: itemId,
           FIELD_TYPE_ID: fieldTypeId,
