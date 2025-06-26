@@ -2,7 +2,7 @@
 import { getProjects } from '@/app/controllers/projectController';
 import Sidebar from "@/app/component/sidebar/sidebar";
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth/auth";
 
 export default async function SidebarWrapper() {
   const projects = await getProjects();

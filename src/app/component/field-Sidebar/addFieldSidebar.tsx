@@ -1,15 +1,16 @@
 'use client'
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { setFields, setRealId } from "@/app/store/tableSlice";
 import { showModal } from "../modalUtils";
-import { checkDuplicateFields, addFieldToDB } from "@/app/controllers/taskController";
+import { checkDuplicateFields, addFieldTypeToDB } from "@/app/controllers/taskController";
 import { flash } from "@/app/animation";
 import DropdownOptionList from "@/app/component/field-Sidebar/dropdownOptionList";
 import FieldTypeList from "./fieldTypeList";
 import { FieldSidebarType, OrgTreeNode } from "@/global";
 import PermissionList from "./permissionList";
+import { useToast } from "@/app/context/ToastContext";
 
 export default function AddFieldSidebar(
   {
@@ -28,37 +29,27 @@ export default function AddFieldSidebar(
   const dispatch = useDispatch();
   const nameRef = useRef<HTMLInputElement>(null);
   const [permittedList, setPermittedList] = useState<OrgTreeNode[]>([]);
-  const allowAllRef = useRef<HTMLInputElement>(null)
+  // 전체 허용 여부
+  const [isPermitAll, setIsPermitAll] = useState(false);
+  const {showToast} = useToast();
   
   // text field 유효성 검사
   const validateFieldInput = async () => {
     const name = nameRef.current?.value.trim();
     // name 검사
     if (!name) {
-      try {
-        await showModal({
-          type: 'alert',
-          title: '이름을 입력해주세요.'
-        });
-        return;
-      } catch {
-        nameRef.current?.focus();
-        console.log('사용자 취소');
-        return;
-      }
+      showToast('이름을 입력해주세요.', 'error');
+      nameRef.current!.focus()
+      return;
     }
     // type 검사
     if (!selectedType) {
-      try {
-        await showModal({
-          type: 'alert',
-          title: 'Type을 선택해주세요.'
-        });
-        return;
-      } catch {
-        console.log('사용자 취소');
-        return;
-      }
+      showToast('Type을 선택해주세요.', 'error');
+      return;
+    }
+    if (!isPermitAll && !permittedList.length) {
+      showToast('최소 1개 이상의 권한을 추가해주세요.', 'error');
+      return;
     }
 
     // 중복 검사
@@ -94,11 +85,12 @@ export default function AddFieldSidebar(
 
     const newField = {
       fieldId: tempFieldId,
-      name: name,
+      name,
       typeId: tempFieldId,
       type: selectedType,
       order: maxOrder,
-      width: 200
+      width: 200,
+      isPermitAll
     }
     newFields.push(newField);
 
@@ -106,8 +98,11 @@ export default function AddFieldSidebar(
     dispatch(setFields({newFields}));
 
     try {
-      addFieldToDB({
-        itemId, name, type: selectedType 
+      addFieldTypeToDB({
+        itemId,
+        name,
+        type: selectedType,
+        isPermitAll
       }).then((res) => {
         // real id로 업데이트
         dispatch(setRealId({
@@ -215,7 +210,7 @@ export default function AddFieldSidebar(
           <div className="relative px-[17px]">
             <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Permission</p>
             {/* 허가된 사용자 목록 */}
-            <PermissionList newName={nameRef.current?.value || ''} permittedList={permittedList} setPermittedList={setPermittedList} allowAllRef={allowAllRef} />
+            <PermissionList newName={nameRef.current?.value || ''} permittedList={permittedList} setPermittedList={setPermittedList} isPermitAll={isPermitAll} setIsPermitAll={setIsPermitAll} />
           </div>
         </div>
         {/* 하단 버튼 */}

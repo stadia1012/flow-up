@@ -71,7 +71,7 @@ export default function NumberContent({
         // 수정모드
         <input
           type='text'
-          className='w-full outline-none text-blue-600'
+          className='w-full outline-none text-blue-600 text-right'
           value={addCommas(cellValue)}
           onChange={(e) => handleChange(e)}
           onBlur={(e) => {handleUpdateValue({newValue: removeCommas(cellValue)})}}

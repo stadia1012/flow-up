@@ -4,6 +4,7 @@ import DropdownContent from './dropdownContent';
 import TextContent from './textContent';
 import NameContent from './nameContent';
 import NumberContent from './numberContent';
+import { useToast } from '@/app/context/ToastContext';
 
 export default function ItemTableCell({
   updateValue,
@@ -18,7 +19,7 @@ export default function ItemTableCell({
 }) {
   const [isEditing, setIsEditing] = useState(false); // 수정모드
   const containerRef = useRef<HTMLDivElement | null>(null);
-
+  const {showToast} = useToast();
   const handleUpdateValue = ({newValue}: {newValue: string}) => {
     if (newValue !== value) {
       updateValue({
@@ -42,6 +43,13 @@ export default function ItemTableCell({
       `}
       onClick={() => {
         if (!isEditing) {
+          // 조회 모드에서 수정모드로 전환
+
+          // 권한 검사
+          if (field.type !== 'name' && !field.canEdit) {
+            showToast('수정 권한이 없습니다.', 'error');
+            return;
+          }
           setIsEditing((prev) => !prev);
         }
       }}

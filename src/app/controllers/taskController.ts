@@ -2,7 +2,7 @@
 import { TaskFieldType } from '@/global';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth/auth";
 const prisma = new PrismaClient();
 
 type PrismaModel = {
@@ -150,11 +150,14 @@ export async function checkDuplicateFields({
   };
 }
 
-// field 추가
-export async function addFieldToDB({
-  itemId, name, type
+// field type 추가
+export async function addFieldTypeToDB({
+  itemId, name, type, isPermitAll
 }: {
-  itemId: number, name: string, type: string
+  itemId: number,
+  name: string,
+  type: string,
+  isPermitAll?: boolean
 }) {
   const now = new Date();
   // field type 추가
@@ -162,7 +165,8 @@ export async function addFieldToDB({
     data: {
       NAME: name,
       DATA_TYPE: type,
-      REG_DT: now
+      REG_DT: now,
+      IS_PERMIT_ALL: (isPermitAll) ? 'Y' : 'N'
     },
   });
 

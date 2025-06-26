@@ -12,12 +12,14 @@ export default function EditPermissionPopup(
     setIsPopupOpen,
     field,
     newName,
-    setPermittedList
+    setPermittedList,
+    permittedList
   }: {
     setIsPopupOpen: (arg: boolean) => void,
     field?: TaskField, // edit 시에 사용
     newName?: string, // add 시에 사용
-    setPermittedList: (arg: OrgTreeNode[]) => void
+    setPermittedList: (arg: OrgTreeNode[]) => void,
+    permittedList?: OrgTreeNode[]
   }) {
   // 추가된 users or departments
   const [selectedNodes, setSelectedNodes] = useState<OrgTreeNode[]>([]);
@@ -31,13 +33,16 @@ export default function EditPermissionPopup(
 
   // selectedNodes 받아오기
   useEffect(() => {
-    if (!field?.fieldId) {
+    if (!field?.fieldId && permittedList) {
+      // add의 경우
+      setSelectedNodes(permittedList);
       setIsAddedListLoading(false);
       return;
     }
+    if (!field) return;
     getPemissionsFromDB({
       type: 'field',
-      id: field?.fieldId
+      id: field?.typeId
     }).then((res) => {
       setSelectedNodes([
         ...(res.departments as OrgTreeNode[]),

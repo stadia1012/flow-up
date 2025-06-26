@@ -19,6 +19,8 @@ export default function EditFieldSidebar(
   const dispatch: AppDispatch = useDispatch();
   const {showToast} = useToast();
   const [permittedList, setPermittedList] = useState<OrgTreeNode[]>([]);
+  // 전체 허용 여부
+  const [isPermitAll, setIsPermitAll] = useState(false);
 
   const nameRef = useRef<HTMLInputElement>(null);
   // field를 추가할 때와 달리 수정 시에는 dropdownOptions가 redux store를 구독하므로
@@ -37,7 +39,7 @@ export default function EditFieldSidebar(
     setIsSidebarOpen(false);
   }
   
-  // 저장
+  /* 저장 (Save Button) */
   const hadleSaveField = async () => {
     if (!field.canEdit) {
       showToast('권한이 없습니다.', 'error');
@@ -48,9 +50,15 @@ export default function EditFieldSidebar(
       showToast('이름을 입력해주세요.', 'error');
       return;
     }
+
+    if (!isPermitAll && !permittedList.length) {
+      showToast('최소 1개 이상의 권한을 추가해주세요.', 'error');
+      return;
+    }
+
     const newFields = structuredClone(fields);
 
-    /* field type 업데이트 */ 
+    /* (1) field type 업데이트 */ 
     newFields.forEach(f => {
       if (f.fieldId === field.fieldId) {
         f.name = nameRef.current!.value.trim();
@@ -78,7 +86,7 @@ export default function EditFieldSidebar(
       }));
     })
 
-    /* permission 업데이트 */ 
+    /* (2) permission 업데이트 */ 
     if (!field?.fieldId) {
       showToast('오류가 발생했습니다.', 'error');
       return;
@@ -145,7 +153,7 @@ export default function EditFieldSidebar(
         <div className="relative px-[17px]">
           <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Permission</p>
           {/* 허가된 사용자 목록 */}
-          <PermissionList field={field} permittedList={permittedList} setPermittedList={setPermittedList} />
+          <PermissionList field={field} permittedList={permittedList} setPermittedList={setPermittedList} isPermitAll={isPermitAll} setIsPermitAll={setIsPermitAll} />
         </div>
         {/* [Save] / [Cancel] button wrapper */}
         <div className="text-right mr-[14px] text-[13px] mt-[12px]">

@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { Spin } from 'antd'
 
 export default function LoginPage() {
-  const [userId, setUserId] = useState('') // email -> userId로 변경
+  const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -55,7 +56,7 @@ export default function LoginPage() {
   }
 
   if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center">로딩 중...</div>
+    return <div className="min-h-screen flex items-center justify-center"><Spin></Spin></div>
   }
 
   if (status === 'authenticated') {
@@ -64,9 +65,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 pb-[6%]">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
             로그인
           </h2>
         </div>

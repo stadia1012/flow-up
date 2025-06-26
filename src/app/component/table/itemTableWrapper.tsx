@@ -2,7 +2,7 @@
 import ItemTable from '@/app/component/table/itemTable'
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth/auth";
 const prisma = new PrismaClient();
 export default async function ItemTableWrapper({item} : {item: List}) {
   // const res = await fetch(`http://localhost:3000/api/values/${itemId}`);

@@ -11,13 +11,15 @@ export default function PermissionList({
     newName,
     permittedList,
     setPermittedList,
-    allowAllRef
+    isPermitAll,
+    setIsPermitAll
   }: {
     field?: TaskField, // edit 시에 사용
     newName?: string, // add 시에 사용
     permittedList: OrgTreeNode[],
     setPermittedList: (arg: OrgTreeNode[]) => void,
-    allowAllRef?: React.RefObject<HTMLInputElement | null>,
+    isPermitAll: boolean,
+    setIsPermitAll: (arg: boolean) => void
   }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(() => {
@@ -27,15 +29,13 @@ export default function PermissionList({
       return false;
     }
   });
-  // 전체 허용 여부
-  const [isPermissionAll, setIsPermissionAll] = useState(false);
   const {showToast} = useToast();
 
   // 첫 마운트 시 실행
   useEffect(() => {
     if (!field) {
       // add인 경우
-      setIsPermissionAll(true);
+      setIsPermitAll(true);
       return;
     }
 
@@ -72,7 +72,7 @@ export default function PermissionList({
       await getPermitAllFromDB({
         fieldTypeId: field.typeId
       }).then((res) => {
-        setIsPermissionAll(res);
+        setIsPermitAll(res);
       })
     }
   }
@@ -85,7 +85,7 @@ export default function PermissionList({
     }
     const newStatus = e.target.checked;
     // 화면 업데이트
-    setIsPermissionAll(newStatus);
+    setIsPermitAll(newStatus);
     if (field) {
       // 수정의 경우만 DB 업데이트
       await updatePermitAllToDB({
@@ -111,19 +111,19 @@ export default function PermissionList({
         <>
         {/* allow all users checkbox */}
         <div className="relative flex items-center mb-[0px]">
-          <input ref={allowAllRef} type="checkbox" id="add-field-allow-all" name="add-field-allow-all" className="mr-[5px]" onChange={handlePermitAll} checked={isPermissionAll} />
+          <input type="checkbox" id="add-field-allow-all" name="add-field-allow-all" className="mr-[5px]" onChange={handlePermitAll} checked={isPermitAll} />
           <label htmlFor="add-field-allow-all" className="text-[13px] cursor-pointer">Allow All Users</label>
         </div>
         <div
           className={`border border-gray-300 rounded-[3px] p-[2px] mt-[5px] transition
-          ${isPermissionAll ? 'cursor-not-allowed opacity-[55%]' : ''}`}
+          ${isPermitAll ? 'cursor-not-allowed opacity-[55%]' : ''}`}
         >
           <button type="button" className={`
             flex items-center rounded-[5px]
             bg-gray-100/60 border border-gray-300 transition
-            pl-[5px] w-full py-[2px] ${isPermissionAll ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-gray-200/80'}`}
+            pl-[5px] w-full py-[2px] ${isPermitAll ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-gray-200/80'}`}
             onClick={() => {
-              if (isPermissionAll) return;
+              if (isPermitAll) return;
               if (field && !field.canEdit) {
                 showToast('권한이 없습니다.', 'error');
                 return;
@@ -189,7 +189,7 @@ export default function PermissionList({
       isPopupOpen && createPortal(
         field ?
         <EditPermissionPopup setIsPopupOpen={setIsPopupOpen} field={field} setPermittedList={setPermittedList} />:
-        <EditPermissionPopup setIsPopupOpen={setIsPopupOpen} newName={newName} setPermittedList={setPermittedList} />
+        <EditPermissionPopup setIsPopupOpen={setIsPopupOpen} newName={newName} setPermittedList={setPermittedList} permittedList={permittedList} />
         , document.body)
       }
     </>
