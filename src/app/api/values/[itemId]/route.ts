@@ -4,9 +4,9 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { itemId: string } }
+  context: { params: { itemId: string } }
 ) {
-  const { itemId } = await params;
+  const { itemId } = context.params;
   const id = Number(itemId);
   
   try {
@@ -32,7 +32,7 @@ export async function GET(
       const key = row?.ID as number;
       if (!rowMap.has(key)) {
         rowMap.set(key, {
-          values: {},           // 이곳에 숫자 키로 VALUE를 쌓을 것
+          values: {}, // 이곳에 숫자 키로 VALUE를 쌓음
           rowId: row?.ID as number,
           order: row?.ORDER as number,
         });
