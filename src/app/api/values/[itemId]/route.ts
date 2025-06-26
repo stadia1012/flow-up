@@ -4,9 +4,9 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  context: { params: { itemId: string } }
+  context: { params: Promise<{ itemId: string }> }
 ) {
-  const { itemId } = context.params;
+  const { itemId } = await context.params;
   const id = Number(itemId);
   
   try {
