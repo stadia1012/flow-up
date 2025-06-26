@@ -57,7 +57,15 @@ const addIconToNodes = (nodes: OrgNode[]) => {
   });
 }
 
-export default function OrgTree({onSelect}: {onSelect: () => void}) {
+export default function OrgTree({onNodeSelect}: {
+  onNodeSelect: (
+    {type, id, title}: {
+      type: 'user' | 'department',
+      id: string,
+      title: string
+    }
+  ) => void}
+) {
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,5 +94,13 @@ export default function OrgTree({onSelect}: {onSelect: () => void}) {
   if (loading) return <div className="flex relative items-center w-full h-full justify-center top-[-15px]"><Spin /></div>;
   if (error) return <Alert type="error" message={error} />;
 
-  return <Tree treeData={treeData} showIcon onSelect={() => {onSelect()}} />;
+  return <Tree treeData={treeData} showIcon onSelect={(keys, info) => {
+    const key = info.node.key.toString();
+    const type = key.charAt(0) === 'd' ? 'department' : 'user'
+    const title = info.node.title?.toString() || '';
+    const id = key.slice(2);
+    if (info) {
+      onNodeSelect({type, id, title});
+    }
+  }} />;
 }

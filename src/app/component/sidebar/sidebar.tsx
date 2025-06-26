@@ -3,11 +3,21 @@ import { useState, useEffect, useRef, MouseEvent } from "react";
 import SidebarAddButton from "./sidebarAddButton";
 import SidebarTreeWrapper from "./sidebarTreeWrapper";
 import Link from "next/link";
+import { Session } from "next-auth";
+import { useToast } from "@/app/context/ToastContext";
 
-export default function Sidebar({projects}: {projects: List[]}) {
+export default function Sidebar({
+  projects,
+  session
+}: {
+  projects: List[],
+  session: Session | null
+}) {
   const [width, setWidth] = useState(240);
   const isResizing = useRef(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
+  
 
   // 마우스로 width 조절
   useEffect(() => {
@@ -48,13 +58,25 @@ export default function Sidebar({projects}: {projects: List[]}) {
     >
       <div className="border-b-1 border-gray-300/85 p-2 pl-2 pt-3 basis-[150px]">
         <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
-          <Link href={{pathname: `/settings`}}>Settings</Link>
+          {
+            session?.user.isAdmin
+            ? <Link href={{pathname: `/settings`}}>Settings</Link>
+            : <p onClick={() => {
+              showToast('접근 권한이 없습니다.', 'error')
+            }}>Settings</p>
+          }
         </div>
         {/* <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
           <Link  href={{pathname: `/groups`}}>User Groups</Link>
         </div> */}
         <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
-          <Link href={{pathname: `/logs`}}>Logs</Link>
+          {
+            session?.user.isAdmin
+            ? <Link href={{pathname: `/logs`}}>Logs</Link>
+            : <p onClick={() => {
+              showToast('접근 권한이 없습니다.', 'error')
+            }}>Logs</p>
+          }
         </div>
       </div>
       <div className="p-2 pr-3">

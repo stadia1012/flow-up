@@ -12,13 +12,12 @@ export default function Toast({ id, message, type, onClose }: Props) {
   const baseStyle = 'flex items-center justify-between px-4 py-2 mb-2 rounded-lg shadow-lg';
   const typeStyles = {
     success: 'bg-green-500/85 text-white',
-    error: 'bg-red-500/85 text-white',
+    error: 'bg-red-500/80 text-white',
     info: 'bg-blue-500/85 text-white',
   };
 
   return (
     <div className={`${baseStyle} ${typeStyles[type]}`} onClick={(e) => {
-      console.log('hhdhdhdh')
       e.stopPropagation();
       e.preventDefault();
       

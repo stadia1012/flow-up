@@ -1,6 +1,8 @@
 'use server'
 import { TaskFieldType } from '@/global';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 const prisma = new PrismaClient();
 
 type PrismaModel = {
@@ -10,12 +12,6 @@ type PrismaModel = {
   delete: (args: any) => Promise<any>,
   aggregate: (args: any) => Promise<any>,
   findUnique: (args: any) => Promise<any>,
-};
-
-const prismaTable = {
-  'folder': prisma.w_FOLDERS,
-  'project': prisma.w_PROJECTS,
-  'item': prisma.w_ITEMS
 };
 
 // row order 변경
@@ -560,4 +556,166 @@ export async function deleteTaskRowFromDB({
       } 
     }
   });
+}
+
+// 권한 목록(사용자) 가져오기
+export async function getPemissionsFromDB(
+  {type, id}: {
+    type: 'field' | 'project',
+    id: number
+  }) {
+  const userRaw = await prisma.w_USER_PERMISSIONS.findMany({
+    select: {
+      USER_ID: true,
+      user: {
+        select: {
+          USER_NAME: true,
+        }
+      }
+    },
+    where: {
+      RESOURCE_ID: id,
+      RESOURCE_TYPE: type
+    }
+  });
+  const users = userRaw.map(row => ({
+      type: 'user',
+      id: row.USER_ID,
+      title: row.user.USER_NAME || ''
+    })
+  );
+
+  const departmentRaw = await prisma.w_DEPT_PERMISSIONS.findMany({
+    select: {
+      DEPT_CODE: true,
+      dept: {
+        select: {
+          DEPT_NAME: true,
+        }
+      }
+    },
+    where: {
+      RESOURCE_ID: id,
+      RESOURCE_TYPE: type
+    }
+  });
+
+  const departments = departmentRaw.map(row => {
+    return {
+      type: 'department',
+      id: row.DEPT_CODE,
+      title: row.dept.DEPT_NAME || ''
+    }
+  });
+
+  return {users, departments}
+}
+
+// 권한 목록 추가 (사용자 || 부서)
+export async function savePermissionToDB(
+  {
+    resourceType,
+    resourceId,
+    permissions,
+  }: {
+    resourceType: 'field' | 'project',
+    resourceId: number,
+    permissions: {
+      type: 'user' | 'department', id: string, title: string
+    }[]
+  }) : Promise<{ result: 'success' | 'error', message?: string, details?: any[] }> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { result: 'error', message: 'No valid session found' };
+    }
+
+    // 트랜잭션으로 처리
+    await prisma.$transaction(async (tx) => {
+      // 1. 기존 권한 모두 삭제
+      await tx.w_DEPT_PERMISSIONS.deleteMany({
+        where: {
+          RESOURCE_ID: resourceId,
+          RESOURCE_TYPE: resourceType,
+        }
+      });
+
+      await tx.w_USER_PERMISSIONS.deleteMany({
+        where: {
+          RESOURCE_ID: resourceId,
+          RESOURCE_TYPE: resourceType,
+        }
+      });
+
+      // 2. 새로운 권한 추가
+      for (const p of permissions) {
+        if (p.type === 'department') {
+          await tx.w_DEPT_PERMISSIONS.create({
+            data: {
+              DEPT_CODE: p.id,
+              RESOURCE_ID: resourceId,
+              RESOURCE_TYPE: resourceType,
+              REG_ID: session.user.id,
+              REG_DT: new Date()
+            }
+          });
+        } else if (p.type === 'user') {
+          await tx.w_USER_PERMISSIONS.create({
+            data: {
+              USER_ID: p.id,
+              RESOURCE_ID: resourceId,
+              RESOURCE_TYPE: resourceType,
+              REG_ID: session.user.id,
+              REG_DT: new Date()
+            }
+          });
+        }
+      }
+    });
+
+    return { result: 'success' };
+
+  } catch (error) {
+    console.error('Error in savePermissionToDB:', error);
+    return { 
+      result: 'error', 
+      message: 'Failed to save permissions',
+      details: [error]
+    };
+  }
+}
+
+// isPermitAll updete
+export async function updatePermitAllToDB({
+  status,
+  fieldTypeId
+}: {
+  status: boolean,
+  fieldTypeId: number
+}) {
+  await prisma.w_FIELD_TYPES.update({
+    where: {
+      ID: fieldTypeId
+    },
+    data: {
+      IS_PERMIT_ALL: (status ? 'Y' : 'N')
+    }
+  });
+}
+
+// get isPermitAll
+export async function getPermitAllFromDB({
+  fieldTypeId
+}: {
+  fieldTypeId: number
+}) {
+  const result = await prisma.w_FIELD_TYPES.findUnique({
+    select: {
+      IS_PERMIT_ALL: true
+    },
+    where: {
+      ID: fieldTypeId
+    },
+  });
+  return (result?.IS_PERMIT_ALL === 'Y') ?  true : false;
 }

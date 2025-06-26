@@ -125,7 +125,7 @@ export async function addUserToAdminListOnDB({
       update: {},
       create: {
         USER_ID: userId,
-        REG_ID: session?.user.id || 'system', // 세션에서 사용자 ID 가져오기
+        REG_ID: session?.user.id || 'unknown',
         REG_DT: new Date(),
       },
     });

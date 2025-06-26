@@ -161,6 +161,9 @@
     padding-inline: 0px !important;
     white-space: nowrap !important;
   }
+  :where(.css-dev-only-do-not-override-36gkoj).ant-tree .ant-tree-treenode {
+    margin-bottom: 2px !important;
+  }
   /* ant tree (조직도) end */
 }
 

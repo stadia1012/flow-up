@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import AddGroupPopup from "./addAdminPopup";
 import { deleteUserFromAdminListOnDB, getAdminListFromDB } from "../controllers/userController";
@@ -8,7 +8,7 @@ import { showModal } from "../component/modalUtils";
 
 export default function Main() {
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(true);
   // add group popup 
   const handleAddAdminPopup = () => {
     setIsAddPopupOpen(prev => !prev);
@@ -18,14 +18,19 @@ export default function Main() {
   const [adminList, setAdminList] = useState<{userId: string; userName: string; isActive: string}[]>([]);
 
   // list 로드 함수
-  const fetchAdmins = () => {
-    getAdminListFromDB()
+  const fetchAdmins = async () => {
+    await getAdminListFromDB()
       .then((res) => setAdminList(res.data || []))
       .catch((err) => console.error("Failed to fetch admin list:", err));
   };
 
   useEffect(() => {
-    fetchAdmins();
+    const loadData = async () => {
+      await fetchAdmins();
+      setIsLoading(false);
+    }
+    loadData();
+    
   }, []);
 
   // checkbox 상태 관리
@@ -157,7 +162,16 @@ export default function Main() {
             <span className="ml-[3px] text-[14px] relative top-[0.5px]">Delete</span>
           </button>
         </div>
-        <AdminTable adminList={adminList} setAdminList={setAdminList} fetchAdmins={fetchAdmins} handleCheckAll={handleCheckAll} isAllChecked={isAllChecked} checkedIds={checkedIds} handleCheckbox={handleCheckbox} />
+        <AdminTable
+          adminList={adminList}
+          setAdminList={setAdminList}
+          fetchAdmins={fetchAdmins}
+          handleCheckAll={handleCheckAll}
+          isAllChecked={isAllChecked}
+          checkedIds={checkedIds}
+          handleCheckbox={handleCheckbox}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

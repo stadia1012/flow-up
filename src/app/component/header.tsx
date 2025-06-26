@@ -65,6 +65,12 @@ export default function Header() {
         onClick={handleIsPopupOpen}
         ref={profileRef}
       >
+        {
+        session?.user.isAdmin &&
+        <div className="mr-[10px] text-yellow-200">
+          <span>[Admin]</span>
+        </div>
+        }
         <div className="leading-[125%]">
           <p>{session?.user.deptName}</p>
           <p>{session?.user.name} {session?.user.rank}</p>

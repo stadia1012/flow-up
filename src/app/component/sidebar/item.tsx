@@ -133,7 +133,8 @@ export default function Item({item, project, folder}: {item: List, project: List
         applyColor={applyColor}
       />}
       {/* 아이템 이름 */}
-      { isRename ? ( /* 이름변경 시 */
+      { isRename ? (
+          /* 이름변경 시 */
           <div className="flex-1 w-[10px] rename">
             <input
               type="text"

@@ -678,7 +678,7 @@ model W_FIELD_TYPES {
   DATA_TYPE  String?   @db.VarChar(15) @default("text")
   IS_DELETED String @default("N") @db.VarChar(1)
   OPTIONS_VERSION Int?
-  IS_ALLOW_ALL String? @db.VarChar(1) @default("N")
+  IS_PERMIT_ALL String? @db.VarChar(1) @default("N")
   REG_ID     String?   @db.VarChar(15)
   REG_DT     DateTime?
   UPDT_ID    String?   @db.VarChar(15)
@@ -686,6 +686,9 @@ model W_FIELD_TYPES {
 
   fields     W_FIELDS[]   @relation("FieldType")
   dropdownOptions W_DROPDOWN_OPTIONS[] @relation("DropdownType")
+
+  userPermissions   W_USER_PERMISSIONS[]   @relation("FieldTypeUserPermissions")
+  deptPermissions   W_DEPT_PERMISSIONS[]   @relation("FieldTypeDeptPermissions")
 }
 
 model W_DROPDOWN_OPTIONS {
@@ -777,6 +780,8 @@ model W_USER_PERMISSIONS {
   REG_ID  String?   @db.VarChar(15)
   REG_DT  DateTime?
 
+  fieldType       W_FIELD_TYPES? @relation("FieldTypeUserPermissions", fields: [RESOURCE_ID], references: [ID])
+
   @@id([RESOURCE_TYPE, RESOURCE_ID, USER_ID])
 }
 
@@ -787,6 +792,8 @@ model W_DEPT_PERMISSIONS {
   RESOURCE_TYPE String @db.VarChar(20) // project, folder, item, field
   REG_ID  String?   @db.VarChar(15)
   REG_DT  DateTime?
+
+  fieldType       W_FIELD_TYPES? @relation("FieldTypeDeptPermissions", fields: [RESOURCE_ID], references: [ID])
 
   @@id([RESOURCE_TYPE, RESOURCE_ID, DEPT_CODE])
 }

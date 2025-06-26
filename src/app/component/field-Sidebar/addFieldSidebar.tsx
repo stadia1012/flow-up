@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { setFields, setRealId } from "@/app/store/tableSlice";
@@ -8,7 +8,7 @@ import { checkDuplicateFields, addFieldToDB } from "@/app/controllers/taskContro
 import { flash } from "@/app/animation";
 import DropdownOptionList from "@/app/component/field-Sidebar/dropdownOptionList";
 import FieldTypeList from "./fieldTypeList";
-import { FieldSidebarType } from "@/global";
+import { FieldSidebarType, OrgTreeNode } from "@/global";
 import PermissionList from "./permissionList";
 
 export default function AddFieldSidebar(
@@ -23,11 +23,12 @@ export default function AddFieldSidebar(
   const {rows, fields} = useSelector((state: RootState) =>
     state.table.data
   )
-  const [isPermissionEnabled, setIsPermissionEnabled] = useState(false);
   const [selectedType, setSelectedType] = useState('');
   const [additionalSetting, setAdditionalSetting] = useState<FieldSidebarType>('default');
   const dispatch = useDispatch();
   const nameRef = useRef<HTMLInputElement>(null);
+  const [permittedList, setPermittedList] = useState<OrgTreeNode[]>([]);
+  const allowAllRef = useRef<HTMLInputElement>(null)
   
   // text field 유효성 검사
   const validateFieldInput = async () => {
@@ -213,13 +214,8 @@ export default function AddFieldSidebar(
           <div className="border-t border-gray-200 h-0 my-[12px]"></div>
           <div className="relative px-[17px]">
             <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Permission</p>
-            {/* allow all users checkbox */}
-            <div className="relative flex items-center mb-[0px]">
-              <input type="checkbox" id="add-field-allow-all" name="add-field-allow-all" className="mr-[5px]" onChange={(e) => setIsPermissionEnabled(!e.target.checked)} defaultChecked={true} />
-              <label htmlFor="add-field-allow-all" className="text-[13px] cursor-pointer">Allow All Users</label>
-            </div>
             {/* 허가된 사용자 목록 */}
-            <PermissionList isPermissionEnabled={isPermissionEnabled} newName={nameRef.current?.value || ''} />
+            <PermissionList newName={nameRef.current?.value || ''} permittedList={permittedList} setPermittedList={setPermittedList} allowAllRef={allowAllRef} />
           </div>
         </div>
         {/* 하단 버튼 */}

@@ -20,6 +20,7 @@ declare global {
     order: number;
     width: number;
     dropdownOptions?: DropdownOption[];
+    canEdit?: boolean; // 현재 사용자의 수정가능 여부
   };
 
   type TaskRow = {
@@ -55,6 +56,12 @@ type Toast = {
   message: string;
   type: ToastType;
   duration?: number; // 기본 유지 시간(ms)
+}
+
+type OrgTreeNode = {
+  type: 'user' | 'department',
+  id: string,
+  title: string
 }
 
 export const ReactNativeWebView = window.ReactNativeWebView;

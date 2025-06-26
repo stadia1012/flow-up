@@ -34,6 +34,7 @@ export const authOptions: AuthOptions = {
               USER_RANK: true,
               userDept: {
                 select: {
+                  DEPT_CODE: true,
                   DEPT_NAME: true
                 }
               },
@@ -64,6 +65,7 @@ export const authOptions: AuthOptions = {
             id: user.USER_ID || '',
             name: String(user.USER_NAME) || '[no_name]',
             rank: String(user.USER_RANK) || '[no_rank]',
+            deptCode: String(user.userDept?.DEPT_CODE) || '[no_departmentCode]',
             deptName: String(user.userDept?.DEPT_NAME) || '[no_departmentName]',
             isAdmin: (user.adminUser?.IS_ACTIVE === "Y") ? true : false, // 관리자 여부 추가
           };
@@ -80,6 +82,7 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.name = user.name;
         token.rank = user.rank;
+        token.deptCode = user.deptCode;
         token.deptName = user.deptName;
         token.isAdmin = user.isAdmin;
       }
@@ -90,6 +93,7 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id as string;
         session.user.name = token.name as string;
         session.user.rank = token.rank as string;
+        session.user.deptCode = token.deptCode as string;
         session.user.deptName = token.deptName as string;
         session.user.isAdmin = token.isAdmin as boolean;
       }
@@ -105,5 +109,5 @@ export const authOptions: AuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-// App Router에서는 GET, POST 모두 export 해야 함
+// App Router에서는 GET, POST 모두 export
 export { handler as GET, handler as POST };

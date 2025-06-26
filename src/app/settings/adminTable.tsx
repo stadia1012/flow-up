@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import AdminTableRow from "./adminTableRow";
+import { Spin } from "antd";
 
 export default function AdminTable(
   {
@@ -8,7 +10,8 @@ export default function AdminTable(
     handleCheckAll,
     isAllChecked,
     checkedIds,
-    handleCheckbox
+    handleCheckbox,
+    isLoading
   }: {
     adminList: {userId: string; userName: string; isActive: string}[],
     fetchAdmins: () => void,
@@ -16,7 +19,8 @@ export default function AdminTable(
     handleCheckAll: () => void,
     isAllChecked: boolean,
     checkedIds: Set<string>,
-    handleCheckbox: React.ChangeEventHandler<HTMLInputElement>
+    handleCheckbox: React.ChangeEventHandler<HTMLInputElement>,
+    isLoading: boolean
   }) {
   return (
     <>
@@ -41,19 +45,28 @@ export default function AdminTable(
       </thead>
       <tbody>
         {/* row */
-        adminList.length === 0 ? (
+        isLoading ? 
+          <tr>
+            <td colSpan={4} className="h-[100px] translate-x-1/2 relative left-[-50%]">
+              <div className="flex items-center justify-center h-full">
+                <Spin></Spin>
+              </div>
+            </td>
+          </tr>
+        : adminList.length ?
+        adminList.map((admin, i) => (
+          <AdminTableRow admin={admin} key={i} checkedIds={checkedIds} handleCheckbox={handleCheckbox} fetchAdmins={fetchAdmins} adminList={adminList} setAdminList={setAdminList} />
+        ))
+        : (
           <tr>
             <td colSpan={4} className="text-center text-gray-500 py-[10px] text-[14px]">
               등록된 관리자가 없습니다.
             </td>
           </tr>
-        ) :
-        adminList.map((admin, i) => (
-          <AdminTableRow admin={admin} key={i} checkedIds={checkedIds} handleCheckbox={handleCheckbox} fetchAdmins={fetchAdmins} adminList={adminList} setAdminList={setAdminList} />
-        ))}
+        )
+      }
       </tbody>
       </table>
     </>
-    
   )
 }

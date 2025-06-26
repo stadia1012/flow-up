@@ -209,8 +209,8 @@ export default function ItemTable({initialTableData, item}: {
         <button
           type="button"
           className="
-            flex items-center transition ml-auto hover:bg-red-100/80 cursor-pointer
-            p-[3px] pr-[6px] rounded-[4px] box-content"
+            flex items-center transition ml-auto hover:bg-red-100/60 cursor-pointer
+            p-[2px] pr-[7px] pl-[4px] rounded-[4px] box-content border border-red-300 rounded-[4px]"
           onClick={async () => {
             try {
               await showModal({

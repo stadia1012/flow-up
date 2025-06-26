@@ -7,6 +7,7 @@ declare module "next-auth" {
       id: string;
       name: string;
       rank: string;
+      deptCode: string;
       deptName: string;
       isAdmin?: boolean;
     }
@@ -15,6 +16,7 @@ declare module "next-auth" {
     id: string;
     name: string;
     rank: string;
+    deptCode: string;
     deptName: string;
     isAdmin?: boolean;
   }
