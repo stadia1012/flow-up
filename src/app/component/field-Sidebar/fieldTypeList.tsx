@@ -6,6 +6,8 @@ import { TaskFieldType } from "@/global";
 import { useEffect, useState } from "react";
 import FieldType from "./fieldType";
 import { setFields, setRealId } from "@/app/store/tableSlice";
+import { Session } from "next-auth";
+import { useToast } from "@/app/context/ToastContext";
 
 export default function FieldTypeList({itemId}: {itemId: number}) {
   const dispatch = useDispatch();
@@ -15,6 +17,7 @@ export default function FieldTypeList({itemId}: {itemId: number}) {
   const {rows, fields} = useSelector((state: RootState) =>
     state.table.data
   )
+  const {showToast} = useToast();
 
   // DB에서 item fieldTypes 가져오기
   useEffect(() => {
@@ -58,66 +61,95 @@ export default function FieldTypeList({itemId}: {itemId: number}) {
   // 변경된 field DB에서 변경
   useEffect(() => {
     if (lastToggledId === null) return;
-    const isChecked = checkedIds.has(lastToggledId);
+    const updateField = async () => {
+      const isChecked = checkedIds.has(lastToggledId);
 
-    // 대상 fieldType
-    const newFieldType = fieldTypes.find(ft => ft.fieldTypeId == lastToggledId);
-    if (isChecked) {
-      // redux 업데이트 준비
-      const maxOrder = Math.max(...fields.map((field) => field.order)) + 1;
-      const tempFieldId = Date.now();
-      const newFields = fields.map(f => ({ ...f }));
+      // 대상 fieldType
+      const newFieldType = fieldTypes.find(ft => ft.fieldTypeId == lastToggledId);
+      if (isChecked) {
+        // redux 업데이트 준비
+        const maxOrder = Math.max(...fields.map((field) => field.order)) + 1;
+        const tempFieldId = Date.now();
+        const newFields = fields.map(f => ({ ...f }));
 
-      const newField = {
-        fieldId: tempFieldId,
-        name: newFieldType?.name || '',
-        typeId: tempFieldId,
-        type: newFieldType?.type || 'text',
-        order: maxOrder,
-        width: 200,
-        dropdownOptions: newFieldType?.dropdownOptions
+        const newField = {
+          fieldId: tempFieldId, // 임시 값
+          name: newFieldType?.name || '',
+          typeId: tempFieldId,
+          type: newFieldType?.type || 'text',
+          order: maxOrder,
+          width: 200,
+          dropdownOptions: newFieldType?.dropdownOptions,
+          canEdit: false // 임시 값
+        }
+        newFields.push(newField);
+
+        // redux 업데이트 (임시 id)
+        dispatch(setFields({newFields}));
+
+        // DB field 추가
+        try {
+          hadleFieldHiddenFromDB({
+            fieldTypeId: lastToggledId,
+            itemId: itemId,
+            isHidden: false
+          }).then(async (res) => {
+            // real id로 업데이트
+            if (!res?.field.ID || !res?.field.FIELD_TYPE_ID) return;
+
+            // 권한여부 구하기
+            const response = await fetch("/api/session/");
+            // 응답이 성공적인지 확인
+            if (!response.ok) {
+              throw new Error('Failed to fetch session');
+            }
+            const {session}: {session: Session} = await response.json();
+            // session과 user가 존재하는지 확인
+            if (!session || !session.user) {
+              showToast('로그인 상태를 확인해주세요.', 'error');
+              return;
+            }
+
+            const canEdit = (
+              session?.user.isAdmin === true
+              // 전체 허용 검사
+              || (res.permissions?.IS_PERMIT_ALL === "Y") ? true : false 
+              // 사용자 권한 검사
+              || res.permissions?.userPermissions.some(perm => perm.USER_ID === session.user.id)
+              // 소속부서 권한 검시
+              || res.permissions?.deptPermissions.some(perm => session?.user.ancestorDepts?.includes(perm.DEPT_CODE))
+            )
+  
+            dispatch(setRealId({
+              type: 'field',
+              tempId: tempFieldId,
+              realId: res.field.ID,
+              fieldTypeId: res.field.FIELD_TYPE_ID,
+              canEdit
+            }));
+          });
+        } catch (err) {
+          alert('DB 저장에 실패했습니다.');
+        }
+      } else {
+        // redux 업데이트 (숨기기)
+        const newFields = fields.filter((f) => f.typeId !== newFieldType?.fieldTypeId);
+        dispatch(setFields({newFields}));
+
+        try {
+          // DB field 숨기기
+          hadleFieldHiddenFromDB({
+            fieldTypeId: lastToggledId,
+            itemId: itemId,
+            isHidden: true
+          });
+        } catch (err) {
+          alert('DB 저장에 실패했습니다.');
+        }
+        
       }
-      newFields.push(newField);
-
-      // redux 업데이트 (임시 id)
-      dispatch(setFields({newFields}));
-
-      // DB field 추가
-      try {
-        hadleFieldHiddenFromDB({
-          fieldTypeId: lastToggledId,
-          itemId: itemId,
-          isHidden: false
-        }).then((res) => {
-          // real id로 업데이트
-          if (!res?.ID || !res?.FIELD_TYPE_ID) return
-          dispatch(setRealId({
-            type: 'field',
-            tempId: tempFieldId,
-            realId: res.ID,
-            fieldTypeId: res.FIELD_TYPE_ID
-          }));
-        });
-      } catch (err) {
-        alert('DB 저장에 실패했습니다.');
-      }
-    } else {
-      // redux 업데이트 (숨기기)
-      const newFields = fields.filter((f) => f.typeId !== newFieldType?.fieldTypeId);
-      dispatch(setFields({newFields}));
-
-      try {
-        // DB field 숨기기
-        hadleFieldHiddenFromDB({
-          fieldTypeId: lastToggledId,
-          itemId: itemId,
-          isHidden: true
-        });
-      } catch (err) {
-        alert('DB 저장에 실패했습니다.');
-      }
-      
     }
+    updateField();
   }, [checkedIds, lastToggledId]);
   return (
     <ul>

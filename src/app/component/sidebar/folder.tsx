@@ -254,7 +254,9 @@ export default function Folder({folder, dragStateType, project}: {folder: List, 
           </div>
         ) : (
           // width를 지정해야 hover 시 overflow가 발생하지 않음
-          <span className="relative top-[1px] cursor-pointer w-[10px] flex-1 truncate" onClick={handleIsFolded}>{folderName}</span>
+          <div className="relative top-[1px] cursor-pointer w-[10px] flex-1 flex items-center h-full" onClick={handleIsFolded}>
+            <span className="truncate">{folderName}</span>
+          </div>
         )
       }
       {/* button wrapper */

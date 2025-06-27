@@ -100,7 +100,7 @@ model CBT_USER_DEPT {
 
   users        CBT_USER[]  @relation("UserToDept")
   deptPermissions W_DEPT_PERMISSIONS[] @relation("CBTDeptToPermissions")
-  closureAncestror CBT_DEPT_CLOSURE[] @relation("ClosureAncestror")
+  closureAncestor CBT_DEPT_CLOSURE[] @relation("ClosureAncestor")
   closureDescendant CBT_DEPT_CLOSURE[] @relation("ClosureDescendant")
 }
 
@@ -808,7 +808,7 @@ model W_ADMIN_USERS {
 
 model CBT_DEPT_CLOSURE {
   ANCESTOR_SEQ Int
-  ancestror CBT_USER_DEPT @relation("ClosureAncestror", fields: [ANCESTOR_SEQ], references: [DEPT_SEQ])
+  ancestor CBT_USER_DEPT @relation("ClosureAncestor", fields: [ANCESTOR_SEQ], references: [DEPT_SEQ])
   DESCENDANT_SEQ Int
   descendant CBT_USER_DEPT @relation("ClosureDescendant", fields: [DESCENDANT_SEQ], references: [DEPT_SEQ])
   DEPTH Int

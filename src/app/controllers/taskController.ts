@@ -465,7 +465,6 @@ export async function hadleFieldHiddenFromDB(
       }
     });
   } else {
-    // 표시하기
     // max order
     const maxOrder = await prisma.w_FIELDS.aggregate({
       where: {
@@ -476,9 +475,9 @@ export async function hadleFieldHiddenFromDB(
       }
     });
 
+    // 필드추가 및 결과 return (temp id => real id로 redux store 업데이트)
     const field = await prisma.w_FIELDS.upsert({
       where: {
-        // 복합 유니크 키가 정의되어 있다면
         unique_item_fieldType: {
           ITEM_ID: itemId,
           FIELD_TYPE_ID: fieldTypeId,
@@ -496,7 +495,33 @@ export async function hadleFieldHiddenFromDB(
         REG_DT: new Date(),
       },
     });
-    return field;
+
+    // 권한 목록 return
+    const permissions = await prisma.w_FIELD_TYPES.findUnique({
+      where: {
+        ID: fieldTypeId,
+      },
+      select: {
+        IS_PERMIT_ALL: true,
+        userPermissions: {
+          where: {
+            RESOURCE_TYPE: 'field'
+          },
+          select: {
+            USER_ID: true
+          }
+        },
+        deptPermissions: {
+          where: {
+            RESOURCE_TYPE: 'field'
+          },
+          select: {
+            DEPT_CODE: true
+          }
+        }
+      }
+    });
+    return {field, permissions};
   }
 }
 

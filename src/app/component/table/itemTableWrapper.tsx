@@ -15,22 +15,6 @@ export default async function ItemTableWrapper({item} : {item: List}) {
     location.href = "/login";
   }
 
-  // 사용자 부서의 상위 부서 조회 (자기 자신 포함)
-  const userAncestorDeptCodes: string[] = [];
-  if (session?.user?.deptCode) {
-    const userDeptHierarchy = await prisma.cBT_DEPT_CLOSURE.findMany({
-      where: {
-        descendant: { DEPT_CODE: session.user.deptCode }
-      },
-      select: {
-        ancestror: {
-          select: { DEPT_CODE: true }
-        }
-      }
-    });
-    userAncestorDeptCodes.push(...userDeptHierarchy.map(h => h.ancestror.DEPT_CODE));
-  }
-
   const [rawValues, rawfields] = await Promise.all([
     // rawValues
     prisma.w_VALUES.findMany({
@@ -109,8 +93,8 @@ export default async function ItemTableWrapper({item} : {item: List}) {
       || session?.user?.id && f.fieldType.userPermissions
         .some(perm => perm.USER_ID === session.user.id))
       // 소속부서 권한 검시
-      || (userAncestorDeptCodes.length > 0 && f.fieldType.deptPermissions
-        .some(perm => userAncestorDeptCodes.includes(perm.DEPT_CODE))
+      || ((session?.user.ancestorDepts || []).length > 0 && f.fieldType.deptPermissions
+        .some(perm => session?.user.ancestorDepts?.includes(perm.DEPT_CODE))
     )
   }));
   const data = {

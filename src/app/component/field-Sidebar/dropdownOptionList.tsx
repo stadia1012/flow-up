@@ -3,13 +3,15 @@ import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DropdownOption from "@/app/component/field-Sidebar/dropdownOption";
 import AddDropdownOption from "./addDropdownOption";
-import { addDropdownFieldToDB } from "@/app/controllers/taskController";
+import { addDropdownFieldToDB, savePermissionToDB } from "@/app/controllers/taskController";
 import { showModal } from "../modalUtils";
 import { setDropdownOptionsId, setFields, setRealId } from "@/app/store/tableSlice";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { flash } from "@/app/animation";
-import { FieldSidebarType } from "@/global";
+import { FieldSidebarType, OrgTreeNode } from "@/global";
+import { useToast } from "@/app/context/ToastContext";
+import { Session } from "next-auth";
 
 export default function DropdownOptionList(
   {
@@ -17,13 +19,17 @@ export default function DropdownOptionList(
     itemId,
     setAdditionalSetting,
     fields,
-    closefieldSidebar
+    closefieldSidebar,
+    permittedList,
+    isPermitAll
   }: {
     nameRef: React.RefObject<HTMLInputElement | null>,
     itemId: number,
     setAdditionalSetting: (arg: FieldSidebarType) => void,
     fields: TaskField[],
-    closefieldSidebar: () => void
+    closefieldSidebar: () => void,
+    permittedList: OrgTreeNode[],
+    isPermitAll: boolean
   }) {
   const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>([
     {id: crypto.randomUUID(), order: 0, color: "3dce72", name: "Option 1"},
@@ -31,6 +37,7 @@ export default function DropdownOptionList(
     {id: crypto.randomUUID(), order: 2, color: "f7d92b", name: "Option 3"}]
   );
   const dispatch = useDispatch();
+  const {showToast} = useToast();
   
   // option 추가
   const addDropdownOption = (newOption: DropdownOption) => {
@@ -69,6 +76,30 @@ export default function DropdownOptionList(
     const tempFieldId = Date.now();
     const newFields = fields.map(f => ({ ...f }));
     const name = nameRef.current?.value.trim() || '';
+
+    const response = await fetch("/api/session/");
+    // 응답이 성공적인지 확인
+    if (!response.ok) {
+      throw new Error('Failed to fetch session');
+    }
+    const {session}: {session: Session} = await response.json();
+    // session과 user가 존재하는지 확인
+    if (!session || !session.user) {
+      showToast('로그인 상태를 확인해주세요.', 'error');
+      return;
+    }
+
+    const canEdit = (
+      session?.user.isAdmin === true
+      // 전체 허용 검사
+      || isPermitAll
+      // 사용자 권한 검사
+      || permittedList.filter(perm => perm.type === 'user').some(perm => perm.id === session.user.id))
+      // 소속부서 권한 검시
+      || (permittedList.filter(perm => perm.type === 'department')
+        .some(perm => session?.user.ancestorDepts?.includes(perm.id))
+    )
+
     const newField = {
       fieldId: tempFieldId,
       name: name,
@@ -76,7 +107,9 @@ export default function DropdownOptionList(
       type: 'dropdown',
       order: maxOrder,
       width: 200,
-      dropdownOptions: dropdownOptions
+      dropdownOptions: dropdownOptions,
+      isPermitAll,
+      canEdit
     }
     newFields.push(newField);
 
@@ -90,21 +123,40 @@ export default function DropdownOptionList(
         itemId: itemId,
         name,
         type: 'dropdown' 
-      }).then((res) => {
-          // real id로 업데이트
-          dispatch(setRealId({
-            type: 'field',
-            tempId: tempFieldId,
-            realId: res.fields.ID,
-            fieldTypeId: res.fields.FIELD_TYPE_ID
-          }));
+      }).then(async (res) => {
+        // real id로 업데이트
+        dispatch(setRealId({
+          type: 'field',
+          tempId: tempFieldId,
+          realId: res.fields.ID,
+          fieldTypeId: res.fields.FIELD_TYPE_ID
+        }));
 
-          // options real id 업데이트
-          dispatch(setDropdownOptionsId({
-            fieldTypeId: res.fields.FIELD_TYPE_ID,
-            options: res.options
-          }));
-        })
+        // options real id 업데이트
+        dispatch(setDropdownOptionsId({
+          fieldTypeId: res.fields.FIELD_TYPE_ID,
+          options: res.options
+        }));
+
+        // permission 저장
+        try {
+          const result = await savePermissionToDB({
+            resourceType: 'field',
+            resourceId: res.fields.FIELD_TYPE_ID,
+            permissions: permittedList
+          });
+
+          if (result.result !== 'success') {
+            // 상세한 에러 메시지 표시
+            const errorMessage = result.message || '권한 저장 중 오류가 발생했습니다.';
+            showToast(errorMessage, 'error'); 
+          }
+        } catch (error) {
+          // 에러 처리
+          console.error('Unexpected error in handleSavePermission:', error);
+          showToast('오류가 발생했습니다.', 'error');
+        }
+      })
     } catch(err) {
       try {
         await showModal({

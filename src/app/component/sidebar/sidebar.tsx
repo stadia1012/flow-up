@@ -57,27 +57,33 @@ export default function Sidebar({
       style={{minWidth: `${width}px`}}
     >
       <div className="border-b-1 border-gray-300/85 p-2 pl-2 pt-3 basis-[150px]">
-        <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
-          {
-            session?.user.isAdmin
-            ? <Link href={{pathname: `/settings`}}>Settings</Link>
-            : <p onClick={() => {
-              showToast('접근 권한이 없습니다.', 'error')
-            }}>Settings</p>
-          }
-        </div>
+        {
+          session?.user.isAdmin
+          ? <Link href={{pathname: `/settings`}}>
+              <p className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">Settings</p>
+            </Link>
+          : <p
+              className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]"
+              onClick={() => {
+                showToast('접근 권한이 없습니다.', 'error')
+              }}
+            >Settings</p>
+        }
         {/* <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
           <Link  href={{pathname: `/groups`}}>User Groups</Link>
         </div> */}
-        <div className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">
-          {
-            session?.user.isAdmin
-            ? <Link href={{pathname: `/logs`}}>Logs</Link>
-            : <p onClick={() => {
-              showToast('접근 권한이 없습니다.', 'error')
-            }}>Logs</p>
-          }
-        </div>
+        {
+          session?.user.isAdmin
+          ? <Link href={{pathname: `/logs`}}>
+              <p className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">Logs</p>
+            </Link>
+          : <p
+              className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]"
+              onClick={() => {
+                showToast('접근 권한이 없습니다.', 'error')
+              }}
+            >Logs</p>
+        }
       </div>
       <div className="p-2 pr-3">
         <div className="flex">

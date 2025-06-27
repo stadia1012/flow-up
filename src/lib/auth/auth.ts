@@ -59,6 +59,21 @@ export const authOptions: AuthOptions = {
             return null;
           }
           console.log("User authenticated successfully:", user.USER_ID);
+
+          const userAncestorDeptCodes: string[] = [];
+          if (user.userDept?.DEPT_CODE) {
+            const userDeptHierarchy = await prisma.cBT_DEPT_CLOSURE.findMany({
+              where: {
+                descendant: { DEPT_CODE: user.userDept?.DEPT_CODE }
+              },
+              select: {
+                ancestor: {
+                  select: { DEPT_CODE: true }
+                }
+              }
+            });
+            userAncestorDeptCodes.push(...userDeptHierarchy.map(h => h.ancestor.DEPT_CODE));
+          }
           
           return {
             id: user.USER_ID || '',
@@ -66,7 +81,8 @@ export const authOptions: AuthOptions = {
             rank: String(user.USER_RANK) || '[no_rank]',
             deptCode: String(user.userDept?.DEPT_CODE) || '[no_departmentCode]',
             deptName: String(user.userDept?.DEPT_NAME) || '[no_departmentName]',
-            isAdmin: (user.adminUser?.IS_ACTIVE === "Y") ? true : false, // 관리자 여부 추가
+            isAdmin: (user.adminUser?.IS_ACTIVE === "Y") ? true : false,
+            ancestorDepts: userAncestorDeptCodes
           };
         } catch (error) {
           console.error("Database error during authentication:", error);
@@ -84,6 +100,7 @@ export const authOptions: AuthOptions = {
         token.deptCode = user.deptCode;
         token.deptName = user.deptName;
         token.isAdmin = user.isAdmin;
+        token.ancestorDepts = user.ancestorDepts;
       }
       return token;
     },
@@ -95,6 +112,7 @@ export const authOptions: AuthOptions = {
         session.user.deptCode = token.deptCode as string;
         session.user.deptName = token.deptName as string;
         session.user.isAdmin = token.isAdmin as boolean;
+        session.user.ancestorDepts = token.ancestorDepts as string[];
       }
       return session;
     },

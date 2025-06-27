@@ -248,7 +248,9 @@ export default function Project({project, dragStateType}: {project : List, dragS
             </div>
           ) : (
             // width를 지정해야 hover 시 overflow가 발생하지 않음
-            <span className="relative top-[1px] cursor-pointer w-[10px] flex-1 truncate" onClick={() => setIsFolded(!isFolded)}>{projectName}</span>
+            <div className="relative top-[1px] cursor-pointer w-[10px] flex-1 flex items-center h-full" onClick={() => setIsFolded(!isFolded)}>
+              <span className="truncate">{projectName}</span>
+            </div>
           )
         }
         {/* button wrapper */

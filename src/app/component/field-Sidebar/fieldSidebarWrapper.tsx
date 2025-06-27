@@ -4,8 +4,14 @@ import EditFieldSidebar from "./editFieldSidebar";
 import AddFieldSidebar from "./addFieldSidebar";
 
 export default function FieldSidebarWrapper(
-  {type, setIsMountSidebar, itemId, field, sidebarRef, closeSidebar}:
   {
+    type,
+    setIsMountSidebar,
+    itemId,
+    field,
+    sidebarRef,
+    closeSidebar
+  }: {
     type: 'add' | 'edit',
     setIsMountSidebar: (arg: boolean) => void,
     itemId?: number, // add에서 사용

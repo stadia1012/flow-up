@@ -42,9 +42,10 @@ const tableSlice = createSlice({
         tempId: number,
         realId: number,
         fieldTypeId?: number, // 'field'인 경우만
+        canEdit?: boolean // 'field'인 경우만
       }>
     ) => {
-      const { type, tempId, realId, fieldTypeId } = action.payload;
+      const { type, tempId, realId, fieldTypeId, canEdit } = action.payload;
       if (type === "row") {
         state.data.rows.forEach((row) => {
           if (row.rowId === tempId) {
@@ -57,6 +58,9 @@ const tableSlice = createSlice({
           if (field.fieldId === tempId) {
             field.fieldId = realId;
             field.typeId = fieldTypeId;
+            if (canEdit) {
+              field.canEdit = canEdit
+            }
           }
         });
       }

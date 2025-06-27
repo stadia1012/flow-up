@@ -4,13 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { setFields, setRealId } from "@/app/store/tableSlice";
 import { showModal } from "../modalUtils";
-import { checkDuplicateFields, addFieldTypeToDB } from "@/app/controllers/taskController";
+import { checkDuplicateFields, addFieldTypeToDB, savePermissionToDB } from "@/app/controllers/taskController";
 import { flash } from "@/app/animation";
 import DropdownOptionList from "@/app/component/field-Sidebar/dropdownOptionList";
 import FieldTypeList from "./fieldTypeList";
 import { FieldSidebarType, OrgTreeNode } from "@/global";
 import PermissionList from "./permissionList";
 import { useToast } from "@/app/context/ToastContext";
+import { Session } from "next-auth";
 
 export default function AddFieldSidebar(
   {
@@ -83,6 +84,29 @@ export default function AddFieldSidebar(
     const newFields = fields.map(f => ({ ...f }));
     const name = nameRef.current?.value.trim() || '';
 
+    const response = await fetch("/api/session/");
+    // 응답이 성공적인지 확인
+    if (!response.ok) {
+      throw new Error('Failed to fetch session');
+    }
+    const {session}: {session: Session} = await response.json();
+    // session과 user가 존재하는지 확인
+    if (!session || !session.user) {
+      showToast('로그인 상태를 확인해주세요.', 'error');
+      return;
+    }
+
+    const canEdit = (
+      session?.user.isAdmin === true
+      // 전체 허용 검사
+      || isPermitAll
+      // 사용자 권한 검사
+      || permittedList.filter(perm => perm.type === 'user').some(perm => perm.id === session.user.id))
+      // 소속부서 권한 검시
+      || (permittedList.filter(perm => perm.type === 'department')
+        .some(perm => session?.user.ancestorDepts?.includes(perm.id))
+    )
+
     const newField = {
       fieldId: tempFieldId,
       name,
@@ -90,20 +114,22 @@ export default function AddFieldSidebar(
       type: selectedType,
       order: maxOrder,
       width: 200,
-      isPermitAll
-    }
+      isPermitAll,
+      canEdit
+    } as TaskField
     newFields.push(newField);
 
     // redux 업데이트 (임시 id)
     dispatch(setFields({newFields}));
 
+    // db 저장
     try {
       addFieldTypeToDB({
         itemId,
         name,
         type: selectedType,
         isPermitAll
-      }).then((res) => {
+      }).then( async (res) => {
         // real id로 업데이트
         dispatch(setRealId({
           type: 'field',
@@ -111,6 +137,25 @@ export default function AddFieldSidebar(
           realId: res.field.ID,
           fieldTypeId: res.field.FIELD_TYPE_ID
         }));
+
+        // permission 저장
+        try {
+          const result = await savePermissionToDB({
+            resourceType: 'field',
+            resourceId: res.field.FIELD_TYPE_ID,
+            permissions: permittedList
+          });
+
+          if (result.result !== 'success') {
+            // 상세한 에러 메시지 표시
+            const errorMessage = result.message || '권한 저장 중 오류가 발생했습니다.';
+            showToast(errorMessage, 'error'); 
+          }
+        } catch (error) {
+          // 에러 처리
+          console.error('Unexpected error in handleSavePermission:', error);
+          showToast('오류가 발생했습니다.', 'error');
+        }
       });
     } catch(err) {
       try {
@@ -124,6 +169,8 @@ export default function AddFieldSidebar(
         return;
       }
     }
+
+    showToast('저장되었습니다.', 'success');
     closefieldSidebar();
   }
 
@@ -255,7 +302,7 @@ export default function AddFieldSidebar(
         <div className="flex flex-col">
           {/* 구분 선 */}
           <div className="border-t border-gray-200 h-0 my-[12px]"></div>
-            <DropdownOptionList nameRef={nameRef} itemId={itemId} setAdditionalSetting={setAdditionalSetting} fields={fields} closefieldSidebar={closefieldSidebar} />
+          <DropdownOptionList nameRef={nameRef} itemId={itemId} setAdditionalSetting={setAdditionalSetting} fields={fields} closefieldSidebar={closefieldSidebar} permittedList={permittedList} isPermitAll={isPermitAll} />
         </div>
         }
       </div>

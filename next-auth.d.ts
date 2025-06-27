@@ -10,6 +10,7 @@ declare module "next-auth" {
       deptCode: string;
       deptName: string;
       isAdmin?: boolean;
+      ancestorDepts?: string[];
     }
   }
   interface User {
@@ -19,6 +20,7 @@ declare module "next-auth" {
     deptCode: string;
     deptName: string;
     isAdmin?: boolean;
+    ancestorDepts?: string[];
   }
   interface User extends DefaultUser {
 
