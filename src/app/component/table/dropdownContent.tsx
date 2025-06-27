@@ -53,20 +53,6 @@ export default function DropdownContent({
   }
 
   // 수정모드일 때 popup 위치 조정
-  // useEffect(() => {
-  //   if (isEditing && divRef.current) {
-  //     const rect = divRef.current.getBoundingClientRect();
-  //     setPopupPos({
-  //       top: rect.bottom + window.scrollY, // 하단 기준
-  //       left: rect.left + window.scrollX, // 왼쪽 기준
-  //     });
-  //     setIsPopupOpen(true);
-  //   } else {
-  //     setIsPopupOpen(false);
-  //   }
-  // }, [isEditing]);
-
-  // 수정모드일 때 popup 위치 조정
   useEffect(() => {
     if (isEditing && divRef.current) {
       const rect = divRef.current.getBoundingClientRect();
