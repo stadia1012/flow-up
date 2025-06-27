@@ -53,18 +53,60 @@ export default function DropdownContent({
   }
 
   // 수정모드일 때 popup 위치 조정
+  // useEffect(() => {
+  //   if (isEditing && divRef.current) {
+  //     const rect = divRef.current.getBoundingClientRect();
+  //     setPopupPos({
+  //       top: rect.bottom + window.scrollY, // 하단 기준
+  //       left: rect.left + window.scrollX, // 왼쪽 기준
+  //     });
+  //     setIsPopupOpen(true);
+  //   } else {
+  //     setIsPopupOpen(false);
+  //   }
+  // }, [isEditing]);
+
+  // 수정모드일 때 popup 위치 조정
   useEffect(() => {
     if (isEditing && divRef.current) {
       const rect = divRef.current.getBoundingClientRect();
-      setPopupPos({
-        top: rect.bottom + window.scrollY, // 하단 기준
-        left: rect.left + window.scrollX, // 왼쪽 기준
-      });
+      const popupWidth = 190; // 팝업 너비
+      const popupHeight = Math.min(202 + 50, (field.dropdownOptions?.length || 0) * 35 + 80); // 대략적인 팝업 높이
+      
+      // 뷰포트 크기
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      let top = rect.bottom + window.scrollY; // 기본: 셀 아래쪽
+      let left = rect.left + window.scrollX; // 기본: 셀 왼쪽 정렬
+      
+      // 세로 위치 조정: 팝업이 화면 아래로 벗어나는 경우 셀 위쪽에 표시
+      if (rect.bottom + popupHeight > viewportHeight) {
+        top = rect.top + window.scrollY - popupHeight; // 셀 위쪽에 표시
+        
+        // 위쪽에 표시해도 화면을 벗어나는 경우, 가능한 공간에 맞춰 조정
+        if (top < window.scrollY) {
+          // 위쪽 공간이 부족한 경우, 화면 상단에서 약간의 여백을 두고 표시
+          top = window.scrollY;
+        }
+      }
+      
+      // 팝업이 화면 오른쪽으로 벗어나는 경우
+      if (rect.left + popupWidth > viewportWidth) {
+        left = viewportWidth - popupWidth - 1 + window.scrollX; // 화면 오른쪽 경계에서 여백을 두고 표시
+      }
+      
+      // 팝업이 화면 왼쪽으로 벗어나는 경우
+      if (left < window.scrollX) {
+        left = window.scrollX + 1; // 화면 왼쪽 경계에서 여백을 두고 표시
+      }
+
+      setPopupPos({ top, left });
       setIsPopupOpen(true);
     } else {
       setIsPopupOpen(false);
     }
-  }, [isEditing]);
+  }, [isEditing, field.dropdownOptions]);
 
   // popup 외부 클릭 감지
   const popupRef = useRef<HTMLDivElement>(null);
