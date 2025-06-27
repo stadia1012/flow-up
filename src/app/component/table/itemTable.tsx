@@ -249,7 +249,8 @@ export default function ItemTable({initialTableData, item}: {
         </button>
         }
       </div>
-      <div className="relative pl-[0px] pr-[5px] pt-[5px] w-full h-full scroll-8px mb-[40px] mr-[8px] pb-[15px]" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+      <div className='absolute sticky top-[62px] w-full h-[7px] bg-white z-2'></div>
+      <div className="relative pl-[0px] pr-[5px] pt-[0px] w-full h-full scroll-8px mb-[40px] mr-[8px] pb-[15px]" style={{ overflowX: 'auto', overflowY: 'auto' }}>
         <table className="itemTable border-collapse w-min table-fixed">
           <thead>
             <ItemTableHeadContainer
