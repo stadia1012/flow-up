@@ -49,7 +49,7 @@ export default function DropdownContent({
     const b = (rgb >>  0) & 0xff
     const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b // per ITU-R BT.709
     // 색상 선택
-    return luma < 127.5 ? "ffffff" : "171717"
+    return luma < 170 ? "ffffff" : "171717"
   }
 
   // 수정모드일 때 popup 위치 조정

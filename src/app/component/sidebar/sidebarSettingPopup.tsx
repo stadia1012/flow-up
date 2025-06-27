@@ -3,6 +3,7 @@ import { deleteItemFromDB } from '@/app/controllers/projectController';
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
 import { deleteItemFromStore }  from "@/app/store/projectsSlice";
+import { useToast } from '@/app/context/ToastContext';
 interface SidebarSettingPopupProps {
   popupRef: React.RefObject<HTMLDivElement | null>;
   type: string;
@@ -13,6 +14,8 @@ interface SidebarSettingPopupProps {
 
 export default function SidebarSettingPopup({popupRef, type, handleRename, setIsPopupOpen, item} : SidebarSettingPopupProps) {
   const dispatch: AppDispatch = useDispatch();
+  const {showToast} = useToast();
+
   const handleDelete = async () => {
     let title = `'${item.name}'을(를) 삭제하시겠습니까?`;
     if (['project', 'folder'].includes(type)) {
@@ -35,6 +38,8 @@ export default function SidebarSettingPopup({popupRef, type, handleRename, setIs
         itemType: item.type,
         itemId: item.id,
       }))
+      showToast('삭제되었습니다.', 'success');
+
     } catch {
       console.log('사용자 취소');
     }

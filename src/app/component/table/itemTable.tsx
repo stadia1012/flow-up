@@ -12,6 +12,7 @@ import { setTableData, setValues, setRealId } from "@/app/store/tableSlice";
 import type { RootState } from "@/app/store/store";
 import ItemTableHeadContainer from './itemTableHeadContainer';
 import { showModal } from '../modalUtils';
+import { useToast } from '@/app/context/ToastContext';
 
 export default function ItemTable({initialTableData, item}: {
   initialTableData: {
@@ -32,6 +33,8 @@ export default function ItemTable({initialTableData, item}: {
   )
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
   const dispatch: AppDispatch = useDispatch();
+
+  const {showToast} = useToast();
 
   // task (row) 추가
   const addTaskRow = (name: string) => {
@@ -203,13 +206,22 @@ export default function ItemTable({initialTableData, item}: {
   return (
     <>
       <div className='flex items-center h-[32px] pl-[15px]'>
-        <h1 className='text-[15px] font-[600] '>{item?.name || 'Unknown'}</h1>
+        <div className='flex items-center'>
+          <h1 className='text-[15px] font-[600] '>{item?.name || 'Unknown'}</h1>
+          <p className='ml-[7px] text-[14px] text-gray-500/90 font-[500]'>
+          {
+            checkedIds.size
+              ? `(${checkedIds.size}/${rows.length})`
+              : `(${rows.length})`
+          }
+          </p>
+        </div>
         { /* delete button */
         (checkedIds.size !== 0) &&
         <button
           type="button"
           className="
-            flex items-center transition ml-auto hover:bg-red-100/60 cursor-pointer
+            flex items-center transition ml-auto mr-[10px] hover:bg-red-100/60 cursor-pointer
             p-[2px] pr-[7px] pl-[4px] rounded-[4px] box-content border border-red-300 rounded-[4px]"
           onClick={async () => {
             try {
@@ -218,6 +230,7 @@ export default function ItemTable({initialTableData, item}: {
                 title: `선택한 행을 삭제하시겠습니까? (${checkedIds.size}개 행)`
               });
               handleDeleteRow();
+              showToast('삭제되었습니다.', 'success');
               return;
             } catch {
               console.log('사용자 취소');
@@ -236,7 +249,7 @@ export default function ItemTable({initialTableData, item}: {
         </button>
         }
       </div>
-      <div className="relative pl-[5px] pr-[5px] pt-[5px] w-full h-full scroll-8px" style={{ overflowX: 'auto' }}>
+      <div className="relative pl-[0px] pr-[5px] pt-[5px] w-full h-full scroll-8px mb-[40px] mr-[8px] pb-[15px]" style={{ overflowX: 'auto', overflowY: 'auto' }}>
         <table className="itemTable border-collapse w-min table-fixed">
           <thead>
             <ItemTableHeadContainer

@@ -97,7 +97,7 @@ export default function ItemTableRow({
         border-b border-gray-200/95
       `}
     >
-      <td className={`${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-blue-100/50' : 'bg-white'} sticky left-[-5px]`}>
+      <td className={`${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-[#edf4fe]' : 'bg-white'} sticky left-[-5px]`}>
         <button className={`relative invisible group-hover:visible top-[2px] pl-[2px] pr-[4px] cursor-move hover:bg-gray-200/50 transition`} onMouseEnter={() => setIsDragging(true)} onMouseLeave={() => setIsDragging(false)} draggable="false">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" strokeWidth="1">
             <path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
@@ -109,7 +109,7 @@ export default function ItemTableRow({
           </svg>
         </button>
       </td>
-      <td className={`${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-blue-100/50' : 'bg-white'} sticky left-[15px]`}>
+      <td className={`${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-[#edf4fe]' : 'bg-white'} sticky left-[15px]`}>
         <span
           role="checkbox"
           aria-checked={checkedIds.has(row.rowId)}
@@ -140,7 +140,7 @@ export default function ItemTableRow({
         <td
           key={field.fieldId}
           className={`
-            ${field.type === "name" ? 'sticky left-[30px] z-1' : ''}
+            ${field.type === "name" ? 'sticky left-[40px] z-1' : ''}
             ${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-[#edf4fe]' 
               : field.type === "name" ? 'bg-white' : ''}
           `}

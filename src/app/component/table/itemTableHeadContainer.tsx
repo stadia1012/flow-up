@@ -124,11 +124,11 @@ export default function ItemTableHeadContainer({
     });
   }, [fields]);
   return (
-    <tr className='border-b border-transparent' ref={containerRef}>
-      <th className='w-[20px] sticky left-[-5px] bg-white z-1'>
+    <tr className='border-b border-transparent sticky top-[0px] z-[10] bg-white' ref={containerRef}>
+      <th className='w-[20px] sticky left-[5px] bg-white z-1'>
         {/* drag button field */}
       </th>
-      <th data-field="default-check" className="w-[19px] sticky left-[15px] bg-white z-1">
+      <th data-field="default-check" className="w-[19px] sticky left-[25px] bg-white z-1">
         <span
           role="checkbox"
           tabIndex={0}
