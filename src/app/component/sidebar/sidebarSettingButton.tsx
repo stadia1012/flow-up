@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import SidebarSettingPopup from "./sidebarSettingPopup";
 
-export default function SidebarSettingButton({type, handleRename, item}: {type: string, handleRename?: () => void, item: List}) {
+export default function SidebarSettingButton({type, handleRename, item}: {type: ListType, handleRename?: () => void, item: List}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
   const popupRef = useRef<HTMLDivElement>(null);
 
