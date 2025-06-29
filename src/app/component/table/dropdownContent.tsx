@@ -70,21 +70,21 @@ export default function DropdownContent({
       if (rect.bottom + popupHeight > viewportHeight) {
         top = rect.top + window.scrollY - popupHeight; // 셀 위쪽에 표시
         
-        // 위쪽에 표시해도 화면을 벗어나는 경우, 가능한 공간에 맞춰 조정
+        // 위쪽에 표시해도 화면을 벗어나는 경우
         if (top < window.scrollY) {
-          // 위쪽 공간이 부족한 경우, 화면 상단에서 약간의 여백을 두고 표시
+          // 화면 상단에서 약간의 여백을 두고 표시
           top = window.scrollY;
         }
       }
       
-      // 팝업이 화면 오른쪽으로 벗어나는 경우
+      // 팝업이 오른쪽으로 벗어나는 경우
       if (rect.left + popupWidth > viewportWidth) {
-        left = viewportWidth - popupWidth - 1 + window.scrollX; // 화면 오른쪽 경계에서 여백을 두고 표시
+        left = viewportWidth - popupWidth - 1 + window.scrollX; // 화면 오른쪽 경계에 여백을 두고 표시
       }
       
-      // 팝업이 화면 왼쪽으로 벗어나는 경우
+      // 팝업이 왼쪽으로 벗어나는 경우
       if (left < window.scrollX) {
-        left = window.scrollX + 1; // 화면 왼쪽 경계에서 여백을 두고 표시
+        left = window.scrollX + 1; // 화면 왼쪽 경계에 여백을 두고 표시
       }
 
       setPopupPos({ top, left });

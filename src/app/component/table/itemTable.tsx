@@ -14,12 +14,12 @@ import ItemTableHeadContainer from './itemTableHeadContainer';
 import { showModal } from '../modalUtils';
 import { useToast } from '@/app/context/ToastContext';
 
-export default function ItemTable({initialTableData, item}: {
+export default function ItemTable({initialTableData, itemId}: {
   initialTableData: {
     rows: TaskRow[];
     fields: TaskField[];
   },
-  item: List
+  itemId: number
 }) {
   // server에서 받은 projects를 redux에 반영
   useEffect(() => {
@@ -27,6 +27,37 @@ export default function ItemTable({initialTableData, item}: {
       initialTableData: initialTableData
     }));
   }, [initialTableData]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [project, setProject] = useState<List|null>(null);
+  const [folder, setFolder] = useState<List|null>(null);
+  const [item, setItem] = useState<List|null>(null);
+
+  const projectList = useSelector((state: RootState) =>
+    state.projects.projects
+  ) as List[];
+
+  useEffect(() => {
+    
+    // project
+    const foundProject = projectList
+        .find(project =>
+          project.lists?.some(folder => 
+            folder.lists?.some(item => item.id === Number(itemId))
+          ));
+    if (foundProject) setProject(foundProject);
+
+    // folder
+    const foundFolder = foundProject?.lists
+      ?.find(folder => folder.lists?.some(item => item.id === Number(itemId)));
+    if (foundFolder) setFolder(foundFolder);
+    
+    // item
+    const foundItem = foundFolder?.lists?.find(item => item.id === Number(itemId));
+    if (foundItem ) setItem(foundItem);
+
+    setIsLoading(false);
+  }, [projectList, itemId])
 
   const {rows, fields} = useSelector((state: RootState) =>
     state.table.data!
@@ -71,7 +102,7 @@ export default function ItemTable({initialTableData, item}: {
 
     // DB에 추가
     addTaskRowToDB({
-      itemId: item.id,
+      itemId,
       fieldId: nameField?.fieldId || 0,
       name
     }).then((res) => {
@@ -204,10 +235,35 @@ export default function ItemTable({initialTableData, item}: {
     deleteTaskRowFromDB({deleteIds});
   }
   return (
-    <>
+    <div className='flex flex-col p-[15px] pt-[20px] pl-[10px] overflow-auto w-full min-w-[400px]'>
+      <div className='pl-[15px]'>
+        <div className='flex text-[13.5px] text-gray-500 mb-[10px] font-[400]'>
+          <span className='inline-flex items-center'>{
+            isLoading
+             ? <span className='block animate-pulse bg-gray-300 rounded h-[16px] w-[70px]'></span>
+             : <span>{project?.name || ''}</span>
+          }</span>
+          <span className='inline-block ml-[9px] mr-[9px]'>/</span>
+          <span className='inline-flex items-center'>{
+            isLoading
+             ? <span className='block animate-pulse bg-gray-300 rounded h-[16px] w-[70px]'></span>
+             : <span>{folder?.name || ''}</span>
+          }</span>
+          <span className='inline-block ml-[9px] mr-[9px]'>/</span>
+          <span className='inline-flex items-center'>{
+            isLoading
+             ? <span className='block animate-pulse bg-gray-300 rounded h-[16px] w-[70px]'></span>
+             : <span>{item?.name || ''}</span>
+          }</span>
+        </div>
+      </div>
       <div className='flex items-center h-[32px] pl-[15px]'>
         <div className='flex items-center'>
-          <h1 className='text-[15px] font-[600] '>{item?.name || 'Unknown'}</h1>
+          <h1 className='text-[15px] font-[600] '>{
+            isLoading
+              ? <span className='block animate-pulse bg-gray-300 rounded h-[17px] w-[90px]'></span>
+              : item?.name || ''
+          }</h1>
           <p className='ml-[7px] text-[14px] text-gray-500/90 font-[500]'>
           {
             checkedIds.size
@@ -254,7 +310,7 @@ export default function ItemTable({initialTableData, item}: {
         <table className="itemTable border-collapse w-min table-fixed">
           <thead>
             <ItemTableHeadContainer
-              fields={fields} handleCheckAll={handleCheckAll} isAllChecked={isAllChecked} itemId={item.id}
+              fields={fields} handleCheckAll={handleCheckAll} isAllChecked={isAllChecked} itemId={itemId}
             />  
           </thead>
           <tbody ref={containerRef}>
@@ -265,6 +321,6 @@ export default function ItemTable({initialTableData, item}: {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }

@@ -153,6 +153,20 @@ export async function moveList({
   try {
     const model = prismaTable[type] as unknown as PrismaModel;
 
+    let updateOrder_ = updateOrder;
+
+    if (updateOrder === -1) {
+      const maxOrder = await model.aggregate({
+        where: {
+          PARENT_ID: updateParentId,
+        },
+        _max: {
+          ORDER: true
+        }
+      })
+      updateOrder_ = (maxOrder._max.ORDER ?? -1) + 1;
+    }
+
     // source parent order 변경
     await model.updateMany({
       where: {
@@ -165,7 +179,7 @@ export async function moveList({
     // target parent order 변경
     await model.updateMany({
       where: {
-        ORDER: { gte: updateOrder },
+        ORDER: { gte: updateOrder_ },
         ...(type !== "project" && { PARENT_ID: updateParentId })
       },
       data: { ORDER: { increment: 1 } },
@@ -173,7 +187,7 @@ export async function moveList({
 
     // 대상의 parentId, order 변경
     const data: Record<string, any> = {
-      ORDER: updateOrder,
+      ORDER: updateOrder_,
       ...(type !== "project" && { PARENT_ID: updateParentId }) // 조건부
     };
     await model.update({

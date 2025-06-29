@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth/auth";
 const prisma = new PrismaClient();
-export default async function ItemTableWrapper({item} : {item: List}) {
+export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   // const res = await fetch(`http://localhost:3000/api/values/${itemId}`);
   // const data: {
   //   fields: Field[];
@@ -18,7 +18,7 @@ export default async function ItemTableWrapper({item} : {item: List}) {
   const [rawValues, rawfields] = await Promise.all([
     // rawValues
     prisma.w_VALUES.findMany({
-      where: { row: { ITEM_ID: item.id } },
+      where: { row: { ITEM_ID: itemId } },
       include: {
         row: true,
         field: true,
@@ -26,7 +26,7 @@ export default async function ItemTableWrapper({item} : {item: List}) {
     }),
     // rawfields
     prisma.w_FIELDS.findMany({
-      where: { ITEM_ID: item.id, IS_HIDDEN: 'N' },
+      where: { ITEM_ID: itemId, IS_HIDDEN: 'N' },
       select: { ID: true, ORDER: true, WIDTH: true,
         fieldType: {
           select: {
@@ -103,7 +103,7 @@ export default async function ItemTableWrapper({item} : {item: List}) {
   }
   return (
     <>
-      <ItemTable initialTableData={data} item={item as List} />
+      <ItemTable initialTableData={data} itemId={itemId} />
     </>
   );
 }

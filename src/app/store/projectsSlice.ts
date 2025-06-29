@@ -105,11 +105,13 @@ const projectsSlice = createSlice({
         updateOrder: number;
       }>
     ) => {
-      const { sourceParentId, targetParentId, sourceId, updateOrder } =
-        action.payload;
+      const { sourceParentId, targetParentId, sourceId, updateOrder } = action.payload;
       const sourceProject = state.projects.find((p) => p.id === sourceParentId);
       const targetProject = state.projects.find((p) => p.id === targetParentId);
       if (sourceProject && targetProject) {
+        const updateOrder_ = (updateOrder === -1) // -1: 맨 끝에 추가
+          ? Math.max(...(targetProject.lists?.map(folder => folder.order) ?? []), -1) + 1
+          : updateOrder
         // source 프로젝트에서 폴더 찾기
         const folder = sourceProject.lists?.find((f) => f.id === sourceId);
         if (folder) {
@@ -123,10 +125,10 @@ const projectsSlice = createSlice({
           // parentId 업데이트
           folder.parentId = targetParentId;
           // target 프로젝트에 추가
-          folder.order = updateOrder;
+          folder.order = updateOrder_;
           targetProject.lists = [...(targetProject.lists || []), folder]
             .map((p) => {
-              if (p.order >= updateOrder && p.id != sourceId) p.order += 1
+              if (p.order >= updateOrder_ && p.id != sourceId) p.order += 1
               return p;
           });
         }
@@ -151,6 +153,9 @@ const projectsSlice = createSlice({
         .flatMap((p) => p.lists || [])
         .find((f) => f.id === targetParentId && f.type == "folder");
       if (sourceFolder && targetFolder) {
+        const updateOrder_ = (updateOrder === -1) // -1: 맨 끝에 추가
+          ? Math.max(...(targetFolder.lists?.map(item => item.order) ?? []), -1) +1
+          : updateOrder
         // source 폴더에서 아이템 찾기
         const item = sourceFolder.lists?.find((f) => f.id === sourceId);
         if (item) {
@@ -164,10 +169,10 @@ const projectsSlice = createSlice({
           // parentId 업데이트
           item.parentId = targetParentId;
           // target 프로젝트에 추가
-          item.order = updateOrder;
+          item.order = updateOrder_;
           targetFolder.lists = [...(targetFolder.lists || []), item]
             .map((p) => {
-              if (p.order >= updateOrder && p.id != sourceId) p.order += 1
+              if (p.order >= updateOrder_ && p.id != sourceId) p.order += 1
               return p;
           });
         }

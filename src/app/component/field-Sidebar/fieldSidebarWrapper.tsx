@@ -55,7 +55,7 @@ export default function FieldSidebarWrapper(
   }, [closeSidebar]);
 
   return (
-    <div id="field-sidebar-wrapper" ref={sidebarRef}>
+    <div id="field-sidebar-wrapper" ref={sidebarRef} className="z-11">
       {isShow &&
       <nav
         className={`
