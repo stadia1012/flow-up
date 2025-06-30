@@ -164,6 +164,9 @@
   :where(.css-dev-only-do-not-override-36gkoj).ant-tree .ant-tree-treenode {
     margin-bottom: 2px !important;
   }
+  .ant-tree-treenode {
+    white-space: nowrap;
+  }
   /* ant tree (조직도) end */
 }
 

@@ -167,7 +167,7 @@ export default function EditPermissionPopup(
     } */
   };
   return (
-    <div className="absolute h-full w-full top-[0px] left-[0px] z-3"
+    <div className="absolute h-full w-full top-[0px] left-[0px] z-11"
       onClick={(e) => {
         e.stopPropagation(); // fieldSlide 닫힘 방지
       }}> 
