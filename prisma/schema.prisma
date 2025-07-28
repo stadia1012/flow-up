@@ -194,6 +194,7 @@ model KPI_BD {
   BD_TP      String? @db.VarChar(9)
   POST_TITLE String? @db.VarChar(100)
   POST_CONTS String? @db.Text
+  CORP       String? @db.VarChar(5)
   DP_YN      String? @db.VarChar(3)
   NTC_YN     String? @db.VarChar(3)
   REG_ID     String? @db.VarChar(15)
