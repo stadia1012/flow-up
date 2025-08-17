@@ -3,6 +3,7 @@
 import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
 import { Toast } from '@/global';
 import ToastContainer from '@/app/component/toastContainer';
+import { v4 as uuidv4 } from 'uuid'
 
 interface ToastContextValue {
   toastList: Toast[];
@@ -16,7 +17,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toastList, setToastList] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: Toast['type'] = 'info', duration = 3000) => {
-    const id = crypto.randomUUID();
+    const id = uuidv4();
     setToastList((prev) => [...prev, { id, message, type, duration }]);
     setTimeout(() => removeToast(id), duration);
   }, []);

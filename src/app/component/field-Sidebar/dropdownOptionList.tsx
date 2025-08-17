@@ -12,6 +12,7 @@ import { flash } from "@/app/animation";
 import { FieldSidebarType, OrgTreeNode } from "@/global";
 import { useToast } from "@/app/context/ToastContext";
 import { Session } from "next-auth";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function DropdownOptionList(
   {
@@ -32,9 +33,9 @@ export default function DropdownOptionList(
     isPermitAll: boolean
   }) {
   const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>([
-    {id: crypto.randomUUID(), order: 0, color: "3dce72", name: "Option 1"},
-    {id: crypto.randomUUID(), order: 1, color: "ff7800", name: "Option 2"},
-    {id: crypto.randomUUID(), order: 2, color: "f7d92b", name: "Option 3"}]
+    {id: uuidv4(), order: 0, color: "3dce72", name: "Option 1"},
+    {id: uuidv4(), order: 1, color: "ff7800", name: "Option 2"},
+    {id: uuidv4(), order: 2, color: "f7d92b", name: "Option 3"}]
   );
   const dispatch = useDispatch();
   const {showToast} = useToast();

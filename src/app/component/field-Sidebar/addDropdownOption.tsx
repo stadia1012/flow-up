@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 // dropdownOptionList에서 option 추가 버튼
 export default function AddDropdownOption({
   addDropdownOption,
@@ -19,7 +20,7 @@ export default function AddDropdownOption({
       return
     }
     addDropdownOption({
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       order: dropdownOptions.reduce((max, option) => {
         return option.order > max ? option.order : max;
       }, -1) + 1,
