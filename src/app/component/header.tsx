@@ -26,7 +26,7 @@ export default function Header() {
     }
   }
 
-  // colorPopup 외부 클릭 감지
+  // 상단 profile Popup 외부 클릭 감지
     useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -52,7 +52,7 @@ export default function Header() {
       <div className="ml-[16px]">
         {/* <h1 className="text-white text-[17px] font-[500]"><span className="">C</span>olla<span className="">B</span>ola<span  className="">T</span>ive</h1> */}
         {/* <h1 className="text-white text-[17px] font-[400]">Flow-up</h1> */}
-        <h1 className="text-white text-[16px] font-[500]">Flow-up</h1>
+        <h1 className="text-white text-[16px] font-[500] cursor-pointer" onClick={() => location.href = '/' }>Flow-up</h1>
       </div>
       {/* profile */}
       <div

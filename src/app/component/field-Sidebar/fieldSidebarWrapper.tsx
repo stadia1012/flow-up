@@ -62,7 +62,7 @@ export default function FieldSidebarWrapper(
           flex flex-col absolute right-[0px] top-[0px] w-[300px]
           bg-white shadow-md
           text-[#46484d] text-[14px]
-          border-b-1 border-l-1 border-gray-300/85 h-full box-border
+          border-b-1 border-l-1 border-gray-300/85 h-[calc(100%-51px)] box-border
           pt-[15px] transition-all
           transition-all duration-300 ease-in-out
           ${isSlidingIn ? 'translate-x-0' : 'translate-x-full'}
