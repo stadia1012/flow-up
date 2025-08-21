@@ -3,6 +3,7 @@ import ItemTable from '@/app/component/table/itemTable'
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth/auth";
+import { redirect } from 'next/navigation'
 const prisma = new PrismaClient();
 export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   // const res = await fetch(`http://localhost:3000/api/values/${itemId}`);
@@ -12,7 +13,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   // } = await res.json();
   const session = await getServerSession(authOptions);
   if (!session) {
-    location.href = "/login";
+    redirect('/login');
   }
 
   const [rawValues, rawfields] = await Promise.all([

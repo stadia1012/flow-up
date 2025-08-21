@@ -3,6 +3,8 @@ import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
+
 
 export default function Header() {
   const { data: session } = useSession();
@@ -52,7 +54,9 @@ export default function Header() {
       <div className="ml-[16px]">
         {/* <h1 className="text-white text-[17px] font-[500]"><span className="">C</span>olla<span className="">B</span>ola<span  className="">T</span>ive</h1> */}
         {/* <h1 className="text-white text-[17px] font-[400]">Flow-up</h1> */}
-        <h1 className="text-white text-[16px] font-[500] cursor-pointer" onClick={() => location.href = '/' }>Flow-up</h1>
+        <Link href={{pathname: `/`}}>
+          <h1 className="text-white text-[16px] font-[500] cursor-pointer">Flow-up</h1>
+        </Link>
       </div>
       {/* profile */}
       <div
@@ -95,7 +99,7 @@ export default function Header() {
           style={{ top: (popupPos?.top || 0), right: "18px" }}
         >
           <ul>
-            <li className="cursor-pointer px-[12px] hover:bg-gray-100 transition" onClick={() => signOut()}>로그아웃</li>
+            <li className="cursor-pointer px-[12px] hover:bg-gray-100 transition" onClick={() => signOut({ callbackUrl: '/login' })}>로그아웃</li>
           </ul>
         </div>
         , document.body)
