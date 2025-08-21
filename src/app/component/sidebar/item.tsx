@@ -150,7 +150,7 @@ export default function Item({item, project, folder}: {item: List, project: List
           </div>
         ) : (
           // width를 지정해야 hover 시 overflow가 발생하지 않음
-          <Link href={{pathname: `/workspace/${item.id}`}} draggable={false} className="truncate w-[10px] flex-1 h-full flex items-center">
+          <Link href={{pathname: `/workspace/${item.id}`}} scroll={false} draggable={false} className="truncate w-[10px] flex-1 h-full flex items-center">
             <span className="relative top-[1px] cursor-pointer">{itemName}</span>
           </Link>
         )

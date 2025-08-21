@@ -235,7 +235,7 @@ export default function ItemTable({initialTableData, itemId}: {
     deleteTaskRowFromDB({deleteIds});
   }
   return (
-    <div className='flex flex-col p-[15px] pt-[20px] pl-[10px] overflow-auto w-full min-w-[400px]'>
+    <div className='flex flex-col p-[15px] pt-[20px] pl-[10px] overflow-auto w-full h-full min-w-[400px]'>
       <div className='pl-[15px]'>
         <div className='flex text-[13.5px] text-gray-500 mb-[10px] font-[400]'>
           <span className='inline-flex items-center'>{
@@ -305,8 +305,7 @@ export default function ItemTable({initialTableData, itemId}: {
         </button>
         }
       </div>
-      <div className='absolute sticky top-[62px] w-full h-[7px] bg-white z-2'></div>
-      <div className="relative pl-[0px] pr-[5px] pt-[0px] w-full h-full scroll-8px mb-[40px] mr-[8px] pb-[15px]" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+      <div className="relative pl-[0px] pr-[5px] pt-[0px] w-full h-full scroll-8px mb-[0px] mr-[8px] pb-[15px]" style={{ overflowX: 'auto', overflowY: 'auto' }}>
         <table className="itemTable border-collapse w-min table-fixed">
           <thead>
             <ItemTableHeadContainer

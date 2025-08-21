@@ -24,6 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="kr">
+      <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1"></meta>
       <body className="overflow-hidden">
         <AuthProvider>
           <Providers>

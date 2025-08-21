@@ -50,7 +50,7 @@ export default function Header() {
     return () => document.removeEventListener('click', handleClickOutside, true);
   }, [isPopupOpen]);
   return (
-    <div className="flex bg-blue-500 shadow-md items-center py-[7px] box-border min-h-[53px]">
+    <div className="flex basis-[53px] shrink-0 bg-blue-500 shadow-md items-center py-[7px] box-border h-[53px] min-h-[53px]">
       <div className="ml-[16px]">
         {/* <h1 className="text-white text-[17px] font-[500]"><span className="">C</span>olla<span className="">B</span>ola<span  className="">T</span>ive</h1> */}
         {/* <h1 className="text-white text-[17px] font-[400]">Flow-up</h1> */}

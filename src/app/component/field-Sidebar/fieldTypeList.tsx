@@ -171,7 +171,7 @@ export default function FieldTypeList({itemId}: {itemId: number}) {
       <p className="text-[12px] font-[600] text-gray-500/90 mb-[8px]">Hidden</p>
       {fieldTypes
         .filter((f) => f.fieldTypeId !== 1 && !checkedIds.has(f.fieldTypeId))
-        // name 제거(id: 1), 체크 안된 항목만
+        // name(id: 1) 제외, 체크 안된 항목만
         .map((fieldType, i) => (
           <FieldType key={i} fieldType={fieldType} handleCheckbox={handleCheckbox} isChecked={false} />
         )

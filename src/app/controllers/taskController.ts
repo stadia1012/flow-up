@@ -193,6 +193,32 @@ export async function addFieldTypeToDB({
   return {field: newField};
 }
 
+// field type 소프트 삭제
+export async function deleteFieldTypeFromDB({
+  fieldTypeId
+}: {
+  fieldTypeId: number
+}) {
+  try {
+    const now = new Date();
+
+    // field type 소프트 삭제
+    const updatedFieldType = await prisma.w_FIELD_TYPES.update({
+      where: { ID: fieldTypeId },
+      data: {
+        IS_DELETED: 'Y',
+        UPDT_DT: now
+      }
+    });
+
+    return { updatedFieldType };
+  } catch (error) {
+    console.error(`Field type 소프트 삭제에 실패했습니다 (${fieldTypeId}):`, error);
+    throw new Error(`Field type 소프트 삭제에 실패했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+
 /* dropdown field type 추가 */
 export const addDropdownFieldToDB = async ({
   options, itemId, name, type
@@ -398,6 +424,9 @@ export async function getAllFieldTypes() {
           ID: true, ORDER: true, COLOR: true, NAME: true
         }
       }
+    },
+    where: {
+      IS_DELETED: 'N'
     }
   });
   const fieldTypes: TaskFieldType[] = fieldTypesRecord.map((fieldType) => {
@@ -423,7 +452,8 @@ export async function getFieldTypes({itemId}: {itemId: number}) {
   const fieldTypesRecord = await prisma.w_FIELDS.findMany({
     where: {
       ITEM_ID: itemId,
-      IS_HIDDEN: 'N'
+      IS_HIDDEN: 'N',
+      fieldType: {IS_DELETED: 'N'}
     },
     select: {
       FIELD_TYPE_ID: true,

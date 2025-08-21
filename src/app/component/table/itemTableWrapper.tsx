@@ -27,7 +27,13 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     }),
     // rawfields
     prisma.w_FIELDS.findMany({
-      where: { ITEM_ID: itemId, IS_HIDDEN: 'N' },
+      where: {
+        ITEM_ID: itemId,
+        IS_HIDDEN: 'N',
+        fieldType: {
+          IS_DELETED: 'N'
+        }
+      },
       select: { ID: true, ORDER: true, WIDTH: true,
         fieldType: {
           select: {
@@ -103,8 +109,8 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     fields: fields as TaskField[]
   }
   return (
-    <>
+    <div className='h-full w-full relative'>
       <ItemTable initialTableData={data} itemId={itemId} />
-    </>
+    </div>
   );
 }
