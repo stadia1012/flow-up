@@ -124,22 +124,23 @@ export default function ItemTable({initialTableData, itemId}: {
     console.log(rowId,',', fieldId,',', value)
   }
 
+  // row check
   const handleCheckbox: React.MouseEventHandler<HTMLSpanElement> = (e) => {
     const id = Number(e.currentTarget.dataset.id);
     if (!id) return;
     setCheckedIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      next.has(id) ? next.delete(id) : next.add(id); // 상태 반전
       return next;
     });
   };
 
-  // 전체 check 여부
+  // 전체 row check 여부
   const isAllChecked = rows.length > 0 && checkedIds.size === rows.length;
 
   // 전체 check
   const handleCheckAll = () => {
-    setCheckedIds(prev => {
+    setCheckedIds(() => {
       if (isAllChecked) {
         return new Set(); // 전체 해제
       } else {
@@ -231,6 +232,10 @@ export default function ItemTable({initialTableData, itemId}: {
       .filter((row) => !deleteIds.includes(row.rowId));
     dispatch(setValues({newRows: [...newRows]}));
 
+    setCheckedIds(() => {
+      return new Set();
+    });
+
     // DB update
     deleteTaskRowFromDB({deleteIds});
   }
@@ -277,7 +282,7 @@ export default function ItemTable({initialTableData, itemId}: {
         <button
           type="button"
           className="
-            flex items-center transition ml-auto mr-[10px] hover:bg-red-100/60 cursor-pointer
+            flex items-center transition ml-[12px] mr-[10px] hover:bg-red-100/60 cursor-pointer
             p-[2px] pr-[7px] pl-[4px] rounded-[4px] box-content border border-red-300 rounded-[4px]"
           onClick={async () => {
             try {

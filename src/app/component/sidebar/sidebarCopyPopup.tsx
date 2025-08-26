@@ -48,6 +48,7 @@ export default function SidebarCopyPopup({originalItem, setIsPopupOpen}: {
 
       if (result.success && result.newItem) {
         const newItem = result.newItem;
+        // redux update
         dispatch(addItemToStore({
           id: Number(newItem.ID),
           addType: 'item',
