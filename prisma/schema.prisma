@@ -654,6 +654,8 @@ model W_ITEMS {
   UPDT_DT   DateTime? @db.DateTime(0)
 
   folder   W_FOLDERS? @relation(fields: [PARENT_ID], references: [ID])
+  fields   W_FIELDS[] @relation("ItemFields")
+  rows     W_ROWS[]   @relation("ItemRows")
 }
 
 model W_FIELDS {
@@ -671,6 +673,7 @@ model W_FIELDS {
   values     W_VALUES[] @relation("FieldValues")
   fieldType  W_FIELD_TYPES   @relation("FieldType", fields: [FIELD_TYPE_ID], references: [ID])
   @@unique([ITEM_ID, FIELD_TYPE_ID], name: "unique_item_fieldType")
+  item       W_ITEMS?        @relation("ItemFields", fields: [ITEM_ID], references: [ID])
 }
 
 model W_FIELD_TYPES {
@@ -717,6 +720,7 @@ model W_ROWS {
   UPDT_DT    DateTime?
 
   values     W_VALUES[] @relation("RowValues")
+  item       W_ITEMS?   @relation("ItemRows", fields: [ITEM_ID], references: [ID])
 }
 
 model W_VALUES {

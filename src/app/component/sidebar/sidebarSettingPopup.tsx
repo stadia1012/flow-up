@@ -12,7 +12,8 @@ interface SidebarSettingPopupProps {
   type: ListType;
   handleRename?: () => void;
   setIsPopupOpen: (isOpen: boolean) => void;
-  item: List;
+  setIsCopyPopupOpen: (isOpen: boolean) => void;
+  item: List;  // item or folder
 }
 
 export default function SidebarSettingPopup({
@@ -20,12 +21,12 @@ export default function SidebarSettingPopup({
   type,
   handleRename,
   setIsPopupOpen,
+  setIsCopyPopupOpen,
   item
 } : SidebarSettingPopupProps) {
   const dispatch: AppDispatch = useDispatch();
   const {showToast} = useToast();
   const [isMovePopupOpen, setIsMovePopupOpen] = useState(false);
-
   const handleDelete = async () => {
     let title = `'${item.name}'을(를) 삭제하시겠습니까?`;
     if (['project', 'folder'].includes(type)) {
@@ -127,6 +128,33 @@ export default function SidebarSettingPopup({
             , document.body
           )
         }
+      </div>}
+      {/* 복사 */}
+      {type == 'item' &&
+        <div
+          className="flex items-center hover:bg-gray-200/65 rounded-[4px] p-[8px] pt-[3px] pb-[3px] cursor-pointer"
+          onClick={() => {
+            setIsCopyPopupOpen(true);
+            setIsPopupOpen(false);
+          }}
+        >
+        {/* 설정 아이콘 */}
+        <div ref={settingBtnRef} className="relative top-[0px] w-[19px] h-[19px] mr-[8px]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" />
+            <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" />
+          </svg>
+        </div>
+        {/* 설정 이름 */}
+        <div className="w-[100px]">복사</div>
       </div>}
       {/* 삭제 */}
       <div

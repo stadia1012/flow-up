@@ -1,10 +1,13 @@
 'use client'
 import { useState, useEffect, useRef } from "react";
 import SidebarSettingPopup from "./sidebarSettingPopup";
+import { createPortal } from "react-dom";
+import SidebarCopyPopup from "./sidebarCopyPopup";
 
 export default function SidebarSettingButton({type, handleRename, item}: {type: ListType, handleRename?: () => void, item: List}) {
   const [isPopupOpen, setIsPopupOpen] = useState(false); // 설정 팝업 열기/닫기
   const popupRef = useRef<HTMLDivElement>(null);
+  const [isCopyPopupOpen, setIsCopyPopupOpen] = useState(false);
 
   // 외부 클릭 감지 로직
   useEffect(() => {
@@ -36,7 +39,14 @@ export default function SidebarSettingButton({type, handleRename, item}: {type: 
         <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
         <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
       </svg>
-      {isPopupOpen && <SidebarSettingPopup popupRef={popupRef} type={type} handleRename={handleRename} setIsPopupOpen={setIsPopupOpen} item={item} />}
+      {isPopupOpen && <SidebarSettingPopup popupRef={popupRef} type={type} handleRename={handleRename} setIsPopupOpen={setIsPopupOpen} item={item} setIsCopyPopupOpen={setIsCopyPopupOpen} />}
+
+      {/* 이동 팝업 */
+        isCopyPopupOpen && createPortal(
+          <SidebarCopyPopup originalItem={item} setIsPopupOpen={setIsCopyPopupOpen} />
+          , document.body
+        )
+      }
     </div>
   );
 }

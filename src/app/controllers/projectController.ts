@@ -275,3 +275,156 @@ export async function deleteItemFromDB({
     throw new Error('item 삭제 실패');
   }
 }
+
+// 아이템 복사 (copy)
+export async function copyItemFromDB({
+  originalItemId,
+  folderId,
+  newName,
+  copyOption,
+}: {
+  originalItemId: number,
+  folderId: number,
+  newName: string
+  copyOption: string,
+}) {
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. 원본 ITEM 조회
+      const originalItem = await tx.w_ITEMS.findUnique({
+        where: { ID: originalItemId },
+        include: {
+          // 관련된 FIELDS와 ROWS도 함께 조회
+          fields: {
+            include: {
+              values: true,
+              fieldType: true
+            }
+          },
+          rows: {
+            include: {
+              values: {
+                include: {
+                  field: {
+                    include: {
+                      fieldType: true  // VALUE의 FIELD_TYPE 정보 포함
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!originalItem) {
+        throw new Error(`Item with ID ${originalItemId} not found`);
+      }
+
+      // 2. 새로운 ITEM 생성
+      const newItem = await tx.w_ITEMS.create({
+        data: {
+          PARENT_ID: folderId,
+          NAME: newName,
+          ICON_COLOR: originalItem.ICON_COLOR,
+          ORDER: originalItem.ORDER,
+          IS_DELETED: "N",
+          ROWS_VERSION: originalItem.ROWS_VERSION,
+          FIELDS_VERSION: originalItem.FIELDS_VERSION,
+          //REG_ID: userId || originalItem.REG_ID,
+          REG_DT: new Date(),
+          //UPDT_ID: userId || originalItem.UPDT_ID,
+          UPDT_DT: new Date()
+        }
+      });
+
+      // 3. FIELDS 복사
+      const fieldMap = new Map<number, number>(); // 원본 FIELD_ID -> 새 FIELD_ID 매핑
+      
+      for (const originalField of originalItem.fields) {
+        const newField = await tx.w_FIELDS.create({
+          data: {
+            ITEM_ID: newItem.ID,
+            FIELD_TYPE_ID: originalField.FIELD_TYPE_ID,
+            ORDER: originalField.ORDER,
+            WIDTH: originalField.WIDTH,
+            IS_HIDDEN: originalField.IS_HIDDEN,
+            //REG_ID: userId || originalField.REG_ID,
+            REG_DT: new Date(),
+            //UPDT_ID: userId || originalField.UPDT_ID,
+            UPDT_DT: new Date()
+          }
+        });
+        
+        fieldMap.set(originalField.ID, newField.ID);
+      }
+
+      // 4. ROWS와 VALUES 복사
+      for (const originalRow of originalItem.rows) {
+        const newRow = await tx.w_ROWS.create({
+          data: {
+            ITEM_ID: newItem.ID,
+            ORDER: originalRow.ORDER,
+            IS_DELETED: originalRow.IS_DELETED,
+            //REG_ID: userId || originalRow.REG_ID,
+            REG_DT: new Date(),
+            //UPDT_ID: userId || originalRow.UPDT_ID,
+            UPDT_DT: new Date()
+          }
+        });
+
+        if (copyOption === 'withData') {
+          // 해당 ROW의 VALUES 복사
+          for (const originalValue of originalRow.values) {
+            if (originalValue.FIELD_ID && fieldMap.has(originalValue.FIELD_ID)) {
+              await tx.w_VALUES.create({
+                data: {
+                  ROW_ID: newRow.ID,
+                  FIELD_ID: fieldMap.get(originalValue.FIELD_ID)!,
+                  VALUE: originalValue.VALUE,
+                  //REG_ID: userId || originalValue.REG_ID,
+                  REG_DT: new Date(),
+                  //UPDT_ID: userId || originalValue.UPDT_ID,
+                  UPDT_DT: new Date()
+                }
+              });
+            }
+          }
+        } else if (copyOption === 'noData') {
+          // FIELD_TYPE_ID가 1인 VALUES만 복사
+          for (const originalValue of originalRow.values) {
+            if (originalValue.FIELD_ID && 
+                fieldMap.has(originalValue.FIELD_ID) &&
+                originalValue.field?.fieldType?.ID === 1) {
+              await tx.w_VALUES.create({
+                data: {
+                  ROW_ID: newRow.ID,
+                  FIELD_ID: fieldMap.get(originalValue.FIELD_ID)!,
+                  VALUE: originalValue.VALUE,
+                  //REG_ID: userId || originalValue.REG_ID,
+                  REG_DT: new Date(),
+                  //UPDT_ID: userId || originalValue.UPDT_ID,
+                  UPDT_DT: new Date()
+                }
+              });
+            }
+          }
+        }
+      }
+      return newItem;
+    });
+
+    return {
+      success: true,
+      newItem: result,
+      message: '아이템이 성공적으로 복사되었습니다.'
+    };
+
+  } catch (error) {
+    console.error('Error copying W_ITEM:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+    };
+  }
+}

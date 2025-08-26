@@ -90,6 +90,7 @@ export default function SidebarMovePopup({
     }
   }, [projectList]);
 
+  // 폴더 select
   useEffect(() => {
     if (folderSelectRef.current) {
       const targetValue = target.parentId?.toString() || '';
@@ -137,7 +138,7 @@ export default function SidebarMovePopup({
       ? Number(projectSelectRef.current.value)
       : Number(folderSelectRef.current!.value)
 
-    // // DB 변경
+    // DB 변경
     moveList({
       type: target.type,
       id: target.id,
