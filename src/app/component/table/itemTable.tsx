@@ -240,7 +240,7 @@ export default function ItemTable({initialTableData, itemId}: {
     deleteTaskRowFromDB({deleteIds});
   }
   return (
-    <div className='flex flex-col p-[15px] pt-[20px] pl-[10px] overflow-auto w-full h-full min-w-[400px]'>
+    <div className='flex flex-col p-[15px] pt-[20px] pl-[10px] overflow-hidden w-full h-full min-w-[400px]'>
       <div className='pl-[15px]'>
         <div className='flex text-[13.5px] text-gray-500 mb-[10px] font-[400]'>
           <span className='inline-flex items-center'>{

@@ -143,7 +143,7 @@ export default function ItemTableHeadContainer({
           className={`
             inline-block
             relative
-            w-[14px] h-[14px]
+            w-[14px] h-[14px] left-[-5px]
             border rounded-[2px]
             text-center
             select-none

@@ -140,7 +140,7 @@ export default function ItemTableRow({
         <td
           key={field.fieldId}
           className={`
-            ${field.type === "name" ? 'sticky left-[40px] z-1' : ''}
+            ${field.type === "name" ? 'sticky left-[39px] z-1' : ''}
             ${checkedIds.has(row.rowId) ? 'border-b border-t border-blue-400 bg-[#edf4fe]' 
               : field.type === "name" ? 'bg-white' : ''}
           `}

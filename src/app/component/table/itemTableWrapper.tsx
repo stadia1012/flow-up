@@ -109,7 +109,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     fields: fields as TaskField[]
   }
   return (
-    <div className='h-full w-full relative'>
+    <div className='h-full w-full relative overflow-hidden'>
       <ItemTable initialTableData={data} itemId={itemId} />
     </div>
   );

@@ -56,7 +56,7 @@ export default function AddRowButton({fields, addTaskRow} : {fields : TaskField[
       <tr className='relative'>
         <td>{/* default field (drag button) */}</td>
         <td>{/* default field (checkbox) */}</td>
-        <td className="sticky left-[40px] bg-white z-1">
+        <td className="sticky left-[39px] bg-white z-1">
           {<button className='
               flex items-center
               border border-gray-300 rounded-[3px]
