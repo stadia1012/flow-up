@@ -3,16 +3,14 @@ import { useState, useEffect, useRef } from 'react'
 
 export default function NameContent({
   isEditing,
-  field,
   value,
   handleUpdateValue,
-  setIsEditing
+  setIsEditing,
 }: { 
   isEditing: boolean,
-  field: TaskField,
   value: string,
   handleUpdateValue: ({newValue}: {newValue: string}) => void,
-  setIsEditing: (isEditing: boolean) => void
+  setIsEditing: (isEditing: boolean) => void,
 }) {
   const [cellValue, setCellValue] = useState(value);
 
@@ -25,7 +23,7 @@ export default function NameContent({
   }, [isEditing]);
 
   return (
-    <div className={`font-[500]`}>
+    <div className={`font-[500] w-full truncate`}>
       { isEditing ? (
         // 수정모드
         <input

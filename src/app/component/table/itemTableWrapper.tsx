@@ -19,9 +19,17 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
   const [rawValues, rawfields] = await Promise.all([
     // rawValues
     prisma.w_VALUES.findMany({
-      where: { row: { ITEM_ID: itemId } },
+      where: {
+        row: {
+          ITEM_ID: itemId,
+        },
+      },
       include: {
-        row: true,
+        row: {
+          include: {
+            children: true,
+          }
+        },
         field: true,
       },
     }),
@@ -61,21 +69,54 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     })
   ])
 
+  /* row 계층구조 구현하기 */
+  // 1단계: 모든 row 데이터를 Map으로 구성
   const rowMap = new Map<number, TaskRow>();
   rawValues.forEach(({ row, field, VALUE }) => {
     const key = row?.ID as number;
     if (!rowMap.has(key)) {
       rowMap.set(key, {
-        values: {},           // 숫자 키로 VALUE 쌓기
+        values: {}, // 숫자 키로 VALUE 쌓기
         rowId: row?.ID as number,
+        parentId: row?.PARENT_ID || null,
+        level: row?.LEVEL as number,
         order: row?.ORDER as number,
+        subRows: [] // 빈 배열로 초기화
       });
     }
     const entry = rowMap.get(key)!;
     entry.values[field?.ID as number] = VALUE || '';
   });
 
-  const rows = Array.from(rowMap.values());
+  // 2단계: 계층구조 구성 (부모-자식 관계 설정)
+  const allRows = Array.from(rowMap.values());
+  const topLevelRows: TaskRow[] = [];
+
+  // 최상위 rows와 하위 rows 분리
+  allRows.forEach(row => {
+    if (row.parentId === null) {
+      // 최상위 row
+      topLevelRows.push(row);
+    } else {
+      // 하위 row - 부모 찾아서 subRows에 추가
+      const parentRow = rowMap.get(row.parentId);
+      if (parentRow) {
+        parentRow.subRows!.push(row);
+      }
+    }
+  });
+
+  // 3단계: 각 레벨별로 정렬
+  const sortRowsRecursively = (rows: TaskRow[]) => {
+    rows.sort((a, b) => a.order - b.order);
+    rows.forEach(row => {
+      if (row.subRows && row.subRows.length > 0) {
+        sortRowsRecursively(row.subRows);
+      }
+    });
+  };
+  sortRowsRecursively(topLevelRows);
+
   const fields: TaskField[] = rawfields.map(f => ({
     fieldId: f.ID,
     name: f.fieldType.NAME || '',
@@ -99,13 +140,13 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
       // 사용자 권한 검사
       || session?.user?.id && f.fieldType.userPermissions
         .some(perm => perm.USER_ID === session.user.id))
-      // 소속부서 권한 검시
+      // 소속부서 권한 검사
       || ((session?.user.ancestorDepts || []).length > 0 && f.fieldType.deptPermissions
         .some(perm => session?.user.ancestorDepts?.includes(perm.DEPT_CODE))
     )
   }));
   const data = {
-    rows: rows as TaskRow[],
+    rows: topLevelRows as TaskRow[],
     fields: fields as TaskField[]
   }
   return (

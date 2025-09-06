@@ -42,7 +42,6 @@ model CBT_LOG {
   REMARKS  String? @db.VarChar(50)
 }
 
-
 model CBT_USER {
   USER_ID        String  @id @db.VarChar(15)
   USER_NAME      String? @db.VarChar(8)
@@ -712,6 +711,8 @@ model W_DROPDOWN_OPTIONS {
 model W_ROWS {
   ID         Int       @id @default(autoincrement())
   ITEM_ID    Int?
+  PARENT_ID  Int?
+  LEVEL      Int? @default(0)
   ORDER      Int?
   IS_DELETED String @default("N") @db.VarChar(1)
   REG_ID     String?   @db.VarChar(15)
@@ -721,6 +722,13 @@ model W_ROWS {
 
   values     W_VALUES[] @relation("RowValues")
   item       W_ITEMS?   @relation("ItemRows", fields: [ITEM_ID], references: [ID])
+
+  // 자기참조 관계
+  parent     W_ROWS? @relation("RowHierarchy", fields: [PARENT_ID], references: [ID], onDelete: NoAction, onUpdate: NoAction)
+  children   W_ROWS[]   @relation("RowHierarchy")
+
+  @@index([PARENT_ID])
+  @@index([ITEM_ID, PARENT_ID])
 }
 
 model W_VALUES {

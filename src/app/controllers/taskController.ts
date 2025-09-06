@@ -61,13 +61,11 @@ export async function moveTaskRow({
 }
 
 // task (row) 추가
-export async function addTaskRowToDB(
-  {
+export async function addTaskRowToDB({
     itemId,
     fieldId,
     name
-  }:
-  {
+  }: {
     itemId: number,
     fieldId: number,
     name: string
@@ -87,7 +85,56 @@ export async function addTaskRowToDB(
   const result = await prisma.w_ROWS.create({
     data: {
       ITEM_ID: itemId,
-      ORDER: (maxOrder._max.ORDER ?? -1) + 1,
+      ORDER: (maxOrder._max.ORDER ?? 0) + 1,
+      REG_DT: now
+    },
+  });
+
+  // name 값 입력
+  await prisma.w_VALUES.create({
+    data: {
+      ROW_ID: result.ID,
+      FIELD_ID: fieldId,
+      VALUE: name,
+      REG_DT: now
+    },
+  });
+
+  return result;
+}
+
+// sub row 추가
+export async function addTaskSubRowToDB({
+    itemId,
+    parentRowId,
+    parentLevel,
+    fieldId,
+    name
+  }: {
+    itemId: number,
+    parentRowId: number,
+    parentLevel: number,
+    fieldId: number,
+    name: string
+  }) {
+  // max order 구하기
+  const maxOrder = await prisma.w_ROWS.aggregate({
+    where: {
+      PARENT_ID: parentRowId,
+    },
+    _max: {
+      ORDER: true
+    }
+  });
+
+  const now = new Date();
+  // row 추가
+  const result = await prisma.w_ROWS.create({
+    data: {
+      ITEM_ID: itemId,
+      PARENT_ID: parentRowId,
+      LEVEL: parentLevel + 1,
+      ORDER: (maxOrder._max.ORDER ?? 0) + 1,
       REG_DT: now
     },
   });

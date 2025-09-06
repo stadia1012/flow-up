@@ -33,7 +33,6 @@ export default function AddRowButton({fields, addTaskRow} : {fields : TaskField[
 
   const handleAddTask = async () => {
     const newName = inputRef.current?.value.trim();
-
     if (!newName?.trim()) {
       const title = '이름을 입력해주세요.';
       try {
@@ -80,50 +79,55 @@ export default function AddRowButton({fields, addTaskRow} : {fields : TaskField[
       <tr>
         <td></td>
         <td></td>
-        <td className="relative pt-[5px]">
-          <input
-            type="text"
-            className="border border-blue-400 rounded-[4px] text-blue-600
-            pt-[2px] pb-[2px] pl-[8px] pr-[8px] outline-none w-full"
-            ref={inputRef}
-            onKeyDown={handleKeyDown}
-            onBlur={() => {
-              if (inputRef && inputRef.current?.value.trim()) {
-                // 값이 있으면 저장처리
-                handleAddTask();
-            
-              } else {
-                // 값이 없으면 취소처리
-                handleAddMode();
-              }
-            }}
-          />
-          {/* save button */}
-          <button
-            className="
-              absolute flex items-center top-[7px] right-[-68px]
-              bg-blue-500 hover:bg-blue-500/90 text-white text-[12px] font-[400]
-              p-[2px] pl-[8px] pr-[10px] rounded-[4px] transition
-            "
-            onMouseDown={e => e.preventDefault()}
-            onClick={handleAddTask} type='button'
-          >
-            <svg className='relative mr-[3px] top-[1px]' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="15" height="15" strokeWidth="2">
-              <path d="M18 6v6a3 3 0 0 1 -3 3h-10l4 -4m0 8l-4 -4"></path>
-            </svg>
-            <span>Save</span>
-          </button>
-          {/* cnacel button */}
-          <button className="
-              absolute flex items-center top-[7px] right-[-126px]
-              bg-white border border-gray-300/90 hover:bg-gray-100 text-gray-500 text-[12px] font-[400]
-              pt-[2px] pb-[1px] pl-[8px] pr-[8px] rounded-[4px] transition
-            "
-            onMouseDown={e => e.preventDefault()}
-            onClick={handleAddMode}
-          >
-            Cancel
-          </button>
+        <td>
+          <div className="flex items-center relative pt-[5px] pl-[25px]">
+            <input
+              type="text"
+              className="border border-blue-400 rounded-[4px] text-blue-600
+              pt-[2px] pb-[2px] pl-[8px] pr-[8px] outline-none w-full"
+              ref={inputRef}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+                if (inputRef && inputRef.current?.value.trim()) {
+                  // 값이 있으면 저장처리
+                  handleAddTask();
+              
+                } else {
+                  // 값이 없으면 취소처리
+                  handleAddMode();
+                }
+              }}
+              autoComplete="off" spellCheck="false" maxLength={200}
+            />
+            {/* save button */}
+            <div className="absolute inline-flex items-center right-[-130px] pt-[1px]">
+              <button
+                className="
+                  flex items-center top-[7px]
+                  bg-blue-500 hover:bg-blue-500/90 text-white text-[12px] font-[400]
+                  mr-[5px] p-[2px] pl-[8px] pr-[10px] rounded-[4px] transition
+                "
+                onMouseDown={e => e.preventDefault()}
+                onClick={handleAddTask} type='button'
+              >
+                <svg className='relative mr-[3px] top-[0px]' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="15" height="15" strokeWidth="2">
+                  <path d="M18 6v6a3 3 0 0 1 -3 3h-10l4 -4m0 8l-4 -4"></path>
+                </svg>
+                <span>Save</span>
+              </button>
+              {/* cnacel button */}
+              <button className="
+                  flex items-center top-[7px]
+                  bg-white border border-gray-300/90 hover:bg-gray-100 text-gray-500 text-[12px] font-[400]
+                  pt-[2px] pb-[1px] pl-[8px] pr-[8px] rounded-[4px] transition
+                "
+                onMouseDown={e => e.preventDefault()}
+                onClick={handleAddMode}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </td>
       </tr>
       }

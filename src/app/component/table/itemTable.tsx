@@ -8,7 +8,7 @@ import AddRowButton from './addRowButton';
 import { moveTaskRow, addTaskRowToDB, updateValueToDB, deleteTaskRowFromDB } from '@/app/controllers/taskController';
 import { useSelector, useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
-import { setTableData, setValues, setRealId } from "@/app/store/tableSlice";
+import { setTableData, setValues, setRealId, setSubRow } from "@/app/store/tableSlice";
 import type { RootState } from "@/app/store/store";
 import ItemTableHeadContainer from './itemTableHeadContainer';
 import { showModal } from '../modalUtils';
@@ -21,6 +21,7 @@ export default function ItemTable({initialTableData, itemId}: {
   },
   itemId: number
 }) {
+  const dispatch: AppDispatch = useDispatch();
   // server에서 받은 projects를 redux에 반영
   useEffect(() => {
     dispatch(setTableData({
@@ -37,8 +38,8 @@ export default function ItemTable({initialTableData, itemId}: {
     state.projects.projects
   ) as List[];
 
+  // 상단 경로 표시를 위한 초기화
   useEffect(() => {
-    
     // project
     const foundProject = projectList
         .find(project =>
@@ -63,11 +64,10 @@ export default function ItemTable({initialTableData, itemId}: {
     state.table.data!
   )
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
-  const dispatch: AppDispatch = useDispatch();
 
   const {showToast} = useToast();
 
-  // task (row) 추가
+  /* task (row) 추가 */
   const addTaskRow = (name: string) => {
     const newRows = rows.map(el => ({ ...el, values: {...el.values} }));
     const maxOrder = newRows.reduce(
@@ -79,10 +79,12 @@ export default function ItemTable({initialTableData, itemId}: {
     const newRow: TaskRow = {
       values: {},
       rowId: tempRowId,
+      parentId: null,
+      level:  0,
       order: maxOrder + 1,
     };
 
-    // 'name' 타입에 name 할당
+    // 'name' 타입에 name 값 할당
     const nameField = fields.find(f => f.type === 'name');
     fields.forEach(f => {
       newRow.values[f.fieldId] = (f.fieldId === nameField?.fieldId) ? name : '';
@@ -110,18 +112,43 @@ export default function ItemTable({initialTableData, itemId}: {
     });
   }
 
-  // value update
-  const updateValue = ({rowId, fieldId, value} : {rowId: number, fieldId: number, value: string}) => {
+  /* value update */
+  const updateValue = ({
+    row, fieldId, value
+  } : {
+    row: TaskRow, fieldId: number, value: string
+  }) => {
     // state update
-    const newRows = rows.map(el => ({ ...el, values: {...el.values} }));
-    const targetRow = newRows.find((row: TaskRow) => row.rowId === rowId);
-    if (!targetRow) return;
-    targetRow.values[fieldId] = value;
-    dispatch(setValues({newRows: [...newRows]}));
+    if (row.level === 0) {
+      // 최상위 row의 경우
+      const newRows = structuredClone(rows); // 깊은 복사
+      // 타겟 row
+      const targetRow = newRows.find((r: TaskRow) => r.rowId === row.rowId);
+      if (!targetRow) return;
+      targetRow.values[fieldId] = value;
+      dispatch(setValues({
+        newRows: [...newRows]
+      }));
+    } else {
+      // sub row의 경우
+      const newRows = structuredClone(rows); // 깊은 복사
+      // 부모 row의 subRows
+      const newSubRows = newRows.find(r => r.rowId === row.parentId)?.subRows;
+      if (!newSubRows) return;
+      // 타겟 row
+      const targetRow = newSubRows.find(r => r.rowId === row.rowId);
+      if (!targetRow || !row.parentId) return;
+      targetRow.values[fieldId] = value;
+      
+      dispatch(setSubRow({
+        parentRowId: row.parentId,
+        newSubRows: [...newSubRows]
+      }));
+    }
 
     // DB update
-    updateValueToDB({rowId, fieldId, value});
-    console.log(rowId,',', fieldId,',', value)
+    updateValueToDB({rowId: row.rowId, fieldId, value});
+    console.log(row.rowId,',', fieldId,',', value)
   }
 
   // row check
@@ -165,9 +192,10 @@ export default function ItemTable({initialTableData, itemId}: {
         if (!sourceData || !("rowId" in sourceData) || !("order" in sourceData)) return;
 
         const target = location.current.dropTargets[0];
-
         const targetData = target.data;
         if (!targetData || !("rowId" in targetData) || !("order" in targetData)) return;
+
+        if (sourceData.level !== targetData.level) return;
         
         console.log(`target:`, target);
         console.log(`source:`, source);
@@ -299,7 +327,7 @@ export default function ItemTable({initialTableData, itemId}: {
             }
           }}
         >
-          <svg className="h-[21px] w-[21px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#db0000" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#db0000" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 7l16 0" />
             <path d="M10 11l0 6" />
             <path d="M14 11l0 6" />
@@ -319,7 +347,16 @@ export default function ItemTable({initialTableData, itemId}: {
           </thead>
           <tbody ref={containerRef}>
             {[...rows].sort((a, b) => (a.order) - (b.order)).map((row)  => (
-              <ItemTableRow key={row.rowId} row={row} fields={fields} checkedIds={checkedIds} handleCheckbox={handleCheckbox} updateValue={updateValue} />
+              <ItemTableRow
+                key={row.rowId}
+                itemId={itemId}
+                row={row}
+                rows={rows}
+                fields={fields}
+                checkedIds={checkedIds}
+                handleCheckbox={handleCheckbox}
+                updateValue={updateValue}
+              />
             ))}
             <AddRowButton fields={fields} addTaskRow={addTaskRow} />
           </tbody>

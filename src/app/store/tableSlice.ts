@@ -38,7 +38,7 @@ const tableSlice = createSlice({
     setRealId: (
       state,
       action: PayloadAction<{
-        type: "row" | "field" | "dropdownOptions",
+        type: "row" | "field",
         tempId: number,
         realId: number,
         fieldTypeId?: number, // 'field'인 경우만
@@ -65,6 +65,28 @@ const tableSlice = createSlice({
         });
       }
     },
+    /* temp id를 real id로 변경 */
+    setSubRowId: (
+      state,
+      action: PayloadAction<{
+        parentRowId: number,
+        tempId: number,
+        realId: number
+      }>
+    ) => {
+      const { parentRowId, tempId, realId } = action.payload;
+      const parentRow = state.data.rows.find(
+        (row) => row.rowId === parentRowId
+      );
+      if (!parentRow?.subRows) return;
+
+      const subRow = parentRow.subRows.find(
+        (sr) => sr.rowId === tempId
+      );
+      if (subRow) {
+        subRow.rowId = realId;
+      }
+    },
     /* dropdown option의 temp id를 real id로 변경 */
     setDropdownOptionsId: (
       state,
@@ -84,6 +106,21 @@ const tableSlice = createSlice({
         }
       });
     },
+    /* sub row 추가/삭제/업데이트 */
+    setSubRow: (
+      state,
+      action: PayloadAction<{
+        parentRowId: number,
+        newSubRows: TaskRow[],
+      }>
+    ) => {
+      const { parentRowId, newSubRows } = action.payload;
+      state.data.rows.forEach(row => {
+        if (row.rowId === parentRowId) {
+          row.subRows = newSubRows;
+        }
+      })
+    },
   },
 });
 
@@ -92,7 +129,9 @@ export const {
   setValues,
   setFields,
   setRealId,
-  setDropdownOptionsId
+  setSubRowId,
+  setDropdownOptionsId,
+  setSubRow,
 } = tableSlice.actions;
 
 export default tableSlice.reducer;
