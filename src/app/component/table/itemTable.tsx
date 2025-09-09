@@ -8,7 +8,7 @@ import AddRowButton from './addRowButton';
 import { moveTaskRow, addTaskRowToDB, updateValueToDB, deleteTaskRowFromDB } from '@/app/controllers/taskController';
 import { useSelector, useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
-import { setTableData, setValues, setRealId, setSubRow } from "@/app/store/tableSlice";
+import { setTableData, setValues, setRealId, setSubRow, setRowOrder, setSubRowOrder } from "@/app/store/tableSlice";
 import type { RootState } from "@/app/store/store";
 import ItemTableHeadContainer from './itemTableHeadContainer';
 import { showModal } from '../modalUtils';
@@ -200,44 +200,36 @@ export default function ItemTable({initialTableData, itemId}: {
         console.log(`target:`, target);
         console.log(`source:`, source);
 
+        const sourceOrder = Number(sourceData.order)
         const targetOrder = Number(targetData.order);
         const closestEdge = extractClosestEdge(targetData);
         let updateOrder = closestEdge === "top" ? targetOrder : targetOrder + 1;
-
-        const newRows = rows.map((el: any) => ({ ...el }));
-        if (updateOrder > Number(sourceData.order)) {
-          // 후순서로 이동
-          console.log('후순서 이동');
-          // 소스 ~ 타켓 order -1
-          updateOrder--; // 조정
-          newRows.forEach((el: any) => {
-            if (el.order >= sourceData.order! && el.order <= updateOrder) {
-              el.order -= 1
-            }
-          });
-        } else {
-          // 선순서로 이동
-          console.log('선순서 이동');
-          // 타겟 ~ 소스 order +1
-          newRows.forEach((el: any) => {
-            if (el.order >= updateOrder && el.order <= sourceData.order!) {
-              el.order += 1
-            }
-          });
-        }
-        // 대상 업데이트
-        const sourceRow = newRows.find((el: TaskRow) => el.rowId === sourceData.rowId);
-        if (!sourceRow) return;
-        sourceRow.order = updateOrder;
           
         console.log('updateOrder: ', updateOrder);
-        console.log('sourceData.order: ', Number(sourceData.order));
-        dispatch(setValues({newRows: [...newRows]}));
+        console.log('sourceOrder: ', sourceOrder);
 
+        // state 변경
+        if (sourceData.level === 0) {
+          // 최상위 row인 경우
+          dispatch(setRowOrder({
+            sourceRowId: Number(sourceData.rowId),
+            sourceOrder,
+            updateOrder,
+          }));
+        } else {
+          // sub row인 경우
+          dispatch(setSubRowOrder({
+            parentRowId: Number(sourceData.parentId) || 0,
+            sourceRowId: Number(sourceData.rowId),
+            sourceOrder,
+            updateOrder,
+          }));
+        }
+        
         // DB 변경
         moveTaskRow({
           rowId: Number(sourceData.rowId),
-          sourceOrder: Number(sourceData.order),
+          sourceOrder: sourceOrder,
           updateOrder
         });
 

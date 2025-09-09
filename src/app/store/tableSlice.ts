@@ -121,6 +121,89 @@ const tableSlice = createSlice({
         }
       })
     },
+    /* row order 변경 */
+    setRowOrder: (
+      state,
+      action: PayloadAction<{
+        sourceRowId: number, // 대상 row
+        sourceOrder: number, // 변경 전 order
+        updateOrder: number, // 변경 후 order
+      }>
+    ) => {
+      const { sourceRowId, sourceOrder, updateOrder } = action.payload;
+      let updateOrder_ = updateOrder;
+      if (updateOrder > sourceOrder) {
+        // 후순서로 이동
+        console.log('후순서 이동');
+        updateOrder_--; // 조정
+        state.data.rows.forEach((row) => {
+          // 소스 ~ 타켓 사이 row들의 order -= 1
+          if (row.order >= sourceOrder! && row.order <= updateOrder) {
+            row.order -= 1
+          }
+          // 대상 row order 변경
+          if (row.rowId === sourceRowId) {
+            row.order = updateOrder_;
+          }
+        });
+      } else {
+        // 선순서로 이동
+        console.log('선순서 이동');
+        state.data.rows.forEach((row) => {
+          // 타겟 ~ 소스 사이 row들의 order += 1
+          if (row.order >= updateOrder_ && row.order <= sourceOrder!) {
+            row.order += 1
+          }
+          // 대상 row order 변경
+          if (row.rowId === sourceRowId) {
+            row.order = updateOrder_;
+          }
+        });
+      }
+    },
+    /* sub row order 변경 */
+    setSubRowOrder: (
+      state,
+      action: PayloadAction<{
+        parentRowId: number,
+        sourceRowId: number, // 대상 row
+        sourceOrder: number, // 변경 전 order
+        updateOrder: number, // 변경 후 order
+      }>
+    ) => {
+      const { parentRowId, sourceRowId, sourceOrder, updateOrder } = action.payload;
+      let parentRow = state.data.rows.find(r => r.rowId === parentRowId);
+      let updateOrder_ = updateOrder;
+      if (!parentRow) return;
+      if (updateOrder > sourceOrder) {
+        // 후순서로 이동
+        console.log('후순서 이동');
+        updateOrder_--; // 조정
+        parentRow?.subRows?.forEach((row) => {
+          // 소스 ~ 타켓 사이 row들의 order -= 1
+          if (row.order >= sourceOrder! && row.order <= updateOrder) {
+            row.order -= 1
+          }
+          // 대상 row order 변경
+          if (row.rowId === sourceRowId) {
+            row.order = updateOrder_;
+          }
+        });
+      } else {
+        // 선순서로 이동
+        console.log('선순서 이동');
+        parentRow?.subRows?.forEach((row) => {
+          // 타겟 ~ 소스 사이 row들의 order += 1
+          if (row.order >= updateOrder_ && row.order <= sourceOrder) {
+            row.order += 1
+          }
+          // 대상 row order 변경
+          if (row.rowId === sourceRowId) {
+            row.order = updateOrder_;
+          }
+        });
+      }
+    },
   },
 });
 
@@ -132,6 +215,8 @@ export const {
   setSubRowId,
   setDropdownOptionsId,
   setSubRow,
+  setRowOrder,
+  setSubRowOrder,
 } = tableSlice.actions;
 
 export default tableSlice.reducer;

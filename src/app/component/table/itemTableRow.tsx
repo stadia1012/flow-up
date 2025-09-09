@@ -67,7 +67,8 @@ export default function ItemTableRow({
             return {
               rowId: row.rowId,
               order: row.order,
-              level: row.level
+              parentId: row.parentId,
+              level: row.level,
             };
           },
         }),
@@ -82,7 +83,7 @@ export default function ItemTableRow({
           getData({ input }) {
             // drop 시 targetData
             return attachClosestEdge(
-              { rowId: row.rowId, order: row.order, level: row.level },
+              { rowId: row.rowId, order: row.order, level: row.level, parentId: row.parentId },
               { element, input, allowedEdges: ["top", "bottom"] }
             );
           },
