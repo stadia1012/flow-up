@@ -711,7 +711,7 @@ model W_DROPDOWN_OPTIONS {
 model W_ROWS {
   ID         Int       @id @default(autoincrement())
   ITEM_ID    Int?
-  PARENT_ID  Int?
+  PARENT_ID  Int? // 상위 row id
   LEVEL      Int? @default(0)
   ORDER      Int?
   IS_DELETED String @default("N") @db.VarChar(1)

@@ -92,12 +92,16 @@ export default function ItemTableRow({
           },
           onDragEnter({ self, source }) {
             if ("rowId" in source.data && source.data.level === row.level) {
+              // sub row는 같은 parentId인 경우만 이동 가능
+              if (row.level !== 0 && source.data.parentId !== row.parentId) return;
               const closestEdge = extractClosestEdge(self.data);
               setDragState({ type: "dragging-over", closestEdge });
             }
           },
           onDrag({ self, source }) {
             if ("rowId" in source.data && source.data.level === row.level) {
+              // sub row는 같은 parentId인 경우만 이동 가능
+              if (row.level !== 0 && source.data.parentId !== row.parentId) return;
               const closestEdge = extractClosestEdge(self.data);
               setDragState({ type: "dragging-over", closestEdge });
             }

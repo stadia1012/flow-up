@@ -312,6 +312,9 @@ export async function copyItemFromDB({
                   }
                 }
               }
+            },
+            where: {
+              IS_DELETED: 'N'
             }
           }
         }
@@ -360,10 +363,15 @@ export async function copyItemFromDB({
       }
 
       // 4. ROWS와 VALUES 복사
-      for (const originalRow of originalItem.rows) {
+      const rowMap = new Map<number, number>();
+      // 낮은 level이 먼저 처리되도록
+      const sortedRows = originalItem.rows.sort((a, b) => (a.LEVEL || 0) - (b.LEVEL || 0));
+      for (const originalRow of sortedRows) {
         const newRow = await tx.w_ROWS.create({
           data: {
             ITEM_ID: newItem.ID,
+            PARENT_ID: originalRow.PARENT_ID ? rowMap.get(originalRow.PARENT_ID) || null : null,
+            LEVEL: originalRow.LEVEL,
             ORDER: originalRow.ORDER,
             IS_DELETED: originalRow.IS_DELETED,
             //REG_ID: userId || originalRow.REG_ID,
@@ -372,6 +380,7 @@ export async function copyItemFromDB({
             UPDT_DT: new Date()
           }
         });
+        rowMap.set(originalRow.ID, newRow.ID);
 
         if (copyOption === 'withData') {
           // 해당 ROW의 VALUES 복사
