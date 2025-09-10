@@ -1,9 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
-import DropdownContent from './dropdownContent';
-import TextContent from './textContent';
-import NameContent from './nameContent';
-import NumberContent from './numberContent';
+import DropdownContent from './content/dropdownContent';
+import TextContent from './content/textContent';
+import NameContent from './content/nameContent';
+import NumberContent from './content/numberContent';
 import { useToast } from '@/app/context/ToastContext';
 import { showModal } from '../modalUtils';
 import { deleteTaskRowFromDB } from '@/app/controllers/taskController';

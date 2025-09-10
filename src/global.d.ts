@@ -24,7 +24,7 @@ declare global {
   };
 
   type TaskRow = {
-    values: { [key: number]: string } // number 키와 string 값 }
+    values: { [key: number]: string } // number 키와 string 값
     rowId: number;
     parentId: number | null;
     level: number;
