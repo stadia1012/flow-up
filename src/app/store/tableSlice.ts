@@ -259,6 +259,41 @@ const tableSlice = createSlice({
         row.tagIds = row.tagIds.filter((id: number) => id !== tagId);
       }
     },
+    /* tag를 완전히 제거 */
+    deleteTag: (
+      state,
+      action: PayloadAction<{
+        tagId: number,
+      }>
+    ) => {
+      const { tagId } = action.payload;
+      // 전체 row에서 tag 제거
+      state.data.rows.forEach(row => {
+        row.tagIds = row.tagIds.filter((id: number) => id !== tagId);
+      });
+
+      // allTags에서 제거
+      state.data.allTags = state.data.allTags.filter((row: RowTag) => row.id !== tagId);
+    },
+    /* tag 수정 */
+    editTag: (
+      state,
+      action: PayloadAction<{
+        tagId: number,
+        color: string,
+        name: string
+      }>
+    ) => {
+      const { tagId, color, name } = action.payload;
+      // tag 찾기
+      const tag = state.data.allTags.find(tag => tag.id === tagId);
+
+      // tag 수정
+      if (tag) {
+        tag.color = color;
+        tag.name = name;
+      }
+    },
   },
 });
 
@@ -274,7 +309,9 @@ export const {
   setSubRowOrder,
   addAllTags,
   addTagToRow,
-  deleteRowTag
+  deleteRowTag,
+  deleteTag,
+  editTag
 } = tableSlice.actions;
 
 export default tableSlice.reducer;

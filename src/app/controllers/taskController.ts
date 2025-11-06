@@ -889,3 +889,43 @@ export async function deleteRowTagFromDB({
 
   return result;
 }
+
+// tag 완전 삭제
+export async function deleteTagFromDB({
+  tagId
+}: {
+  tagId: number
+}) {
+  await prisma.w_ROW_TAGS.deleteMany({
+    where: {
+      TAG_ID: tagId,
+    },
+  });
+
+  await prisma.w_TAGS.deleteMany({
+    where: {
+      ID: tagId,
+    },
+  });
+}
+
+// tag 수정
+export async function editTagFromDB({
+  tagId,
+  color,
+  name
+}: {
+  tagId: number,
+  color: string,
+  name: string
+}) {
+  await prisma.w_TAGS.update({
+    data: {
+      NAME: name,
+      COLOR: color
+    },
+    where: {
+      ID: tagId,
+    },
+  });
+}

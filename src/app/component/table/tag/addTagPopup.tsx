@@ -4,6 +4,7 @@ import { AppDispatch } from "@/app/store/store";
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import { addAllTags, addTagToRow, deleteRowTag, setRealId } from "@/app/store/tableSlice";
 import { addTagToRowFromDB, createTagToDB, deleteRowTagFromDB } from "@/app/controllers/taskController";
+import EditTagButton from "./editTagButton";
 
 export default function AddTagPopup({
   rowId,
@@ -37,21 +38,19 @@ export default function AddTagPopup({
   }, []);
 
   // Searched tags
-  const [searchedTags, setSearchedTags] = useState<RowTag[]>([]);
+  const [searchedTagIds, setSearchedTagIds] = useState<number[]>([]);
   // 태그 검색 input
   const tagInputRef = useRef<HTMLInputElement>(null);
-  // create 표시
-
 
   // input 입력 시
   const inputHandler = () => {
     const inputText = tagInputRef.current?.value.trim() || '';
 
     // 검색된 tags
-    const searchedTags = allTags?.filter((t) => (
+    const searched = allTags?.filter((t) => (
       t.name.includes(inputText) && !tagIds.includes(t.id)
-    ));
-    setSearchedTags(searchedTags);
+    )).map(t => t.id);
+    setSearchedTagIds(searched);
   }
 
   // 배경색에 따른 option 글자색 변경 (hexColor: #을 제외한 hex 값)
@@ -94,19 +93,20 @@ export default function AddTagPopup({
 
   /* row에 tag 추가 */
   const handleAddTag = ({tagId}: {tagId: number}) => {
-      // state 업데이트
-      dispatch(addTagToRow({rowId, tagId: tagId}))
+    // state 업데이트
+    dispatch(addTagToRow({rowId, tagId: tagId}))
 
-      // DB 업데이트
-      addTagToRowFromDB({rowId, tagId: tagId});
+    // DB 업데이트
+    addTagToRowFromDB({rowId, tagId: tagId});
   }
 
+  /* tag 삭제 */
   const handleDeleteTag = ({tagId}: {tagId: number}) => {
-      // state 업데이트
-      dispatch(deleteRowTag({rowId, tagId: tagId}))
+    // state 업데이트
+    dispatch(deleteRowTag({rowId, tagId: tagId}))
 
-      // DB 업데이트
-      deleteRowTagFromDB({rowId, tagId: tagId});
+    // DB 업데이트
+    deleteRowTagFromDB({rowId, tagId: tagId});
   }
 
   return (
@@ -120,7 +120,7 @@ export default function AddTagPopup({
         onClick={(e) => e.stopPropagation()}
         ref={tagPopupRef}
       >
-        <div className="flex pt-[5px] px-[10px]">
+        <div className="flex flex-wrap pt-[5px] px-[10px] w-full max-h-[80px] overflow-y-auto scroll-8px">
           {/* 기존 태그 표시 */}
           {
             tagIds.map((id) => {
@@ -140,6 +140,17 @@ export default function AddTagPopup({
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg>
                   </div>
+                  {/* 수정 버튼 */}
+                  <div
+                    className="absolute opacity-[0] group-hover:opacity-[1] w-[20px] h-[16px] rounded-[4px] transition right-[18px] top-[1px] px-[3px] hover:[&>svg]:stroke-[2.5]"
+                    style={{
+                      backgroundColor: `#${tag.color}`,
+                      color: `#${getTextColor(tag.color)}`
+                    }}
+                  >
+                    <EditTagButton tag={tag}></EditTagButton>
+                  </div>
+                  {/* tag body */}
                   <div
                     className="inline-block text-[13px] rounded-[4px] text-center min-w-[50px] max-w-[150px] py-[1px px-[3px] truncate"
                     style={{
@@ -164,24 +175,38 @@ export default function AddTagPopup({
             onInput={inputHandler}
           />
         </div>
-        <div className="relative px-[8px] py-[8px] border-gray-300/80 border-b-[1px]">
+        <div className="relative px-[8px] py-[8px] border-gray-300/80 border-b-[1px] h-[200px] overflow-y-auto scroll-8px">
           {
           tagInputRef?.current?.value.trim()
             ? 
               // 검색 입력값이 있는 경우
-              searchedTags.length
+              searchedTagIds.length
                 // 검색 결과가 있으면 표시
-                ? searchedTags.filter((tag) => (!tagIds.includes(tag.id))).map(tag => (
-                  <div key={tag.id} className="hover:bg-gray-200/60 transition rounded-[2px] py-[1px] px-[5px] cursor-pointer">
+                ? searchedTagIds.filter((tagId) => (!tagIds.includes(tagId))).map(tagId => {
+                  const tag = allTags.find((t) => t.id === tagId);
+                  if (!tag) return null;
+
+                  return <div
+                    key={tag.id}
+                    className="flex items-center group/tag hover:bg-gray-200/60 transition rounded-[2px] py-[1px] px-[5px] cursor-pointer"
+                  >
+                    {/* tag body */}
                     <div
                       className="text-[13px] rounded-[4px] text-center min-w-[50px] w-[50px] py-[1px] my-[3px]"
                       style={{
                         backgroundColor: `#${tag.color}`,
                         color: `#${getTextColor(tag.color)}`
                       }}
+                      onClick={() => handleAddTag({tagId: tag.id})}
                     >{tag.name}</div>
+                    {/* 수정 버튼 */}
+                    <div
+                      className="ml-auto opacity-[0] group-hover/tag:opacity-[1] w-[20px] h-[16px] rounded-[4px] transition px-[3px] hover:[&>svg]:stroke-[2.5]"
+                    >
+                      <EditTagButton tag={tag}></EditTagButton>
+                    </div>
                   </div>
-                ))
+                })
                 // 검색 결과가 없으면 create 표시
                 : <div
                     className="flex items-center px-[5px] rounded-[2px] hover:bg-gray-200/60 transition cursor-pointer"
@@ -203,16 +228,23 @@ export default function AddTagPopup({
                 ? allTags.filter((tag) => (!tagIds.includes(tag.id))).map(tag => (
                   <div
                     key={tag.id}
-                    className="flex hover:bg-gray-200/60 transition rounded-[2px] py-[1px] px-[5px] cursor-pointer"
-                    onClick={() => handleAddTag({tagId: tag.id})}
+                    className="flex items-center group/tag hover:bg-gray-200/60 transition rounded-[2px] py-[1px] px-[5px] cursor-pointer"
                   >
+                    {/* tag body */}
                     <div
                       className="inline-block text-[13px] rounded-[4px] text-center min-w-[50px] max-w-[150px] py-[1px] my-[3px] px-[3px] truncate"
                       style={{
                         backgroundColor: `#${tag.color}`,
                         color: `#${getTextColor(tag.color)}`
                       }}
+                      onClick={() => handleAddTag({tagId: tag.id})}
                     >{tag.name}</div>
+                    {/* 수정 버튼 */}
+                    <div
+                      className="ml-auto opacity-[0] group-hover/tag:opacity-[1] w-[20px] h-[16px] rounded-[4px] transition px-[3px] hover:[&>svg]:stroke-[2.5]"
+                    >
+                      <EditTagButton tag={tag}></EditTagButton>
+                    </div>
                   </div>
                 ))
                 : <div className="py-[5px] px-[5px] text-[13px] text-gray-400">No tags created</div>

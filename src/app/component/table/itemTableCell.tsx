@@ -6,11 +6,12 @@ import NameContent from './content/nameContent';
 import NumberContent from './content/numberContent';
 import { useToast } from '@/app/context/ToastContext';
 import { showModal } from '../modalUtils';
-import { deleteTaskRowFromDB } from '@/app/controllers/taskController';
+import { deleteRowTagFromDB, deleteTaskRowFromDB } from '@/app/controllers/taskController';
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
-import { setSubRow } from '@/app/store/tableSlice';
+import { deleteRowTag, setSubRow } from '@/app/store/tableSlice';
 import AddTagButton from './tag/addTagButton';
+import EditTagButton from './tag/editTagButton';
 
 export default function ItemTableCell({
   updateValue,
@@ -69,6 +70,25 @@ export default function ItemTableCell({
     // DB update
     deleteTaskRowFromDB({deleteIds: [row.rowId]});
   }
+
+  // 배경색에 따른 option 글자색 변경 (hexColor: #을 제외한 hex 값)
+  const getTextColor = (hexColor: string) => {
+    const rgb = parseInt(hexColor, 16) // 10진수 변환
+    const r = (rgb >> 16) & 0xff
+    const g = (rgb >>  8) & 0xff
+    const b = (rgb >>  0) & 0xff
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b // per ITU-R BT.709
+    // 색상 선택
+    return luma < 170 ? "ffffff" : "171717"
+  }
+
+  const handleDeleteTag = ({tagId}: {tagId: number}) => {
+    // state 업데이트
+    dispatch(deleteRowTag({rowId: row.rowId, tagId: tagId}))
+
+    // DB 업데이트
+    deleteRowTagFromDB({rowId: row.rowId, tagId: tagId});
+}
 
   return (
     <div className={`flex items-center overflow-hidden w-full group`}
@@ -134,12 +154,16 @@ export default function ItemTableCell({
           </span>
         </button>
       )}
+      {/* content */}
       <div
         ref={containerRef}
         className={`
-          border rounded-[4px] w-full overflow-hidden
-          hover:text-blue-600 ${isEditing ? 'border-blue-400 hover:border-blue-400' : 'border-transparent hover:border-gray-300'}
-          ${field.type === "dropdown" ? '' : 'pt-[4px] pb-[4px] px-[8px] '}
+          flex-shrink
+          border rounded-[4px] overflow-hidden min-w-[80px]
+          hover:text-blue-600 
+          ${isEditing ? 'border-blue-400 hover:border-blue-400 w-full' : 'border-transparent hover:border-gray-300'}
+          ${field.type !== "name" ? 'w-full' : 'pr-[2px]'}
+          ${field.type === "dropdown" ? '' : 'pt-[4px] pb-[4px] px-[8px]'}
           h-[32px] box-border
           cursor-pointer
           transition
@@ -200,16 +224,67 @@ export default function ItemTableCell({
           />
         }
       </div>
+      {/* tags */}
+      {
+        field.type === 'name' && row.tagIds.length > 0 && !isEditing &&
+        <div className='flex justify-start pl-[1px] overflow-hidden min-w-0'>
+          {row.tagIds.map((id) => {
+            const tag = allTags.find((t) => t.id === id);
+              if (!tag) return null;
+
+              return (
+                // tag
+                <div
+                  key={tag.id}
+                  className="
+                    group/tag flex relative justify-center my-[1px] mr-[3px] cursor-pointer transition shrink-0
+                  "
+                  title={tag.name}
+                >
+                  {/* 삭제 버튼 */}
+                  <div
+                    className="absolute opacity-[0] group-hover/tag:opacity-[1] w-[16px] h-[16px] rounded-[3px] transition right-[4px] top-[2px] hover:[&>svg]:stroke-[2]"
+                    style={{
+                      backgroundColor: `#${tag.color}`,
+                      color: `#${getTextColor(tag.color)}`
+                    }}
+                    onClick={() => handleDeleteTag({tagId: tag.id})}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1"><path d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg>
+                  </div>
+                  {/* 수정 버튼 */}
+                  <div
+                    className="absolute opacity-[0] group-hover/tag:opacity-[1] w-[20px] h-[16px] rounded-[4px] transition right-[18px] top-[1px] px-[3px] hover:[&>svg]:stroke-[2.5]"
+                    style={{
+                      backgroundColor: `#${tag.color}`,
+                      color: `#${getTextColor(tag.color)}`
+                    }}
+                  >
+                    <EditTagButton tag={tag}></EditTagButton>
+                  </div>
+                  {/* tag body */}
+                  <div
+                    className="inline-block text-[12px] rounded-[4px] text-center min-w-[45px] max-w-[150px] py-[1px] px-[4px] truncate"
+                    style={{
+                      backgroundColor: `#${tag.color}`,
+                      color: `#${getTextColor(tag.color)}`
+                    }}
+                  >{tag.name}</div>
+                </div>
+              )
+          })}
+        </div>
+      }
       {/* task actions */}
-      <div className={`group-hover:flex ${showActions ? 'flex' : 'hidden'}`}>
+      <div className={`group-hover:flex ${showActions ? 'flex' : 'hidden'} shrink-0 ml-auto`}>
       {
         /* tag 추가 버튼 */
-        field.type === 'name' &&
+        field.type === 'name' && !isEditing &&
         <AddTagButton rowId={row.rowId} allTags={allTags} tagIds={row.tagIds} setShowActions={setShowActions} />
       }
       {
         /* sub row 추가 버튼 */
-        field.type === 'name' && row.level === 0 &&
+        field.type === 'name' && row.level === 0 && !isEditing &&
         <button
           ref={addSubRowButton}
           type="button"

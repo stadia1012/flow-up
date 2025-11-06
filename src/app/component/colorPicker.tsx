@@ -56,6 +56,8 @@ export default function ColorPicker({
               setSelectedHex(newHex);
             }}
             maxLength={6}
+            autoComplete="off"
+            spellCheck="false"
           />
         </span>
         {/* 컬러 직접 선택 */}

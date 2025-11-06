@@ -63,6 +63,7 @@ export default function SubRowInput({
       parentId: row.rowId,
       level: row.level + 1,
       order: maxOrder + 1,
+      tagIds: []
     };
 
     // value 초기화

@@ -30,7 +30,7 @@ export default function NameContent({
         // 수정모드
         <input
           type='text'
-          className='w-full outline-none text-blue-600'
+          className='w-full outline-none text-blue-600 truncate'
           value={cellValue}
           onChange={(e) => {setCellValue(e.target.value)}}
           onBlur={(e) => handleUpdateValue({newValue: cellValue})}
