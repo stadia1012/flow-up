@@ -77,7 +77,7 @@ export default function DraggableItem({ item, project, folder }: { item: List, p
       {dragState.type === "dragging-over" && dragState.closestEdge && (
         <DropIndicator edge={dragState.closestEdge} gap="0px" />
       )}
-      <Item item={item} project={project} folder={folder} />
+      <Item item={item} />
     </div>
   );
 }
