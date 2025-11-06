@@ -721,6 +721,7 @@ model W_ROWS {
   UPDT_DT    DateTime?
 
   values     W_VALUES[] @relation("RowValues")
+  tags       W_ROW_TAGS[]   @relation("RowTags")
   item       W_ITEMS?   @relation("ItemRows", fields: [ITEM_ID], references: [ID])
 
   // 자기참조 관계
@@ -826,4 +827,21 @@ model CBT_DEPT_CLOSURE {
   descendant CBT_USER_DEPT @relation("ClosureDescendant", fields: [DESCENDANT_SEQ], references: [DEPT_SEQ])
   DEPTH Int
   @@id([ANCESTOR_SEQ, DESCENDANT_SEQ])
+}
+
+model W_TAGS {
+  ID         Int       @id @default(autoincrement())
+  NAME       String   @db.VarChar(30)
+  COLOR      String    @db.VarChar(6)
+
+  tags       W_ROW_TAGS[] @relation("Tags")
+}
+
+model W_ROW_TAGS {
+  ROW_ID   Int
+  TAG_ID   Int
+  @@id([ROW_ID, TAG_ID])
+
+  row      W_ROWS?   @relation("RowTags", fields: [ROW_ID], references: [ID])
+  tag      W_TAGS?   @relation("Tags", fields: [TAG_ID], references: [ID])
 }

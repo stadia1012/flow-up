@@ -6,11 +6,13 @@ export default function NameContent({
   value,
   handleUpdateValue,
   setIsEditing,
+  allTags
 }: { 
   isEditing: boolean,
   value: string,
   handleUpdateValue: ({newValue}: {newValue: string}) => void,
   setIsEditing: (isEditing: boolean) => void,
+  allTags: RowTag[]
 }) {
   const [cellValue, setCellValue] = useState(value);
 

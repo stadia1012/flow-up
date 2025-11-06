@@ -18,7 +18,7 @@ export default function ColorPicker({
   ];
   return (
     <div
-      className="absolute bg-white p-[10px] pl-[18px] pr-[18px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-3 popup-menu w-[230px] pb-[10px] w-[250px] top-[30px]"
+      className="absolute bg-white p-[10px] pl-[18px] pr-[18px] rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-300 popup-menu w-[230px] pb-[10px] w-[250px] top-[30px]"
       style={style}
       onClick={(e) => e.stopPropagation()}
       ref={colorPopupRef}

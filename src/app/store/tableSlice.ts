@@ -4,19 +4,21 @@ const tableSlice = createSlice({
   name: 'table',
   initialState: {
     data: {
-      rows : [] as TaskRow[],
-      fields : [] as TaskField[]
+      rows: [] as TaskRow[],
+      fields: [] as TaskField[],
+      allTags: [] as RowTag[] 
     }
   },
   reducers: {
     // table data 초기값 설정
     setTableData: (
       state,
-      action: PayloadAction<{ initialTableData : { rows: TaskRow[], fields: TaskField[] } }>
+      action: PayloadAction<{ initialTableData : { rows: TaskRow[], fields: TaskField[], allTags: RowTag[] } }>
     ) => {
       const { initialTableData } = action.payload;
       state.data.rows = initialTableData.rows;
       state.data.fields = initialTableData.fields;
+      state.data.allTags = initialTableData.allTags;
     },
     /* table data 설정 */
     setValues: (
@@ -38,7 +40,7 @@ const tableSlice = createSlice({
     setRealId: (
       state,
       action: PayloadAction<{
-        type: "row" | "field",
+        type: "row" | "field" | "tag",
         tempId: number,
         realId: number,
         fieldTypeId?: number, // 'field'인 경우만
@@ -61,6 +63,12 @@ const tableSlice = createSlice({
             if (canEdit) {
               field.canEdit = canEdit
             }
+          }
+        });
+      } else if (type === "tag" && realId) {
+        state.data.allTags.forEach((tag) => {
+          if (tag.id === tempId) {
+            tag.id = realId;
           }
         });
       }
@@ -204,6 +212,53 @@ const tableSlice = createSlice({
         });
       }
     },
+    /* 신규 tag 추가 */
+    addAllTags: (
+      state,
+      action: PayloadAction<{
+        tempId: number
+        name: string,
+      }>
+    ) => {
+      const { tempId, name } = action.payload;
+      state.data.allTags.push({
+        id: tempId,
+        name: name,
+        color: 'cccccc'
+      })
+    },
+    /* tag를 row에 추가 */
+    addTagToRow: (
+      state,
+      action: PayloadAction<{
+        rowId: number
+        tagId: number,
+      }>
+    ) => {
+      const { rowId, tagId } = action.payload;
+      state.data.rows.forEach((row) => {
+        if (row.rowId === rowId && !row.tagIds.includes(tagId)) {
+          row.tagIds.push(tagId);
+        }
+      })
+    },
+    /* tag를 row에서 제거 */
+    deleteRowTag: (
+      state,
+      action: PayloadAction<{
+        rowId: number
+        tagId: number,
+      }>
+    ) => {
+      const { rowId, tagId } = action.payload;
+      const row = state.data.rows.find(row => (
+        row.rowId === rowId
+      ));
+
+      if (row) {
+        row.tagIds = row.tagIds.filter((id: number) => id !== tagId);
+      }
+    },
   },
 });
 
@@ -217,6 +272,9 @@ export const {
   setSubRow,
   setRowOrder,
   setSubRowOrder,
+  addAllTags,
+  addTagToRow,
+  deleteRowTag
 } = tableSlice.actions;
 
 export default tableSlice.reducer;

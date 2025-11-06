@@ -8,7 +8,7 @@ import type { AppDispatch } from "@/app/store/store";
 import ColorPicker from '../colorPicker';
 import Link from "next/link";
 
-export default function Item({item, project, folder}: {item: List, project: List, folder: List}) {
+export default function Item({item}: {item: List}) {
   const dispatch: AppDispatch = useDispatch();
   const [isRename, setIsRename] = useState(false); // 이름변경 모드 여부
   const [itemName, setItemName] = useState(item.name); // 이름 state
@@ -151,7 +151,7 @@ export default function Item({item, project, folder}: {item: List, project: List
         ) : (
           // width를 지정해야 hover 시 overflow가 발생하지 않음
           <Link href={{pathname: `/workspace/${item.id}`}} scroll={false} draggable={false} className="truncate w-[10px] flex-1 h-full flex items-center">
-            <span className="relative top-[1px] cursor-pointer">{itemName}</span>
+            <span className="relative top-[1px] cursor-pointer truncate">{itemName}</span>
           </Link>
         )
       }

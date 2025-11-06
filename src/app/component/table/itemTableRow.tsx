@@ -19,7 +19,8 @@ type ItemTableRowProps = {
   fields: TaskField[],
   checkedIds: Set<number>,
   handleCheckbox: React.MouseEventHandler<HTMLSpanElement>,
-  updateValue: ({row, fieldId, value} : {row: TaskRow, fieldId: number, value: string}) => void
+  updateValue: ({row, fieldId, value} : {row: TaskRow, fieldId: number, value: string}) => void,
+  allTags: RowTag[]
 }
 
 export default function ItemTableRow({
@@ -30,7 +31,8 @@ export default function ItemTableRow({
   fields,
   checkedIds,
   handleCheckbox,
-  updateValue
+  updateValue,
+  allTags
 } : ItemTableRowProps) {
   // drag 요소
   const dragRef = useRef<HTMLTableRowElement | null>(null);
@@ -210,6 +212,7 @@ export default function ItemTableRow({
             addSubRowButton={addSubRowButton}
             toggleSubRowInput={toggleSubRowInput}
             setIsSubRowInputOpen={setIsSubRowInputOpen}
+            allTags={allTags}
           />
         </td>
       ))}
@@ -232,6 +235,7 @@ export default function ItemTableRow({
             checkedIds={checkedIds}
             handleCheckbox={handleCheckbox}
             updateValue={updateValue}
+            allTags={allTags}
           />
         ))
       )

@@ -18,6 +18,7 @@ export default function ItemTable({initialTableData, itemId}: {
   initialTableData: {
     rows: TaskRow[];
     fields: TaskField[];
+    allTags: RowTag[];
   },
   itemId: number
 }) {
@@ -60,9 +61,10 @@ export default function ItemTable({initialTableData, itemId}: {
     setIsLoading(false);
   }, [projectList, itemId])
 
-  const {rows, fields} = useSelector((state: RootState) =>
+  const {rows, fields, allTags} = useSelector((state: RootState) =>
     state.table.data!
   )
+  
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
 
   const {showToast} = useToast();
@@ -82,6 +84,7 @@ export default function ItemTable({initialTableData, itemId}: {
       parentId: null,
       level:  0,
       order: maxOrder + 1,
+      tagIds: []
     };
 
     // 'name' 타입에 name 값 할당
@@ -348,6 +351,7 @@ export default function ItemTable({initialTableData, itemId}: {
                 checkedIds={checkedIds}
                 handleCheckbox={handleCheckbox}
                 updateValue={updateValue}
+                allTags={allTags}
               />
             ))}
             <AddRowButton fields={fields} addTaskRow={addTaskRow} />

@@ -10,6 +10,7 @@ import { deleteTaskRowFromDB } from '@/app/controllers/taskController';
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/app/store/store";
 import { setSubRow } from '@/app/store/tableSlice';
+import AddTagButton from './tag/addTagButton';
 
 export default function ItemTableCell({
   updateValue,
@@ -23,6 +24,7 @@ export default function ItemTableCell({
   toggleSubRowButton,
   addSubRowButton,
   setIsSubRowInputOpen,
+  allTags
 }: { 
   row: TaskRow,
   field: TaskField,
@@ -35,11 +37,13 @@ export default function ItemTableCell({
   toggleSubRowButton: React.RefObject<HTMLButtonElement | null>,
   addSubRowButton: React.RefObject<HTMLButtonElement | null>,
   setIsSubRowInputOpen: (arg: boolean) => void,
+  allTags: RowTag[]
 }) {
   const dispatch: AppDispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false); // 수정모드
   const containerRef = useRef<HTMLDivElement | null>(null);
   const {showToast} = useToast();
+  const [showActions, setShowActions] = useState(false);
   
   // 값 업데이트
   const handleUpdateValue = ({newValue}: {newValue: string}) => {
@@ -142,8 +146,7 @@ export default function ItemTableCell({
         `}
         onClick={() => {
           if (!isEditing) {
-            // 조회 모드에서 수정모드로 전환
-
+            /*조회 모드에서 수정모드로 전환*/
             // 권한 검사
             if (field.type !== 'name' && !field.canEdit) {
               showToast('수정 권한이 없습니다.', 'error');
@@ -161,6 +164,7 @@ export default function ItemTableCell({
               handleUpdateValue={handleUpdateValue}
               isEditing={isEditing}
               setIsEditing={setIsEditing}
+              allTags={allTags}
             />
           </div>
         }
@@ -196,6 +200,13 @@ export default function ItemTableCell({
           />
         }
       </div>
+      {/* task actions */}
+      <div className={`group-hover:flex ${showActions ? 'flex' : 'hidden'}`}>
+      {
+        /* tag 추가 버튼 */
+        field.type === 'name' &&
+        <AddTagButton rowId={row.rowId} allTags={allTags} tagIds={row.tagIds} setShowActions={setShowActions} />
+      }
       {
         /* sub row 추가 버튼 */
         field.type === 'name' && row.level === 0 &&
@@ -203,9 +214,9 @@ export default function ItemTableCell({
           ref={addSubRowButton}
           type="button"
           className={`
-            group-hover:flex hidden items-center shrink-0
-            basis-[22px] w-[22px] h-[22px] p-[3px] mx-[4px]
-            border border-gray-300 rounded-[4px] cursor-pointer hover:bg-[#f3f3f3]
+            flex items-center shrink-0
+            basis-[24px] w-[24px] h-[24px] p-[3px] mx-[4px]
+            border border-gray-300 rounded-[4px] cursor-pointer bg-white hover:bg-[#f3f3f3]
           `}
           onClick={() => {
             if (!isSubRowOpen) {
@@ -237,9 +248,9 @@ export default function ItemTableCell({
         <button
           type="button"
           className={`
-            group-hover:flex hidden items-center shrink-0
-            basis-[22px] w-[22px] h-[22px] p-[1px] mx-[4px]
-            border border-gray-300 rounded-[4px] cursor-pointer hover:bg-[#f3f3f3]
+            flex items-center shrink-0
+            basis-[24px] w-[24px] h-[24px] p-[2px] mx-[4px]
+            border border-gray-300 rounded-[4px] cursor-pointer bg-white hover:bg-[#f3f3f3]
             text-[#454545] hover:text-[#db0000]
           `}
           onClick={async () => {
@@ -268,6 +279,7 @@ export default function ItemTableCell({
           </span>
         </button>
       }
+      </div>
     </div>
   )
 }

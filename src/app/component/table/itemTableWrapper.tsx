@@ -16,7 +16,7 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
     redirect('/login');
   }
 
-  const [rawValues, rawfields] = await Promise.all([
+  const [rawValues, rawfields, rawTags] = await Promise.all([
     // rawValues
     prisma.w_VALUES.findMany({
       where: {
@@ -28,6 +28,11 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
         row: {
           include: {
             children: true,
+            tags: {
+              include: {
+                tag: true,
+              }
+            }
           }
         },
         field: true,
@@ -66,6 +71,14 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
           }
         }
       }
+    }),
+    // rawTags
+    prisma.w_TAGS.findMany({
+      select: {
+        ID: true,
+        NAME: true,
+        COLOR: true
+      }
     })
   ])
 
@@ -81,7 +94,8 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
         parentId: row?.PARENT_ID || null,
         level: row?.LEVEL as number,
         order: row?.ORDER as number,
-        subRows: [] // 빈 배열로 초기화
+        subRows: [], // 빈 배열로 초기화
+        tagIds: row?.tags.map(t => t.TAG_ID) || []
       });
     }
     const entry = rowMap.get(key)!;
@@ -145,10 +159,18 @@ export default async function ItemTableWrapper({itemId} : {itemId: number}) {
         .some(perm => session?.user.ancestorDepts?.includes(perm.DEPT_CODE))
     )
   }));
+  const tags = rawTags.map(t => ({
+    id: t.ID,
+    name: t.NAME,
+    color: t.COLOR
+  }))
+
   const data = {
     rows: topLevelRows as TaskRow[],
-    fields: fields as TaskField[]
+    fields: fields as TaskField[],
+    allTags: tags as RowTag[]
   }
+
   return (
     <div className='h-full w-full relative overflow-hidden'>
       <ItemTable initialTableData={data} itemId={itemId} />

@@ -825,3 +825,67 @@ export async function getPermitAllFromDB({
   });
   return (result?.IS_PERMIT_ALL === 'Y') ?  true : false;
 }
+
+// 새 tag 추가
+export async function createTagToDB({
+  name,
+  color
+}: {
+  name: string,
+  color: string
+}) {
+  const result = await prisma.w_TAGS.create({
+    data: {
+      NAME: name,
+      COLOR: color
+    },
+  });
+  return result;
+}
+
+// row에 tag 추가
+export async function addTagToRowFromDB({
+  rowId,
+  tagId
+}: {
+  rowId: number,
+  tagId: number
+}) {
+  const exists = await prisma.w_ROW_TAGS.findUnique({
+    where: {
+      ROW_ID_TAG_ID: { ROW_ID: rowId, TAG_ID: tagId },
+    },
+  });
+
+  if (exists) {
+    // 이미 존재하면 반환
+    return exists;
+  }
+
+  const result = await prisma.w_ROW_TAGS.create({
+    data: {
+      ROW_ID: rowId,
+      TAG_ID: tagId,
+    },
+  });
+
+  return result;
+}
+
+// row에서 tag 삭제
+export async function deleteRowTagFromDB({
+  rowId,
+  tagId
+}: {
+  rowId: number,
+  tagId: number
+}) {
+  const result = await prisma.w_ROW_TAGS.deleteMany({
+    where: {
+      ROW_ID: rowId,
+      TAG_ID: tagId,
+    },
+  });
+
+  return result;
+}

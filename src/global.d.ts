@@ -30,6 +30,7 @@ declare global {
     level: number;
     order: number;
     subRows?: TaskRow[];
+    tagIds: number[];
   };
 
   type DropdownOption = {
@@ -37,6 +38,12 @@ declare global {
     order: number;
     color: string;
     name: string;
+  }
+
+  type RowTag = {
+    id: number;
+    name: string;
+    color: string;
   }
 }
  // fieldSidebar types
