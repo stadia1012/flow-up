@@ -83,7 +83,8 @@ export async function GET(
           parentId: row?.PARENT_ID || null,
           level: row?.LEVEL as number,
           order: row?.ORDER as number,
-          subRows: [] // 빈 배열로 초기화
+          subRows: [], // 빈 배열로 초기화
+          tagIds: []
         });
       }
       const entry = rowMap.get(key)!;
