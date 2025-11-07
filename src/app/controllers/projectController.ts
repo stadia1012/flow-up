@@ -307,11 +307,12 @@ export async function copyItemFromDB({
                 include: {
                   field: {
                     include: {
-                      fieldType: true  // VALUE의 FIELD_TYPE 정보 포함
+                      fieldType: true  // VALUE의 FIELD_TYPE 포함
                     }
                   }
                 }
-              }
+              },
+              tags: true // ROW의 TAGS 정보 포함
             },
             where: {
               IS_DELETED: 'N'
@@ -362,7 +363,7 @@ export async function copyItemFromDB({
         fieldMap.set(originalField.ID, newField.ID);
       }
 
-      // 4. ROWS와 VALUES 복사
+      // 4. ROWS와 VALUES, TAGS 복사
       const rowMap = new Map<number, number>();
       // 낮은 level이 먼저 처리되도록
       const sortedRows = originalItem.rows.sort((a, b) => (a.LEVEL || 0) - (b.LEVEL || 0));
@@ -418,6 +419,15 @@ export async function copyItemFromDB({
               });
             }
           }
+        }
+        // ROW_TAGS 복사 (copyOption과 관계없이 항상 복사)
+        for (const originalTag of originalRow.tags) {
+          await tx.w_ROW_TAGS.create({
+            data: {
+              ROW_ID: newRow.ID,
+              TAG_ID: originalTag.TAG_ID
+            }
+          });
         }
       }
       return newItem;

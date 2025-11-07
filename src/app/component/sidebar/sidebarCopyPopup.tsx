@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store/store";
 import { useDispatch } from "react-redux";
-import { showModal } from '@/app/component/modalUtils';
 import { useToast } from '@/app/context/ToastContext';
-import { addItemToStore, moveFolder, moveItem } from '@/app/store/projectsSlice';
-import { flash } from '@/app/animation';
-import { copyItemFromDB, moveList } from '@/app/controllers/projectController';
+import { addItemToStore } from '@/app/store/projectsSlice';
+import { copyItemFromDB } from '@/app/controllers/projectController';
 
 export default function SidebarCopyPopup({originalItem, setIsPopupOpen}: {
   originalItem: List,

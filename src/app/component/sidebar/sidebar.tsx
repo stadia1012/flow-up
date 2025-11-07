@@ -73,7 +73,7 @@ export default function Sidebar({
           <Link  href={{pathname: `/groups`}}>User Groups</Link>
         </div> */}
         {
-          session?.user.isAdmin
+          session?.user.isAdmin && false // false: 로그 접근 차단
           ? <Link href={{pathname: `/logs`}}>
               <p className="font-[600] cursor-pointer hover:bg-gray-200/65 p-[3px] pl-[15px] rounded-[4px]">Logs</p>
             </Link>
