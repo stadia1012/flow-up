@@ -163,6 +163,7 @@ export default function ItemTableCell({
           hover:text-blue-600 
           ${isEditing ? 'border-blue-400 hover:border-blue-400 w-full' : 'border-transparent hover:border-gray-300'}
           ${field.type !== "name" ? 'w-full' : 'pr-[2px]'}
+          ${field.type === "name" && row.tagIds.length === 0 ? 'w-full' : ''}
           ${field.type === "dropdown" ? '' : 'pt-[4px] pb-[4px] px-[8px]'}
           h-[32px] box-border
           cursor-pointer

@@ -152,6 +152,166 @@ export async function addTaskSubRowToDB({
   return result;
 }
 
+// task (row) 복제
+export async function duplicateTaskRowsFromDB({
+  itemId,
+  duplicateIds,
+}: {
+  itemId: number;
+  duplicateIds: number[];
+}) {
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. 복제할 원본 rows 조회 (subrows 한 단계만, values, tags 포함)
+      const originalRows = await tx.w_ROWS.findMany({
+        where: {
+          ID: { in: duplicateIds },
+          ITEM_ID: itemId,
+          IS_DELETED: 'N'
+        },
+        include: {
+          values: true,
+          tags: true,
+          children: {
+            include: {
+              values: true,
+              tags: true
+            },
+            where: {
+              IS_DELETED: 'N'
+            }
+          }
+        }
+      });
+
+      if (originalRows.length === 0) {
+        throw new Error('복제할 row를 찾을 수 없습니다.');
+      }
+
+      // 2. 현재 최대 ORDER 구하기
+      const maxOrderResult = await tx.w_ROWS.aggregate({
+        where: {
+          ITEM_ID: itemId,
+          IS_DELETED: 'N'
+        },
+        _max: {
+          ORDER: true
+        }
+      });
+
+      let currentMaxOrder = maxOrderResult._max.ORDER ?? 0;
+      const rowMapping: any[] = [];
+
+      // 3. 각 원본 row와 그 하위 row들을 복제
+      for (const originalRow of originalRows) {
+        const now = new Date();
+        
+        // 부모 row 생성
+        const newParentRow = await tx.w_ROWS.create({
+          data: {
+            ITEM_ID: itemId,
+            PARENT_ID: null,
+            LEVEL: 0,
+            ORDER: ++currentMaxOrder,
+            IS_DELETED: 'N',
+            REG_DT: now,
+            UPDT_DT: now
+          }
+        });
+
+        // 부모 row의 values 복제
+        for (const originalValue of originalRow.values) {
+          await tx.w_VALUES.create({
+            data: {
+              ROW_ID: newParentRow.ID,
+              FIELD_ID: originalValue.FIELD_ID,
+              VALUE: originalValue.VALUE,
+              REG_DT: now,
+              UPDT_DT: now
+            }
+          });
+        }
+
+        // 부모 row의 tags 복제
+        for (const originalTag of originalRow.tags) {
+          await tx.w_ROW_TAGS.create({
+            data: {
+              ROW_ID: newParentRow.ID,
+              TAG_ID: originalTag.TAG_ID
+            }
+          });
+        }
+
+        // subrows 복제
+        const subRowMapping = [];
+        if (originalRow.children && originalRow.children.length > 0) {
+          for (const subRow of originalRow.children) {
+            const newSubRow = await tx.w_ROWS.create({
+              data: {
+                ITEM_ID: itemId,
+                PARENT_ID: newParentRow.ID,
+                LEVEL: 1,
+                ORDER: subRow.ORDER,
+                IS_DELETED: 'N',
+                REG_DT: now,
+                UPDT_DT: now
+              }
+            });
+
+            // subrow의 values 복제
+            for (const originalValue of subRow.values) {
+              await tx.w_VALUES.create({
+                data: {
+                  ROW_ID: newSubRow.ID,
+                  FIELD_ID: originalValue.FIELD_ID,
+                  VALUE: originalValue.VALUE,
+                  REG_DT: now,
+                  UPDT_DT: now
+                }
+              });
+            }
+
+            // subrow의 tags 복제
+            for (const originalTag of subRow.tags) {
+              await tx.w_ROW_TAGS.create({
+                data: {
+                  ROW_ID: newSubRow.ID,
+                  TAG_ID: originalTag.TAG_ID
+                }
+              });
+            }
+
+            subRowMapping.push({
+              originalId: subRow.ID,
+              newId: newSubRow.ID
+            });
+          }
+        }
+
+        rowMapping.push({
+          originalId: originalRow.ID,
+          newId: newParentRow.ID,
+          subRows: subRowMapping
+        });
+      }
+
+      return {
+        success: true,
+        rowMapping,
+        message: `${originalRows.length}개의 row가 성공적으로 복제되었습니다.`
+      };
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error duplicating rows:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+    };
+  }
+}
+
 // value 수정 (upsert)
 export async function updateValueToDB({
   rowId, fieldId, value
@@ -654,13 +814,48 @@ export async function deleteTaskRowFromDB({
 }: {
   deleteIds: number[],
 }) {
-  // field 숨기기
-  await prisma.w_ROWS.deleteMany({
-    where: {
-      ID: {
-        in: deleteIds
-      } 
+  await prisma.$transaction(async (tx) => {
+    // 1. 자식 행들의 ID 찾기 (PARENT_ID가 deleteIds인 것들)
+    const children = await tx.w_ROWS.findMany({
+      where: {
+        PARENT_ID: {
+          in: deleteIds
+        }
+      },
+      select: { ID: true }
+    });
+    
+    const childIds = children.map(c => c.ID);
+    const allIds = [...deleteIds, ...childIds];
+    
+    // 2. 모든 관련 태그 삭제 (부모 + 자식)
+    await tx.w_ROW_TAGS.deleteMany({
+      where: {
+        ROW_ID: {
+          in: allIds
+        }
+      }
+    });
+    
+    // 3. 자식 행 먼저 삭제
+    if (childIds.length > 0) {
+      await tx.w_ROWS.deleteMany({
+        where: {
+          ID: {
+            in: childIds
+          }
+        }
+      });
     }
+    
+    // 4. 부모 행 삭제
+    await tx.w_ROWS.deleteMany({
+      where: {
+        ID: {
+          in: deleteIds
+        }
+      }
+    });
   });
 }
 
