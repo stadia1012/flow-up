@@ -192,7 +192,8 @@ export async function duplicateTaskRowsFromDB({
       const maxOrderResult = await tx.w_ROWS.aggregate({
         where: {
           ITEM_ID: itemId,
-          IS_DELETED: 'N'
+          IS_DELETED: 'N',
+          PARENT_ID: null // 최상위 레벨만
         },
         _max: {
           ORDER: true
@@ -202,8 +203,13 @@ export async function duplicateTaskRowsFromDB({
       let currentMaxOrder = maxOrderResult._max.ORDER ?? 0;
       const rowMapping: any[] = [];
 
+      // 원본 rows를 ORDER 순으로 정렬
+      const sortedOriginalRows = [...originalRows].sort((a, b) => 
+        (a.ORDER ?? 0) - (b.ORDER ?? 0)
+      );
+
       // 3. 각 원본 row와 그 하위 row들을 복제
-      for (const originalRow of originalRows) {
+      for (const originalRow of sortedOriginalRows) {
         const now = new Date();
         
         // 부모 row 생성
@@ -245,7 +251,12 @@ export async function duplicateTaskRowsFromDB({
         // subrows 복제
         const subRowMapping = [];
         if (originalRow.children && originalRow.children.length > 0) {
-          for (const subRow of originalRow.children) {
+          // subrows도 ORDER 순으로 정렬
+          const sortedSubRows = [...originalRow.children].sort((a, b) => 
+            (a.ORDER ?? 0) - (b.ORDER ?? 0)
+          );
+          
+          for (const subRow of sortedSubRows) {
             const newSubRow = await tx.w_ROWS.create({
               data: {
                 ITEM_ID: itemId,
