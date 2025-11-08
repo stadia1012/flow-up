@@ -447,3 +447,18 @@ export async function copyItemFromDB({
     };
   }
 }
+
+// 가장 최신 item 가져오기
+export async function getLatestItem() {
+  try {
+    const latestId = await prisma.w_ITEMS.aggregate({
+      _max: {
+        ID: true
+      }
+    });
+    return latestId._max.ID || 0;
+  } catch (error) {
+    console.error('item 조회 실패:', error);
+    throw new Error('item 조회 실패');
+  }
+}
