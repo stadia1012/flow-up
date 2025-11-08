@@ -3,7 +3,6 @@
 import React, { useState, useEffect, ReactElement } from "react";
 import { Spin, Alert } from "antd";
 import Tree, { DataNode } from "antd/lib/tree";
-import { useToast } from '@/app/context/ToastContext';
 
 type OrgNode = {
   key: string;
@@ -69,7 +68,6 @@ export default function OrgTree({onNodeSelect}: {
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { showToast } = useToast();
 
   useEffect(() => {
     fetch("/api/org-tree")

@@ -13,6 +13,8 @@ import type { RootState } from "@/app/store/store";
 import ItemTableHeadContainer from './itemTableHeadContainer';
 import { showModal } from '../modalUtils';
 import { useToast } from '@/app/context/ToastContext';
+import SearchBar from './search/searchBar';
+import { createPortal } from 'react-dom';
 
 export default function ItemTable({initialTableData, itemId}: {
   initialTableData: {
@@ -23,6 +25,7 @@ export default function ItemTable({initialTableData, itemId}: {
   itemId: number
 }) {
   const dispatch: AppDispatch = useDispatch();
+  const {showToast} = useToast();
   // server에서 받은 projects를 redux에 반영
   useEffect(() => {
     dispatch(setTableData({
@@ -66,8 +69,6 @@ export default function ItemTable({initialTableData, itemId}: {
   )
   
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
-
-  const {showToast} = useToast();
 
   /* task (row) 추가 */
   const addTaskRow = (name: string) => {
@@ -263,148 +264,84 @@ export default function ItemTable({initialTableData, itemId}: {
     deleteTaskRowFromDB({deleteIds});
   }
 
-  /* row 복제 (start) */
+/* row 복제 (start) */
   const handleDuplicateRows = async () => {
-    const duplicateIds = Array.from(checkedIds);
-    
-    if (duplicateIds.length === 0) {
-      return;
-    }
-
-    // 복제할 원본 rows 찾기
-    const rowsToDuplicate = rows.filter(r => duplicateIds.includes(r.rowId));
-
-    // max order 구하기
-    const maxOrder = rows.reduce(
-      (max, el) => (typeof el.order === 'number' && el.order > max ? el.order : max), 
-      0
-    );
-
-    let currentMaxOrder = maxOrder;
-    const newRows: TaskRow[] = rows.map(el => ({ 
-      ...el, 
-      values: {...el.values},
-      subRows: el.subRows ? el.subRows.map(sr => ({...sr, values: {...sr.values}})) : undefined
-    }));
-    
-    type TempIdMapping = {
-      parentTempId: number;
-      subRowTempIds: Map<number, number>;
-    };
-    const tempIdMap = new Map<number, TempIdMapping>();
-
-    // 각 row 복제
-    rowsToDuplicate.forEach((originalRow) => {
-      // 부모 row 복제
-      const parentTempId = Date.now() + Math.random();
-      
-      const newParentRow: TaskRow = {
-        values: { ...originalRow.values },
-        rowId: parentTempId,
-        parentId: null, // 최상위 레벨이므로 null
-        level: 0, // 최상위 레벨
-        order: ++currentMaxOrder,
-        tagIds: [...originalRow.tagIds],
-      };
-
-      // subrow 임시 ID 맵
-      const subRowTempIds = new Map<number, number>();
-
-      // 하위 rows 복제
-      if (originalRow.subRows && originalRow.subRows.length > 0) {
-        newParentRow.subRows = [];
-        
-        originalRow.subRows.forEach(subRow => {
-          const subRowTempId = Date.now() + Math.random();
-          
-          const newSubRow = {
-            values: { ...subRow.values },
-            rowId: subRowTempId,
-            parentId: parentTempId,
-            level: 1, // subrow는 레벨 1
-            order: subRow.order,
-            tagIds: [...subRow.tagIds]
-          };
-
-          subRowTempIds.set(subRow.rowId, subRowTempId);
-          newParentRow.subRows!.push(newSubRow);
-        });
-      }
-
-      tempIdMap.set(originalRow.rowId, { 
-        parentTempId, 
-        subRowTempIds 
-      });
-
-      newRows.push(newParentRow);
-    });
-
-    // state 업데이트
-    dispatch(setValues({newRows: [...newRows]}));
-
-    // 체크 해제
-    setCheckedIds(new Set());
-
-    // flash 효과
-    setTimeout(() => {
-      tempIdMap.forEach(({ parentTempId, subRowTempIds }) => {
-        // 부모 row flash
-        const parentEl = document.querySelectorAll(`[data-row-id="${parentTempId}"] td`);
-        if (parentEl) {
-          parentEl.forEach(td => flash(td));
-        }
-        
-        // subrow flash
-        subRowTempIds.forEach((subRowTempId) => {
-          const subEl = document.querySelectorAll(`[data-row-id="${subRowTempId}"] td`);
-          if (subEl) {
-            subEl.forEach(td => flash(td));
-          }
-        });
-      });
-    }, 10);
+    const newRows: TaskRow[] = structuredClone(rows);
 
     // DB에 복제
     try {
       const res = await duplicateTaskRowsFromDB({
-        itemId,
-        duplicateIds
+        itemId, // 현재 item (목적지)
+        duplicateIds: Array.from(checkedIds)
       });
 
-      if (res.success && 'rowMapping' in res) {
-        // 임시 ID를 실제 ID로 교체
-        res.rowMapping.forEach((mapping: any) => {
-          const tempMapping = tempIdMap.get(mapping.originalId);
-          if (!tempMapping) return;
-
-          // 부모 row ID 교체
-          dispatch(setRealId({
-            type: 'row', 
-            tempId: tempMapping.parentTempId, 
-            realId: mapping.newId
-          }));
-
-          // subrow ID 교체
-          mapping.subRows.forEach((subRowMapping: any) => {
-            const subRowTempId = tempMapping.subRowTempIds.get(subRowMapping.originalId);
-            if (subRowTempId) {
-              dispatch(setSubRowId({
-                parentRowId: mapping.newId,
-                tempId: subRowTempId,
-                realId: subRowMapping.newId
-              }));
-            }
-          });
-        });
+      if (!res.success || !('rowsData' in res)) {
+        throw new Error('복제 실패');
       }
+
+      // DB에서 반환된 데이터로 state 업데이트
+      const copiedRows = res.rowsData;
+      
+      copiedRows.forEach((rowData: any) => {
+        const newParentRow: TaskRow = {
+          values: rowData.values,
+          rowId: rowData.rowId,
+          parentId: null,
+          level: 0,
+          order: rowData.order,
+          tagIds: rowData.tagIds,
+        };
+
+        // subrows 추가
+        if (rowData.subRows && rowData.subRows.length > 0) {
+          newParentRow.subRows = rowData.subRows.map((subData: any) => ({
+            values: subData.values,
+            rowId: subData.rowId,
+            parentId: rowData.rowId,
+            level: 1,
+            order: subData.order,
+            tagIds: subData.tagIds
+          }));
+        }
+
+        newRows.push(newParentRow);
+      });
+
+      // state 업데이트
+      dispatch(setValues({newRows: [...newRows]}));
+
+      // 체크 해제
+      setCheckedIds(new Set());
+
+      // flash 효과
+      setTimeout(() => {
+        copiedRows.forEach((rowData: any) => {
+          const parentEl = document.querySelectorAll(`[data-row-id="${rowData.rowId}"] td`);
+          if (parentEl) {
+            parentEl.forEach(td => flash(td));
+          }
+          
+          if (rowData.subRows) {
+            rowData.subRows.forEach((subData: any) => {
+              const subEl = document.querySelectorAll(`[data-row-id="${subData.rowId}"] td`);
+              if (subEl) {
+                subEl.forEach(td => flash(td));
+              }
+            });
+          }
+        });
+      }, 10);
+
     } catch (error) {
       console.error('Row 복제 실패:', error);
+      showToast('복제에 실패했습니다.', 'error');
     }
   };
   /* row 복제 (end) */
   return (
     <div className='flex flex-col p-[15px] pt-[20px] pl-[10px] overflow-hidden w-full h-full min-w-[400px]'>
       <div className='pl-[15px]'>
+        {/* project / folder / item name */}
         <div className='flex text-[13.5px] text-gray-500 mb-[10px] font-[400]'>
           <span className='inline-flex items-center'>{
             isLoading
@@ -455,7 +392,7 @@ export default function ItemTable({initialTableData, itemId}: {
                   title: `선택한 행을 복제하시겠습니까? (${checkedIds.size}개 행)`,
                   buttonText: {confirm: '확인'}
                 });
-                handleDuplicateRows(); 
+                handleDuplicateRows();
                 showToast('복제되었습니다.', 'success');
                 return;
               } catch {
@@ -528,6 +465,14 @@ export default function ItemTable({initialTableData, itemId}: {
           </tbody>
         </table>
       </div>
+
+      {/* search bar */}
+      {
+        item && createPortal(
+          <SearchBar rows={rows} item={item} />,
+          document.body
+        )
+      }
     </div>
   );
 }

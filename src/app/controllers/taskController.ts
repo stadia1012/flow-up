@@ -152,7 +152,7 @@ export async function addTaskSubRowToDB({
   return result;
 }
 
-// task (row) 복제
+// task (row) 복제 - 복제된 데이터 포함 반환
 export async function duplicateTaskRowsFromDB({
   itemId,
   duplicateIds,
@@ -162,19 +162,26 @@ export async function duplicateTaskRowsFromDB({
 }) {
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 1. 복제할 원본 rows 조회 (subrows 한 단계만, values, tags 포함)
+      // 1. 복제할 원본 rows 조회 (다른 item의 row도 가능하도록 ITEM_ID 조건 제거)
       const originalRows = await tx.w_ROWS.findMany({
         where: {
           ID: { in: duplicateIds },
-          ITEM_ID: itemId,
           IS_DELETED: 'N'
         },
         include: {
-          values: true,
+          values: {
+            include: {
+              field: true // FIELD 정보도 포함
+            }
+          },
           tags: true,
           children: {
             include: {
-              values: true,
+              values: {
+                include: {
+                  field: true
+                }
+              },
               tags: true
             },
             where: {
@@ -188,12 +195,28 @@ export async function duplicateTaskRowsFromDB({
         throw new Error('복제할 row를 찾을 수 없습니다.');
       }
 
-      // 2. 현재 최대 ORDER 구하기
+      // 2. 목적지 item의 fields 조회 (field 매핑용)
+      const targetFields = await tx.w_FIELDS.findMany({
+        where: {
+          ITEM_ID: itemId
+        },
+        include: {
+          fieldType: true
+        }
+      });
+
+      // FIELD_TYPE_ID로 매핑 (원본 field -> 목적지 field)
+      const fieldTypeMap = new Map<number, number>();
+      targetFields.forEach(field => {
+        fieldTypeMap.set(field.FIELD_TYPE_ID, field.ID);
+      });
+
+      // 3. 현재 최대 ORDER 구하기
       const maxOrderResult = await tx.w_ROWS.aggregate({
         where: {
           ITEM_ID: itemId,
           IS_DELETED: 'N',
-          PARENT_ID: null // 최상위 레벨만
+          PARENT_ID: null
         },
         _max: {
           ORDER: true
@@ -201,14 +224,14 @@ export async function duplicateTaskRowsFromDB({
       });
 
       let currentMaxOrder = maxOrderResult._max.ORDER ?? 0;
-      const rowMapping: any[] = [];
+      const rowsData: any[] = [];
 
       // 원본 rows를 ORDER 순으로 정렬
       const sortedOriginalRows = [...originalRows].sort((a, b) => 
         (a.ORDER ?? 0) - (b.ORDER ?? 0)
       );
 
-      // 3. 각 원본 row와 그 하위 row들을 복제
+      // 4. 각 원본 row와 그 하위 row들을 복제
       for (const originalRow of sortedOriginalRows) {
         const now = new Date();
         
@@ -225,17 +248,24 @@ export async function duplicateTaskRowsFromDB({
           }
         });
 
-        // 부모 row의 values 복제
+        const parentValues: { [key: number]: string } = {};
+        const parentTagIds: number[] = [];
+
+        // 부모 row의 values 복제 (field 매핑 적용)
         for (const originalValue of originalRow.values) {
-          await tx.w_VALUES.create({
-            data: {
-              ROW_ID: newParentRow.ID,
-              FIELD_ID: originalValue.FIELD_ID,
-              VALUE: originalValue.VALUE,
-              REG_DT: now,
-              UPDT_DT: now
-            }
-          });
+          const targetFieldId = fieldTypeMap.get(originalValue.field!.FIELD_TYPE_ID);
+          if (targetFieldId) {
+            await tx.w_VALUES.create({
+              data: {
+                ROW_ID: newParentRow.ID,
+                FIELD_ID: targetFieldId,
+                VALUE: originalValue.VALUE,
+                REG_DT: now,
+                UPDT_DT: now
+              }
+            });
+            parentValues[targetFieldId] = originalValue.VALUE || '';
+          }
         }
 
         // 부모 row의 tags 복제
@@ -246,12 +276,12 @@ export async function duplicateTaskRowsFromDB({
               TAG_ID: originalTag.TAG_ID
             }
           });
+          parentTagIds.push(originalTag.TAG_ID);
         }
 
         // subrows 복제
-        const subRowMapping = [];
+        const subRowsData = [];
         if (originalRow.children && originalRow.children.length > 0) {
-          // subrows도 ORDER 순으로 정렬
           const sortedSubRows = [...originalRow.children].sort((a, b) => 
             (a.ORDER ?? 0) - (b.ORDER ?? 0)
           );
@@ -269,17 +299,24 @@ export async function duplicateTaskRowsFromDB({
               }
             });
 
+            const subValues: { [key: number]: string } = {};
+            const subTagIds: number[] = [];
+
             // subrow의 values 복제
             for (const originalValue of subRow.values) {
-              await tx.w_VALUES.create({
-                data: {
-                  ROW_ID: newSubRow.ID,
-                  FIELD_ID: originalValue.FIELD_ID,
-                  VALUE: originalValue.VALUE,
-                  REG_DT: now,
-                  UPDT_DT: now
-                }
-              });
+              const targetFieldId = fieldTypeMap.get(originalValue.field!.FIELD_TYPE_ID);
+              if (targetFieldId) {
+                await tx.w_VALUES.create({
+                  data: {
+                    ROW_ID: newSubRow.ID,
+                    FIELD_ID: targetFieldId,
+                    VALUE: originalValue.VALUE,
+                    REG_DT: now,
+                    UPDT_DT: now
+                  }
+                });
+                subValues[targetFieldId] = originalValue.VALUE || '';
+              }
             }
 
             // subrow의 tags 복제
@@ -290,25 +327,30 @@ export async function duplicateTaskRowsFromDB({
                   TAG_ID: originalTag.TAG_ID
                 }
               });
+              subTagIds.push(originalTag.TAG_ID);
             }
 
-            subRowMapping.push({
-              originalId: subRow.ID,
-              newId: newSubRow.ID
+            subRowsData.push({
+              rowId: newSubRow.ID,
+              values: subValues,
+              tagIds: subTagIds,
+              order: subRow.ORDER
             });
           }
         }
 
-        rowMapping.push({
-          originalId: originalRow.ID,
-          newId: newParentRow.ID,
-          subRows: subRowMapping
+        rowsData.push({
+          rowId: newParentRow.ID,
+          values: parentValues,
+          tagIds: parentTagIds,
+          order: currentMaxOrder,
+          subRows: subRowsData
         });
       }
 
       return {
         success: true,
-        rowMapping,
+        rowsData,
         message: `${originalRows.length}개의 row가 성공적으로 복제되었습니다.`
       };
     });
@@ -321,6 +363,121 @@ export async function duplicateTaskRowsFromDB({
       error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
     };
   }
+}
+
+// row 조회 (복제 목적)
+export async function getRowFromDB({rowId}: {rowId: number}) {
+  /* row 계층구조 구현하기 */
+  // 1단계: 모든 row 데이터를 Map으로 구성
+  const rowMap = new Map<number, TaskRow>();
+  const rawValues = await prisma.w_VALUES.findMany({
+    where: {
+      row: {
+        ID: rowId,
+      },
+    },
+    include: {
+      row: {
+        include: {
+          children: true,
+          tags: {
+            include: {
+              tag: true,
+            }
+          }
+        }
+      },
+      field: true,
+    },
+  });
+  rawValues.forEach(({ row, field, VALUE }) => {
+    const key = row?.ID as number;
+    if (!rowMap.has(key)) {
+      rowMap.set(key, {
+        values: {}, // 숫자 키로 VALUE 쌓기
+        rowId: row?.ID as number,
+        parentId: row?.PARENT_ID || null,
+        level: row?.LEVEL as number,
+        order: row?.ORDER as number,
+        subRows: [], // 빈 배열로 초기화
+        tagIds: row?.tags.map(t => t.TAG_ID) || []
+      });
+    }
+    const entry = rowMap.get(key)!;
+    entry.values[field?.ID as number] = VALUE || '';
+  });
+
+  // 2단계: 계층구조 구성 (부모-자식 관계 설정)
+  const allRows = Array.from(rowMap.values());
+  const topLevelRows: TaskRow[] = [];
+
+  // 최상위 rows와 하위 rows 분리
+  allRows.forEach(row => {
+    if (row.parentId === null) {
+      // 최상위 row
+      topLevelRows.push(row);
+    } else {
+      // 하위 row - 부모 찾아서 subRows에 추가
+      const parentRow = rowMap.get(row.parentId);
+      if (parentRow) {
+        parentRow.subRows!.push(row);
+      }
+    }
+  });
+
+  // 3단계: 각 레벨별로 정렬
+  const sortRowsRecursively = (rows: TaskRow[]) => {
+    rows.sort((a, b) => a.order - b.order);
+    rows.forEach(row => {
+      if (row.subRows && row.subRows.length > 0) {
+        sortRowsRecursively(row.subRows);
+      }
+    });
+  };
+  sortRowsRecursively(topLevelRows);
+  return topLevelRows;
+}
+
+// row keyword 검색
+export async function searchRowsFromDB(keyword: string) {
+  const results = await prisma.w_VALUES.findMany({
+    select: {
+      row: {
+        select: {
+          ID: true,
+          item: {
+            select: {
+              NAME: true,
+              ID: true
+            }
+          }
+        }
+      },
+      VALUE: true,
+    },
+    where: {
+      VALUE: { contains: keyword },
+      field: { fieldType: { DATA_TYPE: { in: ['text', 'name'] } } },
+      row: {
+        IS_DELETED: 'N',
+        item: {
+          IS_DELETED: 'N',
+          folder: {
+            IS_DELETED: 'N',
+            project: {
+              IS_DELETED: 'N'
+            }
+          },
+        }
+      }
+    }
+  });
+  return results.map(res => ({
+    rowId: res.row?.ID || 0,
+    itemId: res.row?.item?.ID || 0,
+    content: res.VALUE || '',
+    itemName: res.row?.item?.NAME || ''
+  }));
 }
 
 // value 수정 (upsert)
@@ -345,6 +502,14 @@ export async function updateValueToDB({
       FIELD_ID: fieldId,
       VALUE: value,
       REG_DT: new Date()
+    }
+  });
+  await prisma.w_ROWS.update({
+    where: {
+      ID: rowId
+    },
+    data: {
+      UPDT_DT: new Date()
     }
   });
 }

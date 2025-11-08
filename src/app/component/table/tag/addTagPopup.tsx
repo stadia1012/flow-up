@@ -115,7 +115,7 @@ export default function AddTagPopup({
       onClick={(e) => handleClickOutside(e)}
     >
       <div
-        className="absolute bg-white rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-100 popup-menu w-[230px] w-[250px] top-[30px]"
+        className="absolute bg-white rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-100 popup-menu w-[250px] top-[30px]"
         style={style}
         onClick={(e) => e.stopPropagation()}
         ref={tagPopupRef}
