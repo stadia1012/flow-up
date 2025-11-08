@@ -1,12 +1,12 @@
 'use client'
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useToast } from '@/app/context/ToastContext';
-import { duplicateTaskRowsFromDB, getRowFromDB, searchRowsFromDB } from "@/app/controllers/taskController";
+import { duplicateTaskRowsFromDB, searchRowsFromDB } from "@/app/controllers/taskController";
 import Link from "next/link";
 import { showModal } from "../../modalUtils";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/store/store";
-import { setRealId, setSubRowId, setValues } from "@/app/store/tableSlice";
+import { setValues } from "@/app/store/tableSlice";
 import { flash } from "@/app/animation";
 
 export default function SearchPopup({
@@ -26,12 +26,13 @@ export default function SearchPopup({
     searchInputRef.current?.focus();
   }, []);
 
-  // 검색 결과
+  // 검색 결과 type 정의
   type SearchedResult = {
     rowId: number,
     itemId: number,
     content: string,
-    itemName: string
+    itemName: string,
+    updateDate: string
   };
   const [searchedResults, setSearchedResults] = useState<SearchedResult[]>([]);
 
@@ -144,7 +145,7 @@ export default function SearchPopup({
       onClick={(e) => handleClickOutside(e)}
     >
       <div
-        className="absolute bg-white rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-100 popup-menu w-[830px] h-[540px] top-[100px]"
+        className="absolute bg-white rounded-[6px] shadow-[var(--popupShadow)] cursor-default z-100 popup-menu w-[860px] h-[540px] top-[100px]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 검색어 입력 영역 */}
@@ -191,7 +192,7 @@ export default function SearchPopup({
                   className="group/li flex items-center py-[5px] hover:bg-gray-100 px-[10px] rounded-[4px] transition mr-[6px]"
                 >
                   <span className="text-[14px]">{result.content}</span>
-                  <span className="relative ml-[8px] text-gray-500 text-[12px]">in {result.itemName}</span>
+                  <span className="relative ml-[8px] text-gray-500 text-[12px]">in [{result.itemName}] | {result.updateDate}</span>
                   <div className="ml-auto opacity-0 group-hover/li:opacity-100 transition flex">
                     <button
                       type="button"

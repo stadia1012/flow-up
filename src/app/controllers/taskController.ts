@@ -365,79 +365,6 @@ export async function duplicateTaskRowsFromDB({
   }
 }
 
-// row 조회 (복제 목적)
-export async function getRowFromDB({rowId}: {rowId: number}) {
-  /* row 계층구조 구현하기 */
-  // 1단계: 모든 row 데이터를 Map으로 구성
-  const rowMap = new Map<number, TaskRow>();
-  const rawValues = await prisma.w_VALUES.findMany({
-    where: {
-      row: {
-        ID: rowId,
-      },
-    },
-    include: {
-      row: {
-        include: {
-          children: true,
-          tags: {
-            include: {
-              tag: true,
-            }
-          }
-        }
-      },
-      field: true,
-    },
-  });
-  rawValues.forEach(({ row, field, VALUE }) => {
-    const key = row?.ID as number;
-    if (!rowMap.has(key)) {
-      rowMap.set(key, {
-        values: {}, // 숫자 키로 VALUE 쌓기
-        rowId: row?.ID as number,
-        parentId: row?.PARENT_ID || null,
-        level: row?.LEVEL as number,
-        order: row?.ORDER as number,
-        subRows: [], // 빈 배열로 초기화
-        tagIds: row?.tags.map(t => t.TAG_ID) || []
-      });
-    }
-    const entry = rowMap.get(key)!;
-    entry.values[field?.ID as number] = VALUE || '';
-  });
-
-  // 2단계: 계층구조 구성 (부모-자식 관계 설정)
-  const allRows = Array.from(rowMap.values());
-  const topLevelRows: TaskRow[] = [];
-
-  // 최상위 rows와 하위 rows 분리
-  allRows.forEach(row => {
-    if (row.parentId === null) {
-      // 최상위 row
-      topLevelRows.push(row);
-    } else {
-      // 하위 row - 부모 찾아서 subRows에 추가
-      const parentRow = rowMap.get(row.parentId);
-      if (parentRow) {
-        parentRow.subRows!.push(row);
-      }
-    }
-  });
-
-  // 3단계: 각 레벨별로 정렬
-  const sortRowsRecursively = (rows: TaskRow[]) => {
-    rows.sort((a, b) => a.order - b.order);
-    rows.forEach(row => {
-      if (row.subRows && row.subRows.length > 0) {
-        sortRowsRecursively(row.subRows);
-      }
-    });
-  };
-  sortRowsRecursively(topLevelRows);
-  return topLevelRows;
-}
-
 // row keyword 검색
 export async function searchRowsFromDB(keyword: string) {
   const results = await prisma.w_VALUES.findMany({
@@ -445,6 +372,7 @@ export async function searchRowsFromDB(keyword: string) {
       row: {
         select: {
           ID: true,
+          UPDT_DT: true,
           item: {
             select: {
               NAME: true,
@@ -470,13 +398,17 @@ export async function searchRowsFromDB(keyword: string) {
           },
         }
       }
+    },
+    orderBy: {
+      row: { UPDT_DT: 'desc' }
     }
   });
   return results.map(res => ({
     rowId: res.row?.ID || 0,
     itemId: res.row?.item?.ID || 0,
     content: res.VALUE || '',
-    itemName: res.row?.item?.NAME || ''
+    itemName: res.row?.item?.NAME || '',
+    updateDate: res.row?.UPDT_DT ? res.row.UPDT_DT.toISOString().slice(0, 19).replace('T', ' ') : ''
   }));
 }
 
