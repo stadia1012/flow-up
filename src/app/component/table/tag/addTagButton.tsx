@@ -21,10 +21,6 @@ export default function AddTagButton({rowId, setShowActions, tagIds, allTags}: {
       // 닫힌 경우 열기 전 popup 위치 조정
       setShowActions(true);
       const rect = tagPopupButton.current.getBoundingClientRect();
-      // setPopupPos({
-      //   top: rect.bottom + window.scrollY, // 하단 기준
-      //   left: rect.left + window.scrollX, // 왼쪽 기준
-      // });
       const popupWidth = 250; // 팝업 너비
       const popupHeight = 250; // 대략적인 팝업 높이
       

@@ -94,19 +94,19 @@ export default function AddTagPopup({
   /* row에 tag 추가 */
   const handleAddTag = ({tagId}: {tagId: number}) => {
     // state 업데이트
-    dispatch(addTagToRow({rowId, tagId: tagId}))
+    dispatch(addTagToRow({rowId, tagId}))
 
     // DB 업데이트
-    addTagToRowFromDB({rowId, tagId: tagId});
+    addTagToRowFromDB({rowId, tagId});
   }
 
-  /* tag 삭제 */
+  /* row에서 tag 삭제 */
   const handleDeleteTag = ({tagId}: {tagId: number}) => {
     // state 업데이트
-    dispatch(deleteRowTag({rowId, tagId: tagId}))
+    dispatch(deleteRowTag({rowId, tagId}))
 
     // DB 업데이트
-    deleteRowTagFromDB({rowId, tagId: tagId});
+    deleteRowTagFromDB({rowId, tagId});
   }
 
   return (

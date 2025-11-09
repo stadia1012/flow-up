@@ -162,33 +162,33 @@ export default function ItemTableRow({
       `}>
         {/* row level 0만 체크박스 표시 */}
         {row.level === 0
-            ? (
-            <span
-              role="checkbox"
-              aria-checked={checkedIds.has(row.rowId)}
-              tabIndex={0}
-              data-id={row.rowId}
-              onClick={handleCheckbox}
-              onKeyDown={e => {
-                if (e.key === ' ' || e.key === 'Enter') {
-                  e.preventDefault();
-                  handleCheckbox(e as any);
-                }
-              }}
-              className={`
-                inline-block relative invisible group-hover:visible
-                w-[14px] h-[14px] top-[-2px] mr-[5px]
-                border rounded-[2px]
-                text-center
-                select-none cursor-pointer
-                ${checkedIds.has(row.rowId)
-                  ? 'bg-blue-500 text-white border-blue-500 visible _checked'
-                  : 'bg-transparent text-transparent border-gray-400'}
-              `}
-            >
-              <span className='block relative top-[2px] text-[9px] font-[400] leading-[100%]'>✔</span>
-            </span>)
-            : ''}
+          ? (
+          <span
+            role="checkbox"
+            aria-checked={checkedIds.has(row.rowId)}
+            tabIndex={0}
+            data-id={row.rowId}
+            onClick={handleCheckbox}
+            onKeyDown={e => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                handleCheckbox(e as any);
+              }
+            }}
+            className={`
+              inline-block relative invisible group-hover:visible
+              w-[14px] h-[14px] top-[-2px] mr-[5px]
+              border rounded-[2px]
+              text-center
+              select-none cursor-pointer
+              ${checkedIds.has(row.rowId)
+                ? 'bg-blue-500 text-white border-blue-500 visible _checked'
+                : 'bg-transparent text-transparent border-gray-400'}
+            `}
+          >
+            <span className='block relative top-[2px] text-[9px] font-[400] leading-[100%]'>✔</span>
+          </span>)
+          : ''}
       </td>
       {[...fields].sort((a, b) => (a.order) - (b.order)).map((field) => (
         <td

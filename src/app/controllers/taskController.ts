@@ -373,10 +373,25 @@ export async function searchRowsFromDB(keyword: string) {
         select: {
           ID: true,
           UPDT_DT: true,
+          REG_DT: true,
           item: {
             select: {
               NAME: true,
               ID: true
+            },
+          },
+          children: {
+            select: {
+              values: {
+                select: {
+                  VALUE: true
+                },
+                where: {
+                  field: {
+                    fieldType: { DATA_TYPE: 'name' }
+                  }
+                }
+              }
             }
           }
         }
@@ -403,12 +418,19 @@ export async function searchRowsFromDB(keyword: string) {
       row: { UPDT_DT: 'desc' }
     }
   });
+
   return results.map(res => ({
     rowId: res.row?.ID || 0,
     itemId: res.row?.item?.ID || 0,
     content: res.VALUE || '',
     itemName: res.row?.item?.NAME || '',
-    updateDate: res.row?.UPDT_DT ? res.row.UPDT_DT.toISOString().slice(0, 19).replace('T', ' ') : ''
+    updateDate: res.row?.UPDT_DT?.toISOString().slice(0, 16).replace('T', ' ')
+      || res.row?.REG_DT?.toISOString().slice(0, 16).replace('T', ' ')
+      || '',
+    subRowNames: (res.row?.children || [])
+      .flatMap((child: any) =>
+        (child.values || []).map((val: any) => val.VALUE)
+      )
   }));
 }
 

@@ -74,4 +74,14 @@ type OrgTreeNode = {
   title: string
 }
 
+// row 검색 결과 type 정의
+type SearchedResult = {
+  rowId: number,
+  itemId: number,
+  content: string,
+  itemName: string,
+  updateDate: string,
+  subRowNames: string[]
+};
+
 export const ReactNativeWebView = window.ReactNativeWebView;

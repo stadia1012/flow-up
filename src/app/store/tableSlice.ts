@@ -236,7 +236,7 @@ const tableSlice = createSlice({
       }>
     ) => {
       const { rowId, tagId } = action.payload;
-      state.data.rows.forEach((row) => {
+      state.data.rows.flatMap(row => [row, ...(row.subRows || [])]).forEach((row) => {
         if (row.rowId === rowId && !row.tagIds.includes(tagId)) {
           row.tagIds.push(tagId);
         }
@@ -251,7 +251,7 @@ const tableSlice = createSlice({
       }>
     ) => {
       const { rowId, tagId } = action.payload;
-      const row = state.data.rows.find(row => (
+      const row = state.data.rows.flatMap(r => [r, ...(r.subRows || [])]).find(row => (
         row.rowId === rowId
       ));
 
