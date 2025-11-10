@@ -454,6 +454,15 @@ export async function getLatestItem() {
     const latestId = await prisma.w_ITEMS.aggregate({
       _max: {
         ID: true
+      },
+      where: {
+        IS_DELETED: 'N',
+        folder: {
+          IS_DELETED: 'N',
+          project: {
+            IS_DELETED: 'N',
+          }
+        }
       }
     });
     return latestId._max.ID || 0;
