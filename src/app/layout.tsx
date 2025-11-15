@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="kr">
+    <html lang="ko">
       <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1"></meta>
       <body className="overflow-hidden">
         <AuthProvider>
